@@ -40,7 +40,7 @@
                 </v-card>
             </v-col>
         </v-row>
-       
+
     </v-container>
 </template>
 
@@ -57,7 +57,7 @@ export default {
     },
     computed: {
         publicFullUrl() {
-            return window.location.origin + this.$router.resolve({ name: 'standings', params: { eventId: this.eventId, organizer: this.organizer, game: "overall" } }).href;
+            return window.location.origin + this.$router.resolve({ name: 'tournament.standings', params: { eventId: this.eventId, organizer: this.organizer, game: "overall" } }).href;
         },
         summaryUrl() {
             return encodeURI(`${this.$apex.config.fullUrl}stats/${this.organizer}/${this.eventId}/summary`);
