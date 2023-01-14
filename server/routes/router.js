@@ -8,6 +8,9 @@ const authService = require("../services/auth.service");
 const adminService = require("../services/admin.service");
 const cache = require("../services/cache.service");
 const shortLinkService = require("../services/short_link.service.js");
+const liveService = require("../services/live.service");
+
+
 const SHORT_LINK_PREFIX = "_";
 module.exports = function router(app) {
 
@@ -31,7 +34,7 @@ module.exports = function router(app) {
                 total: stats.length,
                 games: stats,
                 teams: apexService.generateOverallStats(stats),
-                stacked: stacked ? stats.map((_, index) => apexService.generateOverallStats(stats.slice(0, index + 1))): undefined
+                stacked: stacked ? stats.map((_, index) => apexService.generateOverallStats(stats.slice(0, index + 1))) : undefined
             }
         } else {
             stats = stats[0];
@@ -109,7 +112,7 @@ module.exports = function router(app) {
 
         if (!gameStat)
             return res.sendStats(404);
-        
+
         console.log(JSON.stringify(gameStat));
 
         await statsService.writeStats(req.organizer.id, eventId, game, gameStat);
@@ -143,7 +146,7 @@ module.exports = function router(app) {
             let body = "";
             if (stats.teams) {
                 let message = stats.teams.map(team => `${team.name} ${team.overall_stats.score}`)
-                body =  message.join(", ");
+                body = message.join(", ");
             }
             return `${body} -- (after ${stats.total} games)`;
         }, 300)
@@ -239,16 +242,31 @@ module.exports = function router(app) {
         res.send({ hash });
     })
 
-    app.get("/" + SHORT_LINK_PREFIX  +"*", async (req, res) => {
+    app.get("/" + SHORT_LINK_PREFIX + "*", async (req, res) => {
         const hash = req.params[0];
 
         let url = await shortLinkService.getUrl(hash);
         if (url) {
             await shortLinkService.incrementVisit(hash);
-            res.redirect(url);  
+            res.redirect(url);
         } else {
             res.sendStatus(404);
         }
     })
+
+
+
+
+
+    app.ws("/live/write/:organizer", (ws, req) => {
+        console.log("sdf");
+        liveService.connectWrite(ws, req.params.organizer);
+    })
+
+
+    // app.ws("/live/read/:organizer", (ws, req) => {
+    //     liveService.connectRead(ws, req.params.organizer);
+    // })
+
 
 }

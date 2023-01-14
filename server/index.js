@@ -5,9 +5,9 @@ const cors = require("cors");
 const history = require('connect-history-api-fallback');
 const app = express()
 const port = 3000;
-const {db} = require("./connectors/db");
+const { db } = require("./connectors/db");
 const redis = require("./connectors/redis");
-
+const expressWs = require("express-ws");
 (async () => {
     if (!await redis.isConnected()) {
         console.error("Could not connect to redis");
@@ -18,6 +18,7 @@ const redis = require("./connectors/redis");
     // middleware
     app.use(express.json());
     app.use(cors());
+    expressWs(app);
 
     router(app);
 
