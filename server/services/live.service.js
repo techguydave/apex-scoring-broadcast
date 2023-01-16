@@ -1,8 +1,19 @@
 const defaultStruck = {
+    startTime: 0,
+    state: "preinit",
+    serverConfig: {},
     players: {},
     damageFeed: [],
     killFeed: [],
 }
+
+const STATUS = {
+    ALIVE: "alive",
+    DOWNED: "downed",
+    DEAD: "dead",
+    CARD_COLLECTED: "card_collected",
+}
+
 
 test();
 function test() {
@@ -25,6 +36,15 @@ function processDataLine(line, data) {
     let players = data.players;
 
     switch (line.category) {
+        case "init":
+            data.startTime = line.timestamp;
+            break;
+        case "gameStateChanged":
+            data.state = line.state;
+            break;
+        case "matchSetup":
+            data.serverConfig = line;
+            break;
         case "playerConnected":
         case "characterSelected":
             players[pid] = {
@@ -39,7 +59,7 @@ function processDataLine(line, data) {
                 knocks: 0,
                 revives: 0,
                 kills: 0,
-                status: "alive",
+                status: STATUS.ALIVE,
             };
             break;
         case "weaponSwitched":
@@ -70,24 +90,30 @@ function processDataLine(line, data) {
             }
             break;
         case "playerDowned":
-            data.killFeed.push({ type: "knock", attacker: line.attacker, victim: line.victim, weapon: line.weapon, damage: line.damageInflicted });
+            data.killFeed.push({ type: "down", attacker: line.attacker, victim: line.victim, weapon: line.weapon, damage: line.damageInflicted });
             players[line.attacker.nucleusHash].knocks += 1;
-            players[line.victim.nucleusHash].status = "knocked";
+            players[line.victim.nucleusHash].status = STATUS.DOWNED;
             break;
         case "playerKilled":
+            if (players[line.victim.nucleusHash].status == STATUS.ALIVE) {
+                //work around for missing downed events, make sure we push a down to the killfeed;
+                console.log("Deriving down for ", line.awardedTo, line.victim);
+                data.killFeed.push({ type: "down", attacker: line.awardedTo.nucleusHash, victim: line.victim, weapon: line.weapon, damage: 0, derived: true });
+            }
+
             data.killFeed.push({ type: "kill", attacker: line.awardedTo, victim: line.victim, weapon: line.weapon, damage: line.damageInflicted });
             players[line.awardedTo.nucleusHash].kills += 1;
-            players[line.victim.nucleusHash].status = "dead";
+            players[line.victim.nucleusHash].status = STATUS.DEAD;
             break;
         case "playerRespawnTeam":
             let hash = Object.values(players).find(player => player.name == line.respawned).nucleusHash;
             data.killFeed.push({ type: "respawn", player: { nucleusHash: hash, name: line.respawned } });
-            players[hash].status = "alive";
+            players[hash].status = STATUS.ALIVE;
             break;
         case "playerRevive":
-            players[line.revived.nucleusHash].status = "alive";
+            players[line.revived.nucleusHash].status = STATUS.ALIVE;
             data.killFeed.push({ type: "revive", player: line.revived });
-            players[line.revived.nucleusHash].status = "alive";
+            players[line.revived.nucleusHash].status = STATUS.ALIVE;
             break;
 
     }
