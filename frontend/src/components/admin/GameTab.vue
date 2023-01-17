@@ -104,7 +104,8 @@
 				</v-card-text>
 
 				<v-card-actions>
-					<v-btn color="blue" block :disabled="!statsCode && !liveData" @click="addGame">Add
+					<v-btn :loading="loading" color="blue" block :disabled="loading || !statsCode && !liveData"
+						@click="addGame">Add
 						Game</v-btn>
 				</v-card-actions>
 			</v-card>
@@ -174,6 +175,7 @@ export default {
 			liveData: undefined,
 			error: {},
 			showLiveHelp: false,
+			loading: false,
 		}
 	},
 	computed: {
@@ -192,6 +194,7 @@ export default {
 	},
 	methods: {
 		async addGame() {
+			this.loading = true;
 			let result = await this.$apex.generateStats(
 				this.eventId,
 				this.trimmedStatsCode,
@@ -208,6 +211,7 @@ export default {
 				await this.updateStats();
 				this.liveData = undefined;
 			}
+			this.loading = false;
 		},
 		async updateStats() {
 			this.stats = await this.$apex.getStats(this.organizer, this.eventId, "overall");
