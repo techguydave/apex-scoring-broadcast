@@ -103,7 +103,8 @@ module.exports = function router(app) {
         placementPoints = placementPoints.split(",").map(n => parseInt(n))
 
         let respawnStats = undefined;
-        if (statsCode && statsCode.length > 0) {
+        console.log(statsCode)
+        if (statsCode && statsCode.length > 0 && statsCode !== "undefined") {
             respawnStats = await apexService.getMatchFromCode(statsCode, startTime);
         }
 

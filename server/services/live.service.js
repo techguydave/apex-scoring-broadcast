@@ -18,16 +18,6 @@ const STATUS = {
     CARD_COLLECTED: "card_collected",
 }
 
-
-// test();
-function test() {
-    let data = require("../../local/mock/mock.json");
-    let result = processDataDump(data);
-
-    console.log(JSON.stringify(convertLiveDataToRespawnApi(result)));
-    // console.log(JSON.stringify(result));
-}
-
 function processDataDump(chunk, data = defaultStruck) {
     for (let line of chunk) {
         processDataLine(line, data);

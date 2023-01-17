@@ -28,10 +28,12 @@ module.exports = function Apex(config) {
     }
 
     function mergeStats(stat1, stat2) {
-        return {
+        let result = {
+            ...stat2,
             ...stat1,
             player_results: stat2.player_results.map(player => ({ ...player, ...stat1.player_results.find(p => p.nidHash == player.nidHash) })),
         }
+        return result;
     }
 
     function generateOverallStats(stats) {

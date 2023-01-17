@@ -206,13 +206,13 @@ export default {
 				this.showError = true;
 			} else {
 				await this.updateStats();
-				this.game++;
+				this.liveData = undefined;
 			}
 		},
 		async updateStats() {
 			this.stats = await this.$apex.getStats(this.organizer, this.eventId, "overall");
 			if (this.stats && this.stats.games)
-				this.game = this.stats.games.length + 1
+				this.game = this.stats.games[this.stats.games.length - 1].game + 1;
 		},
 		async deleteStats(game) {
 			await this.$apex.deleteStats(this.organizer, this.eventId, game);
