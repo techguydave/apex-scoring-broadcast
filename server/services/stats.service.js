@@ -123,6 +123,8 @@ async function writeStats(organizer, eventId, game, data, source) {
             await trx("team_game_stats").insert(teamStats);
             await trx("player_game_stats").insert(playerStats);
 
+            await Promise.all(playerStats.map(p => trx("players").insert({ playerId: p.playerId }).onConflict().ignore()))
+
         });
     } catch (err) {
         console.error("Failed to insert game into db", err);
