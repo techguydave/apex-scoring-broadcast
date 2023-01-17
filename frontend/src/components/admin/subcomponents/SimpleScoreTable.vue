@@ -5,7 +5,7 @@
                 <thead>
                     <tr>
                         <th class="text-left">
-                        Team
+                            Team
                         </th>
 
                         <th class="text-left">
@@ -17,10 +17,10 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(team, index) in stats.teams" :key="team.teamId">
+                    <tr v-for="(team, index) in sortedTeams" :key="team.teamId">
                         <td>
                             <div><span class="index">{{ index + 1 }}.</span> {{ team.name }}</div>
-                           
+
                         </td>
                         <td>{{ team.overall_stats.score }}</td>
                         <td>{{ team.overall_stats.kills }}</td>
@@ -34,6 +34,13 @@
 <script>
 export default {
     props: ['stats'],
+    computed: {
+        sortedTeams() {
+            if (this.stats && this.stats.teams)
+                return JSON.parse(JSON.stringify(this.stats.teams)).sort((a, b) => b.overall_stats.score - a.overall_stats.score);
+            return []
+        }
+    }
 }
 </script>
 

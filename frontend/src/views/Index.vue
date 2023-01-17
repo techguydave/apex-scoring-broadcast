@@ -9,8 +9,8 @@
             <div class="recent-wrapper">
                 <div class="title-toolbar mb-5 text-center text-uppercase">Recent Tournaments</div>
                 <v-row>
-                    <v-col cols="3" v-for="match in latest" :key="match.id">
-                        <div  >
+                    <v-col cols="12" md="4" lg="3" v-for="match in latest" :key="match.id">
+                        <div>
                             <div class="title-toolbar text-center text-uppercase">{{ getName(match) }}</div>
                             <div class="top-team" :class="'team-' + (index + 1)" v-for="(team, index) in match.top3"
                                 :key="team.id">
@@ -20,7 +20,9 @@
                                 <div class="team-name"> {{ team.name }}</div>
                                 <div class="team-score"> {{ team.score }}</div>
                             </div>
-                            <div class="view-more"><router-link :to="{ name: 'tournament.standings', params: { eventId: match.eventId, organizer: match.organizer, game: 'overall' }}">View More</router-link></div>
+                            <div class="view-more"><router-link
+                                    :to="{ name: 'tournament.standings', params: { eventId: match.eventId, organizer: match.organizer, game: 'overall' } }">View
+                                    More</router-link></div>
                         </div>
                     </v-col>
                 </v-row>
@@ -104,7 +106,7 @@ body {
 
 .view-more a {
     text-decoration: none;
-    color: $primary!important;
+    color: $primary !important;
 }
 
 .team-score {

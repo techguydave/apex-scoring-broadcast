@@ -9,7 +9,7 @@ const adminService = require("../services/admin.service");
 const cache = require("../services/cache.service");
 const shortLinkService = require("../services/short_link.service.js");
 const liveService = require("../services/live.service");
-
+const { getOr } = require("../utils/utils");
 
 const SHORT_LINK_PREFIX = "_";
 module.exports = function router(app) {
@@ -96,28 +96,30 @@ module.exports = function router(app) {
         res.send(stats);
     })
 
-    app.post("/test", async (req, res) => {
-        console.log(req.files["livedata.json"].data.toString())
-        console.log(req.body)
-
-        res.send("ok")
-    })
-
     app.post("/stats", verifyOrganizerHeaders, async (req, res) => {
-        const { eventId, game, statsCode, startTime, placementPoints, killPoints } = req.body;
-        const liveDataFile = req.files["livedata"];
+        let { eventId, game, statsCode, startTime, placementPoints, killPoints } = req.body;
+        const liveDataFile = getOr(req.files, {})["liveData"];
 
-        let respawnStats = await apexService.getMatchFromCode(statsCode, startTime);
+        placementPoints = placementPoints.split(",").map(n => parseInt(n))
+
+        let respawnStats = undefined;
+        if (statsCode && statsCode.length > 0) {
+            respawnStats = await apexService.getMatchFromCode(statsCode, startTime);
+        }
 
         if (!respawnStats && !liveDataFile) {
-            return res.sendStats(404);
+            return res.sendStatus(404);
         }
 
         let liveDataStats = undefined;
         if (liveDataFile) {
-            let rawData = JSON.parse(liveDataFile.data.toString())
-            liveDataStats = liveService.processDataDump(rawData);
-            liveDataStats = liveService.convertLiveDataToRespawnApi(liveDataStats).matches[0];
+            try {
+                let rawData = JSON.parse(liveDataFile.data.toString())
+                liveDataStats = liveService.processDataDump(rawData);
+                liveDataStats = liveService.convertLiveDataToRespawnApi(liveDataStats).matches[0];
+            } catch (err) {
+                return res.status(500).send({ err: "live_data_parse", msg: "The uploaded file is not valid." })
+            }
         }
 
         let gameStats = undefined;
@@ -138,13 +140,13 @@ module.exports = function router(app) {
         gameStats = apexService.generateGameReport(gameStats, placementPoints, killPoints);
 
         try {
-            // console.log(JSON.stringify(gameStats))
+            //console.log(JSON.stringify(gameStats))
             await statsService.writeStats(req.organizer.id, eventId, game, gameStats, source);
             await deleteCache(req.organizer.username, eventId, game);
 
-            res.status(200).send(gameStats);
+            return res.status(200).send(gameStats);
         } catch (err) {
-            res.status(500).send();
+            return res.status(500).send({ err: "live_data_parse", msg: "Something went wrong adding the game." });
         }
 
     })

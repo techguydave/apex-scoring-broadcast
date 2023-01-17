@@ -124,7 +124,10 @@ function processDataLine(line, data) {
             }
 
             data.killFeed.push({ type: "kill", attacker: line.awardedTo, victim: line.victim, weapon: line.weapon, damage: line.damageInflicted });
-            players[line.awardedTo.nucleusHash].kills += 1;
+            let killer = players[line.awardedTo.nucleusHash]
+            if (killer.status == STATUS.ALIVE || killer.status == STATUS.DOWNED) {
+                killer.kills += 1;
+            }
             players[line.victim.nucleusHash].status = STATUS.DEAD;
             break;
         case "playerRespawnTeam":
@@ -166,6 +169,7 @@ function convertLiveDataToRespawnApi(data) {
         characterName: player.character,
         nidHash: player.nucleusHash,
         skin: player.skin,
+        kills: player.kills,
         grenadesThrown: player.grenadesThrown,
         ultimatesUsed: player.ultimatesUsed,
         tacticalsUsed: player.tacticalsUsed,
