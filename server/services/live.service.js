@@ -1,6 +1,10 @@
+const _ = require("lodash");
+
 const defaultStruck = {
-    startTime: 0,
+    match_start: 0,
     state: "preinit",
+    totalTeams: 0,
+    teamsAlive: 0,
     serverConfig: {},
     players: {},
     damageFeed: [],
@@ -15,12 +19,13 @@ const STATUS = {
 }
 
 
-test();
+// test();
 function test() {
     let data = require("../../local/mock/mock.json");
     let result = processDataDump(data);
 
-    console.log(JSON.stringify(result));
+    console.log(JSON.stringify(convertLiveDataToRespawnApi(result)));
+    // console.log(JSON.stringify(result));
 }
 
 function processDataDump(chunk, data = defaultStruck) {
@@ -37,30 +42,46 @@ function processDataLine(line, data) {
 
     switch (line.category) {
         case "init":
-            data.startTime = line.timestamp;
+            data.match_start = line.timestamp;
             break;
         case "gameStateChanged":
+        case "matchStateEnd":
             data.state = line.state;
+            if (data.state === "PickLoadout") {
+                //determine # of starting teams
+                let count = _.uniqBy(Object.values(data.players), "teamId").length;
+                data.totalTeams = count;
+                data.teamsAlive = count;
+            }
+
+            if (data.state === "WinnerDetermined") {
+                line.winners.forEach(player => {
+                    data.players[player.nucleusHash].teamPlacement = 1;
+                })
+            }
             break;
         case "matchSetup":
             data.serverConfig = line;
             break;
         case "playerConnected":
         case "characterSelected":
-            players[pid] = {
-                ...line.player,
-                currentWeapon: undefined,
-                shots: 0,
-                damageDealt: 0,
-                damageTaken: 0,
-                tactical: 0,
-                ultimate: 0,
-                grenades: 0,
-                knocks: 0,
-                revives: 0,
-                kills: 0,
-                status: STATUS.ALIVE,
-            };
+            // Dont include spectators
+            if (line.player.teamId > 1)
+                players[pid] = {
+                    ...line.player,
+                    currentWeapon: undefined,
+                    shots: 0,
+                    damageDealt: 0,
+                    damageTaken: 0,
+                    tacticalsUsed: 0,
+                    ultimatesUsed: 0,
+                    grenadesThrown: 0,
+                    knockdowns: 0,
+                    teamPlacement: 20,
+                    revives: 0,
+                    kills: 0,
+                    status: STATUS.ALIVE,
+                };
             break;
         case "weaponSwitched":
             players[pid].currentWeapon = line.newWeapon;
@@ -79,26 +100,27 @@ function processDataLine(line, data) {
             break;
         case "playerAbilityUsed":
             if (line.linkedEntity.includes("Tactical")) {
-                players[pid].tactical += 1;
+                players[pid].tacticalsUsed += 1;
             } else if (line.linkedEntity.includes("Ultimate")) {
-                players[pid].ultimate += 1;
+                players[pid].ultimatesUsed += 1;
             }
             break;
         case "grenadeThrown":
             if (!line.linkedEntity.includes("Tactical") && !line.linkedEntity.includes("Ultimate")) {
-                players[pid].grenades += 1;
+                players[pid].grenadesThrown += 1;
             }
             break;
         case "playerDowned":
             data.killFeed.push({ type: "down", attacker: line.attacker, victim: line.victim, weapon: line.weapon, damage: line.damageInflicted });
-            players[line.attacker.nucleusHash].knocks += 1;
+            players[line.attacker.nucleusHash].knockdowns += 1;
             players[line.victim.nucleusHash].status = STATUS.DOWNED;
             break;
         case "playerKilled":
             if (players[line.victim.nucleusHash].status == STATUS.ALIVE) {
                 //work around for missing downed events, make sure we push a down to the killfeed;
-                console.log("Deriving down for ", line.awardedTo, line.victim);
+                //console.log("Deriving down for ", line.awardedTo, line.victim);
                 data.killFeed.push({ type: "down", attacker: line.awardedTo.nucleusHash, victim: line.victim, weapon: line.weapon, damage: 0, derived: true });
+                data.players[line.awardedTo.nucleusHash].knockdowns += 1;
             }
 
             data.killFeed.push({ type: "kill", attacker: line.awardedTo, victim: line.victim, weapon: line.weapon, damage: line.damageInflicted });
@@ -115,10 +137,15 @@ function processDataLine(line, data) {
             data.killFeed.push({ type: "revive", player: line.revived });
             players[line.revived.nucleusHash].status = STATUS.ALIVE;
             break;
-
+        case "squadEliminated":
+            line.players.forEach(player => {
+                data.players[player.nucleusHash].teamPlacement = data.teamsAlive;
+            })
+            data.teamsAlive -= 1;
+            break;
     }
 
-    if (line.player) {
+    if (line.player && line.player.teamId > 1) {
         players[pid].currentHealth = line.player.currentHealth;
         players[pid].shieldHealth = line.player.shieldHealth;
     }
@@ -126,8 +153,39 @@ function processDataLine(line, data) {
     return data;
 }
 
+function convertLiveDataToRespawnApi(data) {
+    let player_results = Object.values(data.players).map(player => ({
+        playerName: player.name,
+        teamNum: player.teamId,
+        teamName: player.teamName,
+        shots: player.shots,
+        hits: player.hits,
+        knockdowns: player.knockdowns,
+        damageDealt: player.damageDealt,
+        teamPlacement: player.teamPlacement,
+        characterName: player.character,
+        nidHash: player.nucleusHash,
+        skin: player.skin,
+        grenadesThrown: player.grenadesThrown,
+        ultimatesUsed: player.ultimatesUsed,
+        tacticalsUsed: player.tacticalsUsed,
+    }));
+
+    return {
+        matches: [{
+            match_start: data.match_start,
+            player_results,
+            server: `(${data.serverConfig.datacenter.name})${data.serverConfig.serverId}`,
+            map_name: data.serverConfig.map,
+            aim_assist_allowed: !data.serverConfig.aimAssistOn,
+            anonymousMode: data.serverConfig.anonymousMode,
+        }]
+    }
+}
+
 
 module.exports = {
     processDataDump,
     processDataLine,
+    convertLiveDataToRespawnApi
 }

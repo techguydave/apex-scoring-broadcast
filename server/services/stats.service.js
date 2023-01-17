@@ -62,7 +62,7 @@ async function deleteStats(organizer, eventId, game) {
     }
 }
 
-async function writeStats(organizer, eventId, game, data) {
+async function writeStats(organizer, eventId, game, data, source) {
     try {
         await db.transaction(async trx => {
             console.log({ organizer, eventId, game })
@@ -89,6 +89,7 @@ async function writeStats(organizer, eventId, game, data) {
                 mid: data.mid,
                 map_name: data.map_name,
                 aim_assist_allowed: data.aim_assist_allowed,
+                source,
             }, ["id"])
 
 
@@ -125,6 +126,7 @@ async function writeStats(organizer, eventId, game, data) {
         });
     } catch (err) {
         console.error("Failed to insert game into db", err);
+        throw err;
     }
 }
 
@@ -158,7 +160,7 @@ async function getLatest() {
         } else {
             return [];
         }
-       
+
     } catch (err) {
         console.log(err);
         return undefined;

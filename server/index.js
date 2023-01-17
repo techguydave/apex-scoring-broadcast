@@ -8,6 +8,8 @@ const port = 3000;
 const { db } = require("./connectors/db");
 const redis = require("./connectors/redis");
 const expressWs = require("express-ws");
+const fileUpload = require("express-fileupload");
+
 (async () => {
     if (!await redis.isConnected()) {
         console.error("Could not connect to redis");
@@ -18,6 +20,9 @@ const expressWs = require("express-ws");
     // middleware
     app.use(express.json());
     app.use(cors());
+    app.use(fileUpload({
+        limits: { fileSize: 50 * 1024 * 1024 },
+    }));
     expressWs(app);
 
     router(app);

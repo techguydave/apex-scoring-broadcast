@@ -1,20 +1,37 @@
 const axios = require("axios");
 const _ = require("lodash");
+const { getOr } = require("../utils/utils");
 
 const SCORE_ARRAY = [12, 9, 7, 5, 4, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0]
-const scoreSums = ["kills", "revivesGiven", "headshots", "assists", "survivalTime", "respawnsGiven", "damageDealt", "hits", "knockdowns", "shots"];
+const scoreSums = ["kills", "revivesGiven", "headshots", "assists", "survivalTime", "respawnsGiven", "damageDealt", "hits", "knockdowns", "shots", "grenadesThrown", "ultimatesUsed", "tacticalsUsed"];
 
 module.exports = function Apex(config) {
     console.log("Using ", config.statsUrl, " as Respawn API")
 
-    async function getStatsFromCode(statsCode, placementPoints, killPoints) {
-        console.log("Getting stats from", statsCode);
-
+    async function getStatsFromCode(statsCode) {
         let stats = await getStatsFromEA(statsCode);
-        stats = stats.matches.sort((a, b) => b.match_start - a.match_start);
-        stats = stats.map(stat => generateGameReport(stat, placementPoints, killPoints));
+        if (stats.matches) {
+            stats = stats.matches.sort((a, b) => b.match_start - a.match_start);
+            return stats;
+        }
+        return [];
+    }
 
-        return stats;
+    async function getMatchFromCode(statsCode, startTime) {
+        let stats = await getStatsFromCode(statsCode);
+        let stat;
+        if (startTime)
+            stat = stats.find(({ match_start }) => match_start == startTime);
+        else
+            stat = stats[0];
+        return stat;
+    }
+
+    function mergeStats(stat1, stat2) {
+        return {
+            ...stat1,
+            player_results: stat2.player_results.map(player => ({ ...player, ...stat1.player_results.find(p => p.nidHash == player.nidHash) })),
+        }
     }
 
     function generateOverallStats(stats) {
@@ -48,7 +65,7 @@ module.exports = function Apex(config) {
                     overall_stats.bestGame = Math.max(overall_stats.bestGame, t.score);
                     overall_stats.bestPlacement = Math.min(overall_stats.bestPlacement, t.teamPlacement);
                     overall_stats.bestKills = Math.max(overall_stats.bestKills, t.kills);
-                    scoreSums.forEach(key => overall_stats[key] += t[key]);
+                    scoreSums.forEach(key => overall_stats[key] += (t[key] || 0));
                     overall_stats.accuracy = Math.floor(100 * (overall_stats.hits / overall_stats.shots)) / 100;
 
                     let playerStats = stat[key].player_stats;
@@ -112,7 +129,7 @@ module.exports = function Apex(config) {
             }
             let team = teams[teamId];
             team.player_stats.push(player);
-            scoreSums.forEach(key => team.overall_stats[key] = (team.overall_stats[key] || 0) + player[key]);
+            scoreSums.forEach(key => team.overall_stats[key] = getOr(team.overall_stats[key], 0) + getOr(player[key], 0));
             team.overall_stats.score += (player.kills * killScore)
         });
 
@@ -146,5 +163,8 @@ module.exports = function Apex(config) {
     return {
         getStatsFromCode,
         generateOverallStats,
+        generateGameReport,
+        getMatchFromCode,
+        mergeStats,
     }
 }

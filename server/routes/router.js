@@ -90,35 +90,63 @@ module.exports = function router(app) {
     })
 
     app.get("/stats/code/:statsCode", verifyOrganizerHeaders, async (req, res) => {
-        res.send(await apexService.getStatsFromCode(req.params.statsCode));
+        let stats = await apexService.getStatsFromCode(req.params.statsCode);
+        stats = stats.map(stat => apexService.generateGameReport(stat));
+
+        res.send(stats);
+    })
+
+    app.post("/test", async (req, res) => {
+        console.log(req.files["livedata.json"].data.toString())
+        console.log(req.body)
+
+        res.send("ok")
     })
 
     app.post("/stats", verifyOrganizerHeaders, async (req, res) => {
-        const {
-            eventId,
-            game,
-            statsCode,
-            startTime,
-            placementPoints,
-            killPoints,
-        } = req.body;
+        const { eventId, game, statsCode, startTime, placementPoints, killPoints } = req.body;
+        const liveDataFile = req.files["livedata"];
 
-        const allStats = await apexService.getStatsFromCode(statsCode, placementPoints, killPoints);
-        let gameStat;
-        if (startTime)
-            gameStat = allStats.find(({ match_start }) => match_start == startTime);
-        else
-            gameStat = allStats[0]
+        let respawnStats = await apexService.getMatchFromCode(statsCode, startTime);
 
-        if (!gameStat)
+        if (!respawnStats && !liveDataFile) {
             return res.sendStats(404);
+        }
 
-        console.log(JSON.stringify(gameStat));
+        let liveDataStats = undefined;
+        if (liveDataFile) {
+            let rawData = JSON.parse(liveDataFile.data.toString())
+            liveDataStats = liveService.processDataDump(rawData);
+            liveDataStats = liveService.convertLiveDataToRespawnApi(liveDataStats).matches[0];
+        }
 
-        await statsService.writeStats(req.organizer.id, eventId, game, gameStat);
-        await deleteCache(req.organizer.username, eventId, game);
+        let gameStats = undefined;
+        let source = "";
+        if (liveDataStats && respawnStats) {
+            gameStats = apexService.mergeStats(respawnStats, liveDataStats);
+            source = "respawn+livedata";
+        }
+        else if (liveDataStats) {
+            gameStats = liveDataStats;
+            source = "livedata";
+        }
+        else {
+            gameStats = respawnStats;
+            source = "respawn";
+        }
 
-        res.status(200).send();
+        gameStats = apexService.generateGameReport(gameStats, placementPoints, killPoints);
+
+        try {
+            // console.log(JSON.stringify(gameStats))
+            await statsService.writeStats(req.organizer.id, eventId, game, gameStats, source);
+            await deleteCache(req.organizer.username, eventId, game);
+
+            res.status(200).send(gameStats);
+        } catch (err) {
+            res.status(500).send();
+        }
+
     })
 
     app.get("/games/:organizer/:eventId", async (req, res) => {
