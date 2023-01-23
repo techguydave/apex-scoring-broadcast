@@ -47,7 +47,6 @@ export default {
 <style scoped>
 .index {
     width: 20px;
-    display: inline-block;
     text-align: right;
 }
 </style>

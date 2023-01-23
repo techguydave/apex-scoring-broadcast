@@ -1,7 +1,7 @@
 <template>
     <div class="chart-wrapper">
         <div v-if="stats && stats.games">
-            <v-btn block text @click="stacked = !stacked">{{ stacked ? 'Seperate Axis' : 'Stacked' }}</v-btn>
+            <v-btn block text @click="stacked = !stacked">{{ stacked? 'Seperate Axis': 'Stacked' }}</v-btn>
             <component :is="chartType" :options="chartOptions" :data="{ labels, datasets }"></component>
         </div>
     </div>
@@ -36,11 +36,18 @@ export default {
         chartOptions() {
             return {
                 responsive: true,
+                color: "#ffffff",
                 scales: {
                     x: {
+                        ticks: {
+                            color: "#ffffff",
+                        },
                         stacked: true,
                     },
                     y: {
+                        ticks: {
+                            color: "#ffffff",
+                        },
                         stacked: true
                     }
                 },
@@ -55,15 +62,15 @@ export default {
         },
         datasets() {
             if (this.stats && this.stats.teams) {
-                console.log([this.stats.teams.map(team => ({data: [team.overall_stats.score]})), this.stats.teams.map(team => ({data: [team.overall_stats.score]}))])
-                
+                console.log([this.stats.teams.map(team => ({ data: [team.overall_stats.score] })), this.stats.teams.map(team => ({ data: [team.overall_stats.score] }))])
+
                 return [{
                     label: "Placement",
                     data: this.stats.teams.map(team => ((team.overall_stats.score - team.overall_stats.kills) * (this.stacked ? 1 : -1)))
-                 }, {
+                }, {
                     label: "Kills",
                     data: this.stats.teams.map(team => team.overall_stats.kills),
-                 }]
+                }]
             } else {
                 return []
             }

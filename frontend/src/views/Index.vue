@@ -2,12 +2,11 @@
     <v-app>
         <div class="public-wrapper">
             <nav-bar></nav-bar>
-            <div class="public-header">
-                <div class="title">Apex Tournament Stats</div>
+            <div class="page-header">
+                <div class="page-title">Recent Tournaments</div>
             </div>
 
-            <div class="recent-wrapper">
-                <div class="title-toolbar mb-5 text-center text-uppercase">Recent Tournaments</div>
+            <div class="recent-wrapper content-wrap">
                 <v-row>
                     <v-col cols="12" md="4" lg="3" v-for="match in latest" :key="match.id">
                         <div>
@@ -73,7 +72,13 @@ body {
 
 .recent-wrapper {
     margin: 30px auto;
-    max-width: 1400px;
+    max-width: 1200px;
+    // background: $background;
+    padding: 40px;
+}
+
+.title-toolbar {
+    background-color: $second-tone;
 }
 
 .public-header {
@@ -88,7 +93,7 @@ body {
     font-size: 1.2em;
     width: 100%;
     display: flex;
-    background-color: $second-tone;
+    background-color: $background-content;
     margin: 3px 0px;
 }
 
@@ -128,18 +133,6 @@ body {
 
 .team-3 .entry-index {
     background-color: rgba(88, 54, 7, 0.3);
-}
-
-
-.public-header {
-    display: flex;
-}
-
-.public-header .title {
-    width: 100%;
-    align-self: center;
-    text-align: center;
-    font-size: 2em !important;
 }
 
 .credit {
