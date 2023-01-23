@@ -52,9 +52,9 @@ const statDisplayMapping = {
     "respawnsGiven": "Respawns",
     "characterName": "Legend",
     "knockdowns": "Downs",
-    "grenadesThrown": "Grenades",
-    "tacticalsUsed": "Tacts",
-    "ultimatesUsed": "Ults",
+    "grenadesThrown": "Grenades*",
+    "tacticalsUsed": "Tacts*",
+    "ultimatesUsed": "Ults*",
 }
 
 const mapMap = {

@@ -89,6 +89,10 @@ function apexService(config) {
         return data.data;
     }
 
+    async function getLiveData(organizer, eventId, game) {
+        let data = await axios.get(`${config.baseUrl}stats/${organizer}/${eventId}/${game}/livedata`);
+        return data.data;
+    }
 
     return {
         config,
@@ -104,5 +108,6 @@ function apexService(config) {
         deleteStats,
         getLatest,
         getShortLink,
+        getLiveData
     }
 }

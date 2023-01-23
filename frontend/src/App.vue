@@ -1,5 +1,5 @@
 <template>
-    <router-view />
+  <router-view />
 </template>
 
 <script>
@@ -10,14 +10,32 @@ export default {
 </script>
 
 <style lang="scss">
-.v-data-table tr:nth-child(odd){
+.v-data-table tr:nth-child(odd) {
   background: $second-tone;
 }
-.v-data-table tr:nth-child(even){
-  background:$first-tone;
+
+.v-data-table tr:nth-child(even) {
+  background: $first-tone;
 }
-.theme--dark.v-toolbar.v-sheet{
-  background: $first-tone!important;
+
+.theme--dark.v-toolbar.v-sheet {
+  background: $first-tone !important;
+}
+
+.primary-background {
+  background: $primary;
+}
+
+.first-tone-background {
+  background-color: $first-tone;
+}
+
+.second-tone-background {
+  background-color: $second-tone;
+}
+
+.third-tone-background {
+  background-color: $third-tone;
 }
 
 .title-toolbar {
@@ -31,7 +49,7 @@ export default {
   padding: 0 30px;
 }
 
-#app{
+#app {
   background: black;
 }
 </style>

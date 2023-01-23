@@ -124,7 +124,7 @@ module.exports = function Apex(config) {
                     name: player.teamName,
                     overall_stats: {
                         teamPlacement: player.teamPlacement,
-                        score: placementPoints[player.teamPlacement - 1]
+                        score: placementPoints[player.teamPlacement - 1] || 0
                     },
                     player_stats: []
                 };

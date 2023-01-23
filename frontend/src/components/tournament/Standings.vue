@@ -11,6 +11,8 @@
                         Standings</router-link>
                     <router-link class="toolbar-link" :to="{ name: 'tournament.standings.team', params: $props }">Team
                         Standings</router-link>
+                    <router-link class="toolbar-link"
+                        :to="{ name: 'tournament.standings.feed', params: $props }">Feed</router-link>
                 </div>
             </v-toolbar>
 
@@ -18,12 +20,16 @@
                 <v-row no-gutters>
                     <v-col cols="12" sm="2">
                         <div class="game-select-wrap">
-                            <div :class="{ 'selected-game': 'overall' == game }" class="game-select game py-4" @click="setGame('overall')"> Overall</div>
-                            <div v-for="g in gameList" :class="{ 'selected-game': g.game == game }" class="game-select pa-2"
-                                @click="setGame(g.game)" :key="g.id">
+                            <div :class="{ 'selected-game': 'overall' == game }" class="game-select game py-4"
+                                @click="setGame('overall')"> Overall</div>
+                            <div v-for="g in gameList" :class="{ 'selected-game': g.game == game }"
+                                class="game-select pa-2" @click="setGame(g.game)" :key="g.id">
                                 <div class="game">Game {{ g.game }}</div>
                                 <div class="map">{{ getMapNameShort(g.map_name) }}</div>
-                                <div class="date sub">{{ getDate(g.match_start * 1000) }} {{ getTime(g.match_start * 1000) }}</div>
+                                <div class="date sub">{{ getDate(g.match_start * 1000) }} {{
+                                    getTime(g.match_start *
+                                        1000)
+                                }}</div>
                             </div>
                         </div>
                     </v-col>

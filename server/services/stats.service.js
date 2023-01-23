@@ -64,6 +64,7 @@ async function deleteStats(organizer, eventId, game) {
 
 async function writeStats(organizer, eventId, game, data, source) {
     try {
+        let gameId = undefined;
         await db.transaction(async trx => {
             console.log({ organizer, eventId, game })
             await deleteStats(organizer, eventId, game);
@@ -93,7 +94,7 @@ async function writeStats(organizer, eventId, game, data, source) {
             }, ["id"])
 
 
-            let gameId = gameResult[0].id;
+            gameId = gameResult[0].id;
 
             let teamStats = data.teams.map(team => {
                 return {
@@ -126,6 +127,7 @@ async function writeStats(organizer, eventId, game, data, source) {
             await Promise.all(playerStats.map(p => trx("players").insert({ playerId: p.playerId }).onConflict().ignore()))
 
         });
+        return gameId;
     } catch (err) {
         console.error("Failed to insert game into db", err);
         throw err;
@@ -170,10 +172,26 @@ async function getLatest() {
 }
 
 
+async function writeLiveData(gameId, data) {
+    data = JSON.stringify(data);
+    await db("livedata").insert({ gameId, data });
+}
+
+async function getLiveData(organizer, eventId, game) {
+    console.log({ organizer, eventId, game })
+    let data = await db("game")
+        .select("*")
+        .join("livedata", "game.id", "livedata.gameId")
+        .where({ organizer, eventId, game });
+    return JSON.parse(data[0].data);
+}
+
 module.exports = {
     writeStats,
     getStats,
     getGameList,
     deleteStats,
     getLatest,
+    writeLiveData,
+    getLiveData,
 }

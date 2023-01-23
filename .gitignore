@@ -107,5 +107,6 @@ dist
 server/stats*/
 server/livedata
 *target/
+server/pg_data
 
 __*

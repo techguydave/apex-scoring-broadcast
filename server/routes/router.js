@@ -19,6 +19,7 @@ module.exports = function router(app) {
         await cache.del(`stats:${username}-${eventId}-overall`);
         await cache.del(`stats:${username}-${eventId}-stacked`);
         await cache.del(`stats:${username}-${eventId}-summary`);
+        await cache.del(`stats:${username}-${eventId}-${game}-livedata-parsed`);
     }
 
     async function getStats(organizer, eventId, game, stacked = false) {
@@ -103,7 +104,6 @@ module.exports = function router(app) {
         placementPoints = placementPoints.split(",").map(n => parseInt(n))
 
         let respawnStats = undefined;
-        console.log(statsCode)
         if (statsCode && statsCode.length > 0 && statsCode !== "undefined") {
             respawnStats = await apexService.getMatchFromCode(statsCode, startTime);
         }
@@ -113,12 +113,15 @@ module.exports = function router(app) {
         }
 
         let liveDataStats = undefined;
+        let liveDataJson = undefined;
+
         if (liveDataFile) {
             try {
-                let rawData = JSON.parse(liveDataFile.data.toString())
-                liveDataStats = liveService.processDataDump(rawData);
+                liveDataJson = JSON.parse(liveDataFile.data.toString());
+                liveDataStats = liveService.processDataDump(liveDataJson);
                 liveDataStats = liveService.convertLiveDataToRespawnApi(liveDataStats).matches[0];
             } catch (err) {
+                console.error(err)
                 return res.status(500).send({ err: "live_data_parse", msg: "The uploaded file is not valid." })
             }
         }
@@ -142,14 +145,39 @@ module.exports = function router(app) {
 
         try {
             //console.log(JSON.stringify(gameStats))
-            await statsService.writeStats(req.organizer.id, eventId, game, gameStats, source);
+            let gameId = await statsService.writeStats(req.organizer.id, eventId, game, gameStats, source);
+            console.log(!!liveDataJson, gameId)
+            if (liveDataJson && gameId) {
+                await statsService.writeLiveData(gameId, liveDataJson)
+            }
             await deleteCache(req.organizer.username, eventId, game);
 
             return res.status(200).send(gameStats);
         } catch (err) {
+            console.error(err);
             return res.status(500).send({ err: "live_data_parse", msg: "Something went wrong adding the game." });
         }
 
+    })
+
+
+    app.get("/stats/:organizer/:eventId/:game/livedata", async (req, res) => {
+        const {
+            organizer,
+            eventId,
+            game
+        } = req.params;
+
+        let key = `stats:${organizer}-${eventId}-${game}-livedata-parsed`;
+        let data = await cache.getOrSet(key, async () => {
+            let orgId = await authService.getOrganizerId(organizer)
+            let data = await statsService.getLiveData(orgId, eventId, game);
+            let parsed = liveService.processDataDump(data);
+
+            return parsed;
+        }, 300)
+
+        res.send(data);
     })
 
     app.get("/games/:organizer/:eventId", async (req, res) => {
