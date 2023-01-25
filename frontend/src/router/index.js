@@ -10,7 +10,7 @@ import Stats from "../components/tournament/Stats";
 import Scoreboard from "../components/tournament/standings/Scoreboard";
 import TeamStandings from "../components/tournament/standings/TeamStandings";
 import PlayerStandings from "../components/tournament/standings/PlayerStandings";
-
+import Feed from "../components/tournament/standings/Feed";
 
 import StatsCumulativeCharts from "../components/tournament/stats/CumulativeCharts";
 import StatsGameCharts from "../components/tournament/stats/GameCharts";
@@ -68,6 +68,12 @@ const routes = [
             name: "tournament.standings.player",
             component: PlayerStandings,
             props: true,
+          },
+          {
+            path: "feed",
+            name: "tournament.standings.feed",
+            component: Feed,
+            props: true,
           }
         ]
       },
@@ -76,7 +82,7 @@ const routes = [
         name: "tournament.stats",
         component: Stats,
         props: true,
-        redirect: { name: "tournament.stats.point-ratio"},
+        redirect: { name: "tournament.stats.point-ratio" },
         children: [
           {
             path: "charts",

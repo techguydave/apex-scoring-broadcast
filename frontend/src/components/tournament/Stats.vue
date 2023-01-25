@@ -1,27 +1,23 @@
 <template>
-    <v-container>
-        <div class="overall-wrapper">
+    <div class="overall-wrapper">
 
-            <v-toolbar class="text-center">
-                <div class="toolbar-link-container">
-                    <router-link class="toolbar-link"
-                        :to="{ name: 'tournament.stats.point-ratio', params: $props }">Point Ratio</router-link>
-                    <router-link class="toolbar-link"
-                        :to="{ name: 'tournament.stats.pick-rate', params: $props }">Legend Pick Rates</router-link>
-                    <router-link class="toolbar-link"
-                        :to="{ name: 'tournament.stats.charts', params: $props }">Cumulative Charts</router-link>
-                    <!-- <router-link class="toolbar-link"
+        <div class="subnav">
+            <router-link class="subnav-link" :to="{ name: 'tournament.stats.point-ratio', params: $props }">Point
+                Ratio</router-link>
+            <router-link class="subnav-link" :to="{ name: 'tournament.stats.pick-rate', params: $props }">Legend
+                Pick Rates</router-link>
+            <router-link class="subnav-link" :to="{ name: 'tournament.stats.charts', params: $props }">Cumulative
+                Charts</router-link>
+            <!-- <router-link class="toolbar-link"
                         :to="{ name: 'tournament.stats.game-charts', params: $props }">Game Charts</router-link>
                     -->
 
-                </div>
-            </v-toolbar>
-
-            <div class="leaderboard-wrap">
-                <router-view :stats="stats"></router-view>
-            </div>
         </div>
-    </v-container>
+
+        <div class="leaderboard-wrap">
+            <router-view :stats="stats"></router-view>
+        </div>
+    </div>
 </template>
 
 <script>
@@ -59,7 +55,6 @@ export default {
 
 <style scoped lang="scss">
 .overall-wrapper {
-    background: $third-tone;
     max-width: 1200px !important;
     margin: auto;
 }
@@ -75,19 +70,6 @@ export default {
 .sub {
     font-size: .6em;
     opacity: .7;
-}
-
-.game-select {
-    background: $first-tone;
-    color: white;
-    text-align: center;
-    padding: 3px;
-    margin: 3px 7px;
-    cursor: pointer;
-}
-
-.selected-game {
-    background: $primary;
 }
 
 .leaderboard-wrap {

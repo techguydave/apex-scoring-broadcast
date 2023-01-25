@@ -8,6 +8,9 @@ const authService = require("../services/auth.service");
 const adminService = require("../services/admin.service");
 const cache = require("../services/cache.service");
 const shortLinkService = require("../services/short_link.service.js");
+const liveService = require("../services/live.service");
+const { getOr } = require("../utils/utils");
+
 const SHORT_LINK_PREFIX = "_";
 module.exports = function router(app) {
 
@@ -16,6 +19,7 @@ module.exports = function router(app) {
         await cache.del(`stats:${username}-${eventId}-overall`);
         await cache.del(`stats:${username}-${eventId}-stacked`);
         await cache.del(`stats:${username}-${eventId}-summary`);
+        await cache.del(`stats:${username}-${eventId}-${game}-livedata-parsed`);
     }
 
     async function getStats(organizer, eventId, game, stacked = false) {
@@ -31,7 +35,7 @@ module.exports = function router(app) {
                 total: stats.length,
                 games: stats,
                 teams: apexService.generateOverallStats(stats),
-                stacked: stacked ? stats.map((_, index) => apexService.generateOverallStats(stats.slice(0, index + 1))): undefined
+                stacked: stacked ? stats.map((_, index) => apexService.generateOverallStats(stats.slice(0, index + 1))) : undefined
             }
         } else {
             stats = stats[0];
@@ -87,35 +91,102 @@ module.exports = function router(app) {
     })
 
     app.get("/stats/code/:statsCode", verifyOrganizerHeaders, async (req, res) => {
-        res.send(await apexService.getStatsFromCode(req.params.statsCode));
+        let stats = await apexService.getStatsFromCode(req.params.statsCode);
+        stats = stats.map(stat => apexService.generateGameReport(stat));
+
+        res.send(stats);
     })
 
     app.post("/stats", verifyOrganizerHeaders, async (req, res) => {
+        let { eventId, game, statsCode, startTime, placementPoints, killPoints } = req.body;
+        const liveDataFile = getOr(req.files, {})["liveData"];
+
+        placementPoints = placementPoints.split(",").map(n => parseInt(n))
+
+        let respawnStats = undefined;
+        if (statsCode && statsCode.length > 0 && statsCode !== "undefined") {
+            respawnStats = await apexService.getMatchFromCode(statsCode, startTime);
+        }
+
+        if (!respawnStats && !liveDataFile) {
+            return res.sendStatus(404);
+        }
+
+        let liveDataStats = undefined;
+        let liveDataJson = undefined;
+
+        if (liveDataFile) {
+            try {
+                liveDataJson = JSON.parse(liveDataFile.data.toString());
+                liveDataStats = liveService.processDataDump(liveDataJson);
+                liveDataStats = liveService.convertLiveDataToRespawnApi(liveDataStats).matches[0];
+            } catch (err) {
+                console.error(err)
+                return res.status(500).send({ err: "live_data_parse", msg: "The uploaded file is not valid." })
+            }
+        }
+
+        let gameStats = undefined;
+        let source = "";
+        if (liveDataStats && respawnStats) {
+            gameStats = apexService.mergeStats(respawnStats, liveDataStats);
+            source = "statscode+livedata";
+        }
+        else if (liveDataStats) {
+            gameStats = liveDataStats;
+            source = "livedata";
+        }
+        else {
+            gameStats = respawnStats;
+            source = "statscode";
+        }
+
+        gameStats = apexService.generateGameReport(gameStats, placementPoints, killPoints);
+
+        try {
+            //console.log(JSON.stringify(gameStats))
+            let gameId = await statsService.writeStats(req.organizer.id, eventId, game, gameStats, source);
+            console.log(!!liveDataJson, gameId)
+            if (liveDataJson && gameId) {
+                await statsService.writeLiveData(gameId, liveDataJson)
+            }
+            await deleteCache(req.organizer.username, eventId, game);
+
+            return res.status(200).send(gameStats);
+        } catch (err) {
+            console.error(err);
+            return res.status(500).send({ err: "live_data_parse", msg: "Something went wrong adding the game." });
+        }
+
+    })
+
+
+    app.get("/stats/:organizer/:eventId/:game/livedata", async (req, res) => {
         const {
+            organizer,
             eventId,
-            game,
-            statsCode,
-            startTime,
-            placementPoints,
-            killPoints,
-        } = req.body;
+            game
+        } = req.params;
 
-        const allStats = await apexService.getStatsFromCode(statsCode, placementPoints, killPoints);
-        let gameStat;
-        if (startTime)
-            gameStat = allStats.find(({ match_start }) => match_start == startTime);
-        else
-            gameStat = allStats[0]
+        let key = `stats:${organizer}-${eventId}-${game}-livedata-parsed`;
+        try {
+            let data = await cache.getOrSet(key, async () => {
+                let orgId = await authService.getOrganizerId(organizer)
+                let gameId = await statsService.hasLiveData(orgId, eventId, game);
 
-        if (!gameStat)
-            return res.sendStats(404);
-        
-        console.log(JSON.stringify(gameStat));
+                if (!gameId) {
+                    return { err: "err_no_data", msg: "This game doesn't have any live data attached" }
+                }
+                let data = await statsService.getLiveData(gameId);
+                let parsed = liveService.processDataDump(data);
 
-        await statsService.writeStats(req.organizer.id, eventId, game, gameStat);
-        await deleteCache(req.organizer.username, eventId, game);
+                return parsed;
+            }, 300)
 
-        res.status(200).send();
+            res.send(data);
+        } catch (err) {
+            res.send({ err: "err_retriving_data", msg: "Error getting live data" });
+        }
     })
 
     app.get("/games/:organizer/:eventId", async (req, res) => {
@@ -143,7 +214,7 @@ module.exports = function router(app) {
             let body = "";
             if (stats.teams) {
                 let message = stats.teams.map(team => `${team.name} ${team.overall_stats.score}`)
-                body =  message.join(", ");
+                body = message.join(", ");
             }
             return `${body} -- (after ${stats.total} games)`;
         }, 300)
@@ -239,16 +310,31 @@ module.exports = function router(app) {
         res.send({ hash });
     })
 
-    app.get("/" + SHORT_LINK_PREFIX  +"*", async (req, res) => {
+    app.get("/" + SHORT_LINK_PREFIX + "*", async (req, res) => {
         const hash = req.params[0];
 
         let url = await shortLinkService.getUrl(hash);
         if (url) {
             await shortLinkService.incrementVisit(hash);
-            res.redirect(url);  
+            res.redirect(url);
         } else {
             res.sendStatus(404);
         }
     })
+
+
+
+
+
+    app.ws("/live/write/:organizer", (ws, req) => {
+        console.log("sdf");
+        liveService.connectWrite(ws, req.params.organizer);
+    })
+
+
+    // app.ws("/live/read/:organizer", (ws, req) => {
+    //     liveService.connectRead(ws, req.params.organizer);
+    // })
+
 
 }

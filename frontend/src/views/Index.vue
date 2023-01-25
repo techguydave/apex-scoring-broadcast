@@ -2,15 +2,14 @@
     <v-app>
         <div class="public-wrapper">
             <nav-bar></nav-bar>
-            <div class="public-header">
-                <div class="title">Apex Tournament Stats</div>
+            <div class="page-header">
+                <div class="page-title">Recent Tournaments</div>
             </div>
 
-            <div class="recent-wrapper">
-                <div class="title-toolbar mb-5 text-center text-uppercase">Recent Tournaments</div>
+            <div class="recent-wrapper content-wrap">
                 <v-row>
-                    <v-col cols="3" v-for="match in latest" :key="match.id">
-                        <div  >
+                    <v-col cols="12" md="4" lg="3" v-for="match in latest" :key="match.id">
+                        <div>
                             <div class="title-toolbar text-center text-uppercase">{{ getName(match) }}</div>
                             <div class="top-team" :class="'team-' + (index + 1)" v-for="(team, index) in match.top3"
                                 :key="team.id">
@@ -20,7 +19,9 @@
                                 <div class="team-name"> {{ team.name }}</div>
                                 <div class="team-score"> {{ team.score }}</div>
                             </div>
-                            <div class="view-more"><router-link :to="{ name: 'tournament.standings', params: { eventId: match.eventId, organizer: match.organizer, game: 'overall' }}">View More</router-link></div>
+                            <div class="view-more"><router-link
+                                    :to="{ name: 'tournament.standings', params: { eventId: match.eventId, organizer: match.organizer, game: 'overall' } }">View
+                                    More</router-link></div>
                         </div>
                     </v-col>
                 </v-row>
@@ -71,7 +72,13 @@ body {
 
 .recent-wrapper {
     margin: 30px auto;
-    max-width: 1400px;
+    max-width: 1200px;
+    // background: $background;
+    padding: 40px;
+}
+
+.title-toolbar {
+    background-color: $second-tone;
 }
 
 .public-header {
@@ -86,7 +93,7 @@ body {
     font-size: 1.2em;
     width: 100%;
     display: flex;
-    background-color: $second-tone;
+    background-color: $background-content;
     margin: 3px 0px;
 }
 
@@ -104,7 +111,7 @@ body {
 
 .view-more a {
     text-decoration: none;
-    color: $primary!important;
+    color: $primary !important;
 }
 
 .team-score {
@@ -126,18 +133,6 @@ body {
 
 .team-3 .entry-index {
     background-color: rgba(88, 54, 7, 0.3);
-}
-
-
-.public-header {
-    display: flex;
-}
-
-.public-header .title {
-    width: 100%;
-    align-self: center;
-    text-align: center;
-    font-size: 2em !important;
 }
 
 .credit {

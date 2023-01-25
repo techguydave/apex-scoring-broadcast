@@ -2,7 +2,9 @@
     <div class="chart-wrapper">
         <div v-if="stats && stats.games">
             <v-btn block text @click="perGame = !perGame">{{ !perGame ? 'Group by game' : 'group by legend' }}</v-btn>
-            <v-btn v-if=!perGame block text @click="combind = !combind">{{ combind ? 'Show Individual' : 'Show Team' }}</v-btn>
+            <v-btn v-if=!perGame block text @click="combind = !combind">{{
+                combind? 'Show Individual': 'Show Team'
+            }}</v-btn>
 
             <component :is="chartType" :options="chartOptions" :data="data"></component>
         </div>
@@ -97,11 +99,18 @@ export default {
         chartOptions() {
             return {
                 responsive: true,
+                color: "#ffffff",
                 scales: {
                     x: {
+                        ticks: {
+                            color: "#ffffff",
+                        },
                         stacked: true,
                     },
                     y: {
+                        ticks: {
+                            color: "#ffffff",
+                        },
                         stacked: true
                     }
                 },

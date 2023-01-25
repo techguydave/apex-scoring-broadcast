@@ -7,9 +7,6 @@ const displayOptions = {
             "score",
             "kills",
             "damageDealt",
-            "bestGame",
-            "bestPlacement",
-            "bestKills",
             "revivesGiven",
             "headshots",
             "assists",
@@ -17,8 +14,15 @@ const displayOptions = {
             "hits",
             "knockdowns",
             "shots",
+            "grenadesThrown",
+            "tacticalsUsed",
+            "ultimatesUsed",
+            "bestGame",
+            "bestPlacement",
+            "bestKills",
         ],
         player: [
+            "characterName",
             "kills",
             "damageDealt",
             "knockdowns",
@@ -29,7 +33,9 @@ const displayOptions = {
             "shots",
             "respawnsGiven",
             "revivesGiven",
-
+            "grenadesThrown",
+            "tacticalsUsed",
+            "ultimatesUsed",
         ],
     },
     game: ["overall", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
@@ -44,6 +50,11 @@ const statDisplayMapping = {
     "bestKills": "Best Kills",
     "revivesGiven": "Revives",
     "respawnsGiven": "Respawns",
+    "characterName": "Legend",
+    "knockdowns": "Downs",
+    "grenadesThrown": "Grenades*",
+    "tacticalsUsed": "Tacts*",
+    "ultimatesUsed": "Ults*",
 }
 
 const mapMap = {

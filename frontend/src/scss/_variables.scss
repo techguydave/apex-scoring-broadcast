@@ -1,5 +1,27 @@
-$first-tone: rgb(38, 31, 31);
-$second-tone: rgb(30, 23, 23);
-$third-tone: rgb(20, 12, 12);
+$first-tone: #261f1f;
+$second-tone: #1e1717;
+$third-tone: #140c0c;
 
-$primary: rgb(151, 11, 11);
+$primary: #970b0b;
+// $primary: #ffffffae;
+$primary-invert: #000000ae;
+
+$background: #fff5;
+$background-content: #000a;
+$shadow: #0003;
+$page-bg: linear-gradient(to bottom right, #f900d885, #5900ff8a);
+
+
+
+
+$first-tone: #261f1f;
+$second-tone: #1e1717;
+$third-tone: #140c0c;
+
+$primary: #970b0b;
+$primary-invert: #fff;
+
+$background: $third-tone;
+$background-content: $first-tone;
+$shadow: #0009;
+$page-bg: $second-tone;

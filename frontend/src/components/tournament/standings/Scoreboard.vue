@@ -17,13 +17,14 @@
                         <v-row class="entry-header-row">
                             <v-col sm="6">{{ team.name }}</v-col>
                             <v-col sm="2" class="score">{{ team.overall_stats.score }} </v-col>
-                            <v-col sm="2" class="score">{{ team.overall_stats.bestPlacement ?
+                            <v-col sm="2" class="score">{{
+                                team.overall_stats.bestPlacement ?
                                     team.overall_stats.bestPlacement : team.overall_stats.teamPlacement
                             }} </v-col>
                             <v-col sm="2" class="score">{{ team.overall_stats.kills }}</v-col>
                             <v-btn icon class="float-icon" @click="updateExpanded(team.name)"><v-icon>{{
-                                    expanded[team.name]
-                                        ? 'mdi-menu-up' : 'mdi-menu-down'
+                                expanded[team.name]
+                                    ? 'mdi-menu-up' : 'mdi-menu-down'
                             }}</v-icon></v-btn>
 
                         </v-row>
@@ -32,12 +33,12 @@
                     <div v-if="expanded[team.name]" class="entry-players entry-sub">
                         <v-row no-gutters>
                             <v-col class="entry-player" v-for="player in team.player_stats" :key="player.id">
-                                <template v-if="player.characters"><img  class="team-character"
-                                    v-for="character in player.characters" :key="character" height="18"
-                                    :src="'/legend_icons/' + character + '.webp'"></template>
+                                <template v-if="player.characters"><img class="team-character"
+                                        v-for="character in player.characters" :key="character" height="18"
+                                        :src="'/legend_icons/' + character + '.webp'"></template>
                                 <img v-else class="team-character" height="20"
                                     :src="'/legend_icons/' + player.characterName + '.webp'">
-                                    &nbsp;{{ player.name }} ({{player.kills}})
+                                &nbsp;{{ player.name }} ({{ player.kills }})
                             </v-col>
                         </v-row>
                     </div>
@@ -87,6 +88,9 @@ export default {
     display: flex;
     color: white;
     margin-bottom: 5px;
+    // box-shadow: 0px 0px 10px #ffffff99;
+    border-radius: 6px;
+    overflow: hidden;
 }
 
 .entry-index {
@@ -94,7 +98,8 @@ export default {
     font-size: 1.2em;
     padding: 10px;
     text-align: center;
-    background: $primary;
+    background: #{$primary};
+    color: $primary-invert;
     display: flex;
 }
 
@@ -113,12 +118,13 @@ export default {
     padding-right: 25px;
     white-space: nowrap;
     text-align: center;
-    margin-top: -14px;
+    margin-top: -16px;
+    padding-bottom: 2px;
 }
 
 .entry-main {
     flex-grow: 1;
-    background: $first-tone;
+    background: $background-content;
 }
 
 .float-icon {

@@ -1,39 +1,49 @@
 <template>
-    <v-container>
-        <div class="overall-wrapper">
+    <div class="overall-wrapper">
 
-            <v-toolbar class="text-center">
-                <div class="toolbar-link-container">
-                    <router-link class="toolbar-link"
-                        :to="{ name: 'tournament.standings.scoreboard', params: $props }">Scoreboard</router-link>
-                    <router-link class="toolbar-link"
-                        :to="{ name: 'tournament.standings.player', params: $props }">Player
-                        Standings</router-link>
-                    <router-link class="toolbar-link" :to="{ name: 'tournament.standings.team', params: $props }">Team
-                        Standings</router-link>
-                </div>
-            </v-toolbar>
-
-            <div class="leaderboard-wrap">
-                <v-row no-gutters>
-                    <v-col cols="12" sm="2">
-                        <div class="game-select-wrap">
-                            <div :class="{ 'selected-game': 'overall' == game }" class="game-select game py-4" @click="setGame('overall')"> Overall</div>
-                            <div v-for="g in gameList" :class="{ 'selected-game': g.game == game }" class="game-select pa-2"
-                                @click="setGame(g.game)" :key="g.id">
-                                <div class="game">Game {{ g.game }}</div>
-                                <div class="map">{{ getMapNameShort(g.map_name) }}</div>
-                                <div class="date sub">{{ getDate(g.match_start * 1000) }} {{ getTime(g.match_start * 1000) }}</div>
-                            </div>
-                        </div>
-                    </v-col>
-                    <v-col cols="12" sm="10">
-                        <router-view :stats="stats"></router-view>
-                    </v-col>
-                </v-row>
-            </div>
+        <div class="subnav">
+            <router-link class="subnav-link"
+                :to="{ name: 'tournament.standings.scoreboard', params: $props }">Scoreboard</router-link>
+            <router-link class="subnav-link" :to="{ name: 'tournament.standings.player', params: $props }">Player
+                Standings</router-link>
+            <router-link class="subnav-link" :to="{ name: 'tournament.standings.team', params: $props }">Team
+                Standings</router-link>
+            <router-link class="subnav-link"
+                :to="{ name: 'tournament.standings.feed', params: $props }">Feed</router-link>
         </div>
-    </v-container>
+
+        <div class="leaderboard-wrap">
+            <v-row no-gutters>
+                <v-col cols="12" sm="2">
+                    <div class="game-select-wrap">
+                        <div :class="{ 'selected-game': 'overall' == game }" class="game-select game py-4"
+                            @click="setGame('overall')"> Overall</div>
+                        <div v-for="g in gameList" :class="{ 'selected-game': g.game == game }" class="game-select pa-2"
+                            @click="setGame(g.game)" :key="g.id">
+
+                            <div class="data-source">
+                                <v-tooltip bottom>
+                                    <template v-slot:activator="{ on, attrs }">
+                                        <div v-bind="attrs" v-on="on" class="game">Game {{ g.game }}</div>
+                                    </template>
+                                    <span v-html="getSourceDesc(g.source)"></span>
+                                </v-tooltip>
+                            </div>
+                            <div class="map">{{ getMapNameShort(g.map_name) }}</div>
+                            <div class="date sub">{{ getDate(g.match_start * 1000) }} {{
+                                getTime(g.match_start *
+                                    1000)
+                            }}</div>
+
+                        </div>
+                    </div>
+                </v-col>
+                <v-col cols="12" sm="10">
+                    <router-view :stats="stats"></router-view>
+                </v-col>
+            </v-row>
+        </div>
+    </div>
 </template>
 
 <script>
@@ -65,6 +75,26 @@ export default {
         },
         getTime(timestamp) {
             return Intl.DateTimeFormat(navigator.language, { hour: "numeric", minute: "numeric", hour12: true, timeZoneName: "short" }).format(new Date(timestamp));
+        },
+        getSourceIcon(source) {
+            switch (source) {
+                case "livedata":
+                    return "mdi-star-outline";
+                case "statscode":
+                    return "mdi-star";
+                case "statscode+livedata":
+                    return "mdi-star-plus";
+            }
+        },
+        getSourceDesc(source) {
+            switch (source) {
+                case "livedata":
+                    return "<center>DataSource: Livedata. <br> LiveData is experimental and may not be as accurate as statscode. <br>Public customs can use LiveData for scoring even without a statscode.<br>Extra data is avail with LiveData, including a kill feed.  ";
+                case "statscode":
+                    return "<center>DataSource: StatsCode <br> StatsCode uses respawns api to get post-game data. <br>Statscode data is fully accurate, but may be missing some extra data provided by LiveData";
+                case "statscode+livedata":
+                    return "<center>DataSource: StatsCode + LiveData <br> Uses statscode to get accurate data, and livedata to add additional data such as kill feed";
+            }
         }
     },
     watch: {
@@ -84,10 +114,10 @@ export default {
 
 <style scoped lang="scss">
 .overall-wrapper {
-    background: $third-tone;
-    max-width: 1200px !important;
+    // background: $third-tone;
     margin: auto;
 }
+
 
 .date {
     text-transform: capitalize;
@@ -102,8 +132,11 @@ export default {
     opacity: .7;
 }
 
+
+
 .game-select {
-    background: $first-tone;
+    background: $background-content;
+    border-radius: 5px;
     color: white;
     text-align: center;
     padding: 3px;
@@ -113,10 +146,11 @@ export default {
 
 .selected-game {
     background: $primary;
+    color: $primary-invert;
 }
 
 .leaderboard-wrap {
-    padding: 30px;
+    padding: 20px 20px;
     margin: auto;
 }
 </style>

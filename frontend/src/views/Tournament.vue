@@ -2,19 +2,29 @@
     <v-app>
         <div class="public-wrapper">
             <NavBar></NavBar>
-            <div class="public-header">
-                <div class="title">{{title}}</div>
+            <div class="page-header">
+                <div class="page-title">{{ title }}</div>
             </div>
-            <v-toolbar class="text-center">
-                <div class="toolbar-link-container">
-                    <router-link class="toolbar-link" :to="{ name: 'tournament.standings', params: $props }">Standings</router-link>
-                    <router-link class="toolbar-link" :to="{ name: 'tournament.stats', params: $props }">Stats</router-link>
+            <v-container>
+                <div class="page-wrap">
+                    <div class="page-nav">
+                        <div class="link-container">
+                            <router-link class="nav-link"
+                                :to="{ name: 'tournament.standings', params: $props }">Standings</router-link>
+                            <router-link class="nav-link"
+                                :to="{ name: 'tournament.stats', params: $props }">Stats</router-link>
+                        </div>
+                    </div>
+                    <div class="content-wrap">
+                        <router-view />
+                    </div>
                 </div>
-            </v-toolbar>
 
-            <router-view />
+            </v-container>
+
         </div>
-        <div class="credit">Created by <a target="_blank" href="https://twitter.com/Double0_">@Double0negative</a></div>
+        <div class="credit">Created by <a target="_blank" href="https://twitter.com/Double0_">@Double0negative</a>
+        </div>
     </v-app>
 </template>
 
@@ -52,56 +62,16 @@ export default {
 </script>
 <style lang="scss" scoped>
 body {
-    background: black;
     width: 100%;
     height: 100%;
     font-family: "Heebo", sans-serif;
 }
 
-.public-header {
-    height: 150px;
-    color: white;
-    background: $third-tone;
-    text-transform: capitalize;
-}
-
-::v-deep .toolbar-link-container {
-    display: inline-block;
-    margin: auto;
-    height: 100%;
-    vertical-align: baseline;
-    display: flex;
-}
-
-::v-deep .toolbar-link {
-    padding: 0 20px;
-    color: white!important;
-    text-decoration: none;
-    align-self: end;
-    margin-bottom: -4px;
-    height: 80%;
-}
-
-::v-deep .router-link-exact-active {
-    border-bottom: 2px solid $primary;
-}
-
-.public-header {
-    display: flex;
-}
-
-.public-header .title {
-    width: 100%;
-    align-self: center;
-    text-align: center;
-    font-size: 2em!important;
-}
-
 .credit {
     margin: 5px auto;
-    
+
     a {
-        color: $primary!important;
+        color: $primary !important;
 
     }
 }

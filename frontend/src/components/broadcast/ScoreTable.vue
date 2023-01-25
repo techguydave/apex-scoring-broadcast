@@ -22,12 +22,16 @@
           <div class="score-wrap">
             <div class="score-item score-index" :class="{ 'score-index-styled': styled }"> {{ score.index }} </div>
             <div v-if="mode == 'team'" class="score-item score-name" :class="{ 'score-name-styled': styled }">
-              <div class="team-name-character-wrapper" :class="{ 'team-name-wrapper-override': score.name.length > 14 }">
-                <div class="team-name" :class="{ 'team-name-override': score.name.length > 14 }"> {{ score.name }} </div>
-                <template v-if="showCharacters">
-                <div class="character-wrap score-item" :class="{ 'character-wrap-styled': styled }" v-if="mode == 'team'">
-                  <img class="team-character" v-for="character in getCharacters(score.teamId)" :key="character" height="26" :src="'/legend_icons/' + character + '.webp'">
+              <div class="team-name-character-wrapper"
+                :class="{ 'team-name-wrapper-override': score.name.length > 14 }">
+                <div class="team-name" :class="{ 'team-name-override': score.name.length > 14 }"> {{ score.name }}
                 </div>
+                <template v-if="showCharacters">
+                  <div class="character-wrap score-item" :class="{ 'character-wrap-styled': styled }"
+                    v-if="mode == 'team'">
+                    <img class="team-character" v-for="character in getCharacters(score.teamId)" :key="character"
+                      height="26" :src="'/legend_icons/' + character + '.webp'">
+                  </div>
                 </template>
               </div>
               <div class="score-player-names" v-if="mode == 'team'">
@@ -35,11 +39,15 @@
                   {{ cleanPlayerName(score.name, player.name) }} &nbsp;</span>
               </div>
             </div>
-            <div v-else class="score-item score-name score-player-name padding-zero" :class="{ 'score-name-styled': styled }">
-              <span v-if="mode == 'player' && showCharacters" class="character-wrap-player score-item" :class="{ 'character-wrap-styled': styled }">
-                <img v-for="character in score.characters || [score.characterName]" :key="character" height="70" :src="'/legend_icons/' + character + '.webp'">
+            <div v-else class="score-item score-name score-player-name padding-zero"
+              :class="{ 'score-name-styled': styled }">
+              <span v-if="mode == 'player' && showCharacters" class="character-wrap-player score-item"
+                :class="{ 'character-wrap-styled': styled }">
+                <img v-for="character in score.characters || [score.characterName]" :key="character" height="70"
+                  :src="'/legend_icons/' + character + '.webp'">
               </span>
-              <span class="fix-player-name" :style="{ 'top': showCharacters ? '-25px': '5px' }">{{mode == 'player' ? score.name : cleanPlayerName(score.teamName, score.playerName) }}</span>
+              <span class="fix-player-name" :style="{ 'top': showCharacters ? '-25px' : '5px' }">{{ mode == 'player' ?
+              score.name : cleanPlayerName(score.teamName, score.playerName) }}</span>
             </div>
             <div class="score-item score-value" :class="{ 'score-value-styled': styled }">
               <template v-if="display2">&nbsp;{{ score[display] }}&nbsp;</template>
@@ -71,7 +79,7 @@ export default {
   computed: {
     sortedScores() {
       let scores = sortScores(this.scoresByMode, this.display);
-      
+
       scores = scores.length < 20 ? pad_array(scores, 20, defScore) : scores;
 
       scores.forEach((score, index) => {
@@ -167,12 +175,12 @@ export default {
   margin-right: 4px;
 }
 
-.team-name-override  {
+.team-name-override {
   font-size: 22px;
   top: -2px;
 }
 
-.team-name-wrapper-override  {
+.team-name-wrapper-override {
   margin-top: 3px;
 }
 

@@ -25,6 +25,7 @@ export default {
         return {
             chartType: Bar,
             chartOptions: {
+                color: "#ffffff",
                 scales: {
                     x: {
                         stacked: true,

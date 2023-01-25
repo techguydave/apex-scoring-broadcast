@@ -62,8 +62,9 @@ async function deleteStats(organizer, eventId, game) {
     }
 }
 
-async function writeStats(organizer, eventId, game, data) {
+async function writeStats(organizer, eventId, game, data, source) {
     try {
+        let gameId = undefined;
         await db.transaction(async trx => {
             console.log({ organizer, eventId, game })
             await deleteStats(organizer, eventId, game);
@@ -89,10 +90,11 @@ async function writeStats(organizer, eventId, game, data) {
                 mid: data.mid,
                 map_name: data.map_name,
                 aim_assist_allowed: data.aim_assist_allowed,
+                source,
             }, ["id"])
 
 
-            let gameId = gameResult[0].id;
+            gameId = gameResult[0].id;
 
             let teamStats = data.teams.map(team => {
                 return {
@@ -122,9 +124,13 @@ async function writeStats(organizer, eventId, game, data) {
             await trx("team_game_stats").insert(teamStats);
             await trx("player_game_stats").insert(playerStats);
 
+            await Promise.all(playerStats.map(p => trx("players").insert({ playerId: p.playerId }).onConflict().ignore()))
+
         });
+        return gameId;
     } catch (err) {
         console.error("Failed to insert game into db", err);
+        throw err;
     }
 }
 
@@ -158,7 +164,7 @@ async function getLatest() {
         } else {
             return [];
         }
-       
+
     } catch (err) {
         console.log(err);
         return undefined;
@@ -166,10 +172,34 @@ async function getLatest() {
 }
 
 
+async function writeLiveData(gameId, data) {
+    data = JSON.stringify(data);
+    await db("livedata").insert({ gameId, data });
+}
+
+async function hasLiveData(organizer, eventId, game) {
+    if (!isNaN(game)) {
+        let result = await db("game").first("*").where({ organizer, eventId, game });
+        if (result && result.source.includes("livedata")) {
+            return result.id;
+        }
+    }
+}
+
+async function getLiveData(gameId) {
+    let data = await db("livedata")
+        .first("*")
+        .where({ gameId });
+    return JSON.parse(data.data);
+}
+
 module.exports = {
     writeStats,
     getStats,
     getGameList,
     deleteStats,
     getLatest,
+    writeLiveData,
+    hasLiveData,
+    getLiveData,
 }

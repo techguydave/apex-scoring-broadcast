@@ -1,7 +1,8 @@
 <template>
     <div class="chart-wrapper">
         <div v-if="stats && stats.games">
-            <v-select v-model="selectedOption" :items="options.map((o, index) => ({ text: o.name, value: index }))"></v-select>
+            <v-select v-model="selectedOption"
+                :items="options.map((o, index) => ({ text: o.name, value: index }))"></v-select>
             <component :is="chartType" :options="chartOptions" :data="{ labels, datasets }"></component>
         </div>
     </div>
@@ -26,7 +27,15 @@ const options = [
                     title: {
                         text: "Position",
                         display: true,
-                    }
+                    },
+                    ticks: {
+                        color: "#ffffff",
+                    },
+                },
+                x: {
+                    ticks: {
+                        color: "#ffffff",
+                    },
                 }
             }
         }
@@ -40,7 +49,15 @@ const options = [
                     title: {
                         text: "Kills",
                         display: true,
-                    }
+                    },
+                    ticks: {
+                        color: "#ffffff",
+                    },
+                },
+                x: {
+                    ticks: {
+                        color: "#ffffff",
+                    },
                 }
             }
         }
@@ -54,7 +71,15 @@ const options = [
                     title: {
                         text: "Score",
                         display: true,
-                    }
+                    },
+                    ticks: {
+                        color: "#ffffff",
+                    },
+                },
+                x: {
+                    ticks: {
+                        color: "#ffffff",
+                    },
                 }
             }
         }
@@ -79,7 +104,7 @@ export default {
     computed: {
         selectedOptionValue() {
             return options[this.selectedOption];
-        },  
+        },
         labels() {
             return this.stats.games.map((_, index) => `Game ${index + 1}`);
         },
@@ -89,7 +114,7 @@ export default {
         datasets() {
             if (this.stats && this.stats.games) {
                 let teams = this.stats.teams.map(team => ({ id: `${team.teamId}`, name: team.name }));
-                
+
                 return teams.map(team => ({
                     id: team.id,
                     label: team.name,

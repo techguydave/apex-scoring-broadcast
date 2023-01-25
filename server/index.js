@@ -5,8 +5,10 @@ const cors = require("cors");
 const history = require('connect-history-api-fallback');
 const app = express()
 const port = 3000;
-const {db} = require("./connectors/db");
+const { db } = require("./connectors/db");
 const redis = require("./connectors/redis");
+const expressWs = require("express-ws");
+const fileUpload = require("express-fileupload");
 
 (async () => {
     if (!await redis.isConnected()) {
@@ -18,6 +20,10 @@ const redis = require("./connectors/redis");
     // middleware
     app.use(express.json());
     app.use(cors());
+    app.use(fileUpload({
+        limits: { fileSize: 50 * 1024 * 1024 },
+    }));
+    expressWs(app);
 
     router(app);
 
