@@ -130,7 +130,7 @@ module.exports = function router(app) {
         let source = "";
         if (liveDataStats && respawnStats) {
             gameStats = apexService.mergeStats(respawnStats, liveDataStats);
-            source = "respawn+livedata";
+            source = "statscode+livedata";
         }
         else if (liveDataStats) {
             gameStats = liveDataStats;
@@ -138,7 +138,7 @@ module.exports = function router(app) {
         }
         else {
             gameStats = respawnStats;
-            source = "respawn";
+            source = "statscode";
         }
 
         gameStats = apexService.generateGameReport(gameStats, placementPoints, killPoints);
@@ -169,15 +169,24 @@ module.exports = function router(app) {
         } = req.params;
 
         let key = `stats:${organizer}-${eventId}-${game}-livedata-parsed`;
-        let data = await cache.getOrSet(key, async () => {
-            let orgId = await authService.getOrganizerId(organizer)
-            let data = await statsService.getLiveData(orgId, eventId, game);
-            let parsed = liveService.processDataDump(data);
+        try {
+            let data = await cache.getOrSet(key, async () => {
+                let orgId = await authService.getOrganizerId(organizer)
+                let gameId = await statsService.hasLiveData(orgId, eventId, game);
 
-            return parsed;
-        }, 300)
+                if (!gameId) {
+                    return { err: "err_no_data", msg: "This game doesn't have any live data attached" }
+                }
+                let data = await statsService.getLiveData(gameId);
+                let parsed = liveService.processDataDump(data);
 
-        res.send(data);
+                return parsed;
+            }, 300)
+
+            res.send(data);
+        } catch (err) {
+            res.send({ err: "err_retriving_data", msg: "Error getting live data" });
+        }
     })
 
     app.get("/games/:organizer/:eventId", async (req, res) => {

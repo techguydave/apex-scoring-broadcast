@@ -177,13 +177,20 @@ async function writeLiveData(gameId, data) {
     await db("livedata").insert({ gameId, data });
 }
 
-async function getLiveData(organizer, eventId, game) {
-    console.log({ organizer, eventId, game })
-    let data = await db("game")
-        .select("*")
-        .join("livedata", "game.id", "livedata.gameId")
-        .where({ organizer, eventId, game });
-    return JSON.parse(data[0].data);
+async function hasLiveData(organizer, eventId, game) {
+    if (!isNaN(game)) {
+        let result = await db("game").first("*").where({ organizer, eventId, game });
+        if (result && result.source.includes("livedata")) {
+            return result.id;
+        }
+    }
+}
+
+async function getLiveData(gameId) {
+    let data = await db("livedata")
+        .first("*")
+        .where({ gameId });
+    return JSON.parse(data.data);
 }
 
 module.exports = {
@@ -193,5 +200,6 @@ module.exports = {
     deleteStats,
     getLatest,
     writeLiveData,
+    hasLiveData,
     getLiveData,
 }

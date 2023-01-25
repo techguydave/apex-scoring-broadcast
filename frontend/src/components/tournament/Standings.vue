@@ -20,12 +20,21 @@
                             @click="setGame('overall')"> Overall</div>
                         <div v-for="g in gameList" :class="{ 'selected-game': g.game == game }" class="game-select pa-2"
                             @click="setGame(g.game)" :key="g.id">
-                            <div class="game">Game {{ g.game }}</div>
+
+                            <div class="data-source">
+                                <v-tooltip bottom>
+                                    <template v-slot:activator="{ on, attrs }">
+                                        <div v-bind="attrs" v-on="on" class="game">Game {{ g.game }}</div>
+                                    </template>
+                                    <span v-html="getSourceDesc(g.source)"></span>
+                                </v-tooltip>
+                            </div>
                             <div class="map">{{ getMapNameShort(g.map_name) }}</div>
                             <div class="date sub">{{ getDate(g.match_start * 1000) }} {{
                                 getTime(g.match_start *
                                     1000)
                             }}</div>
+
                         </div>
                     </div>
                 </v-col>
@@ -66,6 +75,26 @@ export default {
         },
         getTime(timestamp) {
             return Intl.DateTimeFormat(navigator.language, { hour: "numeric", minute: "numeric", hour12: true, timeZoneName: "short" }).format(new Date(timestamp));
+        },
+        getSourceIcon(source) {
+            switch (source) {
+                case "livedata":
+                    return "mdi-star-outline";
+                case "statscode":
+                    return "mdi-star";
+                case "statscode+livedata":
+                    return "mdi-star-plus";
+            }
+        },
+        getSourceDesc(source) {
+            switch (source) {
+                case "livedata":
+                    return "<center>DataSource: Livedata. <br> LiveData is experimental and may not be as accurate as statscode. <br>Public customs can use LiveData for scoring even without a statscode.<br>Extra data is avail with LiveData, including a kill feed.  ";
+                case "statscode":
+                    return "<center>DataSource: StatsCode <br> StatsCode uses respawns api to get post-game data. <br>Statscode data is fully accurate, but may be missing some extra data provided by LiveData";
+                case "statscode+livedata":
+                    return "<center>DataSource: StatsCode + LiveData <br> Uses statscode to get accurate data, and livedata to add additional data such as kill feed";
+            }
         }
     },
     watch: {
@@ -102,6 +131,8 @@ export default {
     font-size: .6em;
     opacity: .7;
 }
+
+
 
 .game-select {
     background: $background-content;
