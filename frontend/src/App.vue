@@ -63,8 +63,6 @@ export default {
   background: $background;
   box-shadow: 0 0 30px #00000030;
   border-radius: 5px;
-  background-blend-mode: difference;
-  border-top-left-radius: 0;
 }
 
 .link-container {
@@ -86,17 +84,18 @@ export default {
 
 .page-nav .router-link-active {
   background-color: $background;
-  box-shadow: 0 -9px 20px #00000030;
+  box-shadow: 0 -9px 20px #00000060;
   border-top-left-radius: 5px;
   border-top-right-radius: 5px;
-
+  height: 70px;
+  margin-bottom: -10px;
 }
 
 .subnav {
   height: 55px;
   display: flex;
   align-items: end;
-  // justify-content: center;
+  justify-content: center;
   padding: 0 30px;
   // background: #ffffff50;
 }
@@ -137,6 +136,6 @@ body {
 
 #app {
   background: $first-tone;
-  background: linear-gradient(to bottom right, #f900d885, #5900ff8a);
+  background: $page-bg;
 }
 </style>

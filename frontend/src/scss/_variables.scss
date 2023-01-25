@@ -3,11 +3,25 @@ $second-tone: #1e1717;
 $third-tone: #140c0c;
 
 $primary: #d41010;
-// $primary: #f900d8a6;
 $primary: #ffffffae;
 $primary-invert: #000000ae;
 
 $background: #fff5;
-// $background: #0006;
 $background-content: #000a;
 $shadow: #0003;
+$page-bg: linear-gradient(to bottom right, #f900d885, #5900ff8a);
+
+
+
+
+$first-tone: #261f1f;
+$second-tone: #1e1717;
+$third-tone: #140c0c;
+
+$primary: #d41010;
+$primary-invert: #fff;
+
+$background: $third-tone;
+$background-content: $first-tone;
+$shadow: #0009;
+$page-bg: $second-tone;
