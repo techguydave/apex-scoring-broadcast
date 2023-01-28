@@ -3,7 +3,7 @@ const _ = require("lodash");
 const { getOr } = require("../utils/utils");
 
 const SCORE_ARRAY = [12, 9, 7, 5, 4, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0]
-const scoreSums = ["kills", "revivesGiven", "headshots", "assists", "survivalTime", "respawnsGiven", "damageDealt", "hits", "knockdowns", "shots", "grenadesThrown", "ultimatesUsed", "tacticalsUsed"];
+const scoreSums = ["kills", "revivesGiven", "headshots", "assists", "survivalTime", "respawnsGiven", "damageDealt", "hits", "knockdowns", "shots", "grenadesThrown", "ultimatesUsed", "tacticalsUsed", "damageTaken"];
 
 module.exports = function Apex(config) {
     console.log("Using ", config.statsUrl, " as Respawn API")

@@ -15,6 +15,7 @@ const STATUS = {
     DOWNED: "downed",
     DEAD: "dead",
     CARD_COLLECTED: "card_collected",
+    ELIMINATED: "eliminated"
 }
 
 function processDataDump(chunk, data = defaultStruck()) {
@@ -123,7 +124,7 @@ function processDataLine(line, data) {
 
                 data.feed.push({ timestamp: line.timestamp, type: "kill", player: line.awardedTo, victim: line.victim, weapon: line.weapon, damage: line.damageInflicted });
                 let killer = players[line.awardedTo.nucleusHash]
-                if (killer.status == STATUS.ALIVE || killer.status == STATUS.DOWNED) {
+                if (killer.status != STATUS.ELIMINATED) {
                     killer.kills += 1;
                 }
                 players[line.victim.nucleusHash].status = STATUS.DEAD;
@@ -146,6 +147,7 @@ function processDataLine(line, data) {
                 line.players.forEach(player => {
                     if (data.players[player.nucleusHash].teamPlacement == -1) {
                         data.players[player.nucleusHash].teamPlacement = data.teamsAlive;
+                        data.players[player.nucleusHash].status = STATUS.ELIMINATED;
                         update = true;
                     }
                 })
@@ -184,6 +186,7 @@ function convertLiveDataToRespawnApi(data) {
         grenadesThrown: player.grenadesThrown,
         ultimatesUsed: player.ultimatesUsed,
         tacticalsUsed: player.tacticalsUsed,
+        damageTaken: player.damageTaken,
     }));
 
     return {

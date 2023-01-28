@@ -1,6 +1,7 @@
 <template>
     <div v-if="stats && stats.teams">
-        <v-data-table class="standing-table" :items-per-page="-1" hide-default-footer :headers="headers" :items="playerStats" dense>
+        <v-data-table class="standing-table" :items-per-page="-1" hide-default-footer :headers="headers"
+            :items="playerStats" dense>
             <template v-slot:item.no="{ index }">{{ index + 1}}</template>
         </v-data-table>
     </div>
@@ -32,7 +33,6 @@ export default {
         },
         playerStats() {
             let stats = getStatsByMode(this.stats.teams, "player");
-            console.log(JSON.stringify(stats));
             return stats;
         }
     }
@@ -42,11 +42,10 @@ export default {
 <style>
 .standing-table th {
     white-space: nowrap;
-    padding: 0 8px!important;
+    padding: 0 8px !important;
 }
 
 .standing-table td {
-    padding: 0 8px!important;
+    padding: 0 8px !important;
 }
-
 </style>
