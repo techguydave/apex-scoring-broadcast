@@ -110,3 +110,4 @@ server/livedata
 server/pg_data
 
 __*
+*.fleet/
