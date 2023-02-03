@@ -3,9 +3,7 @@
  * @returns { Promise<void> }
  */
 exports.up = function (knex) {
-    return knex.raw(`
-        DROP VIEW player_matches;
-       
+    return knex.raw(`       
         ALTER TABLE admin_settings ALTER COLUMN broadcast TYPE jsonb USING broadcast::jsonb;
         ALTER TABLE admin_settings ALTER COLUMN public TYPE jsonb USING public::jsonb;
 
