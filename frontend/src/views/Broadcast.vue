@@ -1,17 +1,21 @@
 <template>
     <div>
-        <div class="scoreboard-wrap" :class="{ 'scoreboard-wrap-styled': displayOptions.styled, 'white-text': displayOptions.dark }">
+        <div class="scoreboard-wrap"
+            :class="{ 'scoreboard-wrap-styled': displayOptions.styled, 'white-text': displayOptions.dark }">
             <div class="scoreboard-header-wrap">
                 <div class="scoreboard-header" :class="{ 'scoreboard-header-styled': displayOptions.styled }">
                     <div v-if="displayOptions.styled" class="scoreboard-header-backing"></div>
                     <div class="scoreboard-header-text">{{ title }}</div>
                 </div>
             </div>
-            <score-table :showCharacters="displayOptions.showCharacters" :styled="displayOptions.styled" :mode="displayOptions.mode"
-                :game="displayOptions.game" :display="displayOptions.display" :display2="displayOptions.display2"
-                :dark="displayOptions.dark" :header="displayOptions.header" :stats="stats"/>
+            <score-table :showCharacters="displayOptions.showCharacters" :styled="displayOptions.styled"
+                :mode="displayOptions.mode" :game="displayOptions.game" :display="displayOptions.display"
+                :display2="displayOptions.display2" :dark="displayOptions.dark" :header="displayOptions.header"
+                :stats="stats" />
         </div>
-        <div class="credit" :class="{ dark: displayOptions.dark }">overstat.gg</div>
+        <div id="credit1" class="credit" :class="{ dark: displayOptions.dark }"><span class="power">Powered by
+            </span><br />overstat.gg</div>
+        <!-- <div id="credit2" class="credit" :class="{ dark: displayOptions.dark }">Powered by overstat.gg</div> -->
     </div>
 </template>
 
@@ -115,13 +119,25 @@ export default {
 
 .credit {
     position: absolute;
-    left: 1770px;
-    top: 1040px;
+
+    font-size: 16px;
+    text-align: center;
     color: white;
-    opacity: .4;
+    opacity: .6;
+    font-family: "heebo";
 
     .dark {
         color: black;
     }
+
+    .power {
+        font-weight: bold;
+    }
+}
+
+#credit1 {
+    left: 1750px;
+    text-align: center;
+    top: 1020px;
 }
 </style>
