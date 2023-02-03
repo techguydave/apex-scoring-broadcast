@@ -10,6 +10,7 @@ const cache = require("../services/cache.service");
 const shortLinkService = require("../services/short_link.service.js");
 const liveService = require("../services/live.service");
 const { getOr } = require("../utils/utils");
+const playerService = require("../services/player.service");
 
 const SHORT_LINK_PREFIX = "_";
 module.exports = function router(app) {
@@ -297,9 +298,7 @@ module.exports = function router(app) {
 
     app.get("/short_link", async (req, res) => {
         const url = req.query.url;
-        console.log("url", url);
         let hash = await shortLinkService.getHash(url);
-        console.log("hash", hash);
 
         if (!hash) {
             hash = await shortLinkService.createShortLink(url);
@@ -323,8 +322,17 @@ module.exports = function router(app) {
     })
 
 
+    app.get("/players", async (req, res) => {
+        res.send(await playerService.listPlayers(req.query.start, req.query.count, req.query.search));
+    })
 
+    app.get("/player/:id", async (req, res) => {
+        res.send(await playerService.getPlayer(req.params.id));
+    })
 
+    app.get("/player/:id/matches", async (req, res) => {
+        res.send(await playerService.getMatches(req.params.id, req.query.start, req.query.count));
+    })
 
     app.ws("/live/write/:organizer", (ws, req) => {
         console.log("sdf");

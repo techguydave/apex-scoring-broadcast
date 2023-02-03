@@ -1,9 +1,7 @@
 const axios = require("axios");
 const _ = require("lodash");
-const { getOr } = require("../utils/utils");
+const { getOr, SCORE_ARRAY, SCORE_SUMS } = require("../utils/utils");
 
-const SCORE_ARRAY = [12, 9, 7, 5, 4, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0]
-const scoreSums = ["kills", "revivesGiven", "headshots", "assists", "survivalTime", "respawnsGiven", "damageDealt", "hits", "knockdowns", "shots", "grenadesThrown", "ultimatesUsed", "tacticalsUsed", "damageTaken"];
 
 module.exports = function Apex(config) {
     console.log("Using ", config.statsUrl, " as Respawn API")
@@ -55,7 +53,7 @@ module.exports = function Apex(config) {
                 },
                 player_stats: {}
             };
-            scoreSums.forEach(key => teamStats.overall_stats[key] = 0);
+            SCORE_SUMS.forEach(key => teamStats.overall_stats[key] = 0);
             stats.forEach(stat => {
                 if (stat[key]) {
                     let t = stat[key].overall_stats;
@@ -67,7 +65,7 @@ module.exports = function Apex(config) {
                     overall_stats.bestGame = Math.max(overall_stats.bestGame, t.score);
                     overall_stats.bestPlacement = Math.min(overall_stats.bestPlacement, t.teamPlacement);
                     overall_stats.bestKills = Math.max(overall_stats.bestKills, t.kills);
-                    scoreSums.forEach(key => overall_stats[key] += (t[key] || 0));
+                    SCORE_SUMS.forEach(key => overall_stats[key] += (t[key] || 0));
                     overall_stats.accuracy = Math.floor(100 * (overall_stats.hits / overall_stats.shots)) / 100;
 
                     let playerStats = stat[key].player_stats;
@@ -78,7 +76,7 @@ module.exports = function Apex(config) {
                         };
 
                         player.name = p.name;
-                        scoreSums.forEach(key => player[key] = (player[key] || 0) + p[key]);
+                        SCORE_SUMS.forEach(key => player[key] = (player[key] || 0) + p[key]);
                         player.accuracy = Math.floor(100 * (player.hits / player.shots)) / 100;
                         player.characters = player.characters || []
                         player.characters.push(p.characterName);
@@ -131,7 +129,7 @@ module.exports = function Apex(config) {
             }
             let team = teams[teamId];
             team.player_stats.push(player);
-            scoreSums.forEach(key => team.overall_stats[key] = getOr(team.overall_stats[key], 0) + getOr(player[key], 0));
+            SCORE_SUMS.forEach(key => team.overall_stats[key] = getOr(team.overall_stats[key], 0) + getOr(player[key], 0));
             team.overall_stats.score += (player.kills * killScore)
         });
 

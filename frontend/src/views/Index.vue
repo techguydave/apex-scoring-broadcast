@@ -55,7 +55,7 @@ export default {
         },
         getName(match) {
             return match.title || `${match.organizer} - ${match.eventId}`;
-        }
+        },
     },
     async mounted() {
         await this.refreshRecent();

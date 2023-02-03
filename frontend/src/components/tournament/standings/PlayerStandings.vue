@@ -3,17 +3,21 @@
         <v-data-table class="standing-table" :items-per-page="-1" hide-default-footer :headers="headers"
             :items="playerStats" dense>
             <template v-slot:item.no="{ index }">{{ index + 1}}</template>
+            <template v-slot:item.name="{ item }">
+                <PlayerLink :player="item">{{ item.name }}</PlayerLink>
+            </template>
+
         </v-data-table>
     </div>
 </template>
 
 <script>
 import { displayOptions, getDisplayName, getStatsByMode } from '@/utils/statsUtils';
+import PlayerLink from '../../PlayerLink.vue';
 export default {
     props: ["stats"],
     data() {
-        return {
-        }
+        return {};
     },
     computed: {
         headers() {
@@ -29,13 +33,15 @@ export default {
                 ...displayOptions.display.player.map(o => ({
                     text: getDisplayName(o),
                     value: o,
-                }))]
+                }))
+            ];
         },
         playerStats() {
             let stats = getStatsByMode(this.stats.teams, "player");
             return stats;
         }
-    }
+    },
+    components: { PlayerLink }
 }
 </script>
 

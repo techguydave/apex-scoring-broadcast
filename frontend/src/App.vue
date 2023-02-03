@@ -1,5 +1,5 @@
 <template>
-  <router-view />
+  <router-view class="main-wrap" />
 </template>
 
 <script>
@@ -45,6 +45,16 @@ export default {
   line-height: 64px;
   text-overflow: ellipsis;
   overflow: hidden;
+  white-space: nowrap;
+  padding: 0 30px;
+}
+
+.list-item {
+  min-height: 48px;
+  background-color: $first-tone;
+  font-size: 1.0em;
+  line-height: 48px;
+  text-overflow: ellipsis;
   white-space: nowrap;
   padding: 0 30px;
 }
@@ -137,5 +147,10 @@ body {
 #app {
   background: $first-tone;
   background: $page-bg;
+}
+
+.main-wrap.v-application a {
+  color: $primary-link;
+  text-decoration: none;
 }
 </style>

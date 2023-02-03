@@ -4,6 +4,9 @@ import Admin from "../views/Admin";
 import Broadcast from "../views/Broadcast";
 import Index from "../views/Index";
 import Tournament from "../views/Tournament";
+import Players from "../views/Players";
+import Player from "../views/Player";
+
 import Standings from "../components/tournament/Standings";
 import Stats from "../components/tournament/Stats";
 
@@ -16,6 +19,9 @@ import StatsCumulativeCharts from "../components/tournament/stats/CumulativeChar
 import StatsGameCharts from "../components/tournament/stats/GameCharts";
 import StatsPointRatioCharts from "../components/tournament/stats/PointRatio";
 import StatsPickRate from "../components/tournament/stats/PickRate";
+
+import PlayerOverview from "../components/player/Overview";
+import PlayerMatches from "../components/player/Matches";
 
 Vue.use(VueRouter)
 
@@ -39,10 +45,38 @@ const routes = [
     props: true,
   },
   {
+    path: "/players",
+    name: "players",
+    component: Players,
+    props: true,
+  },
+  {
+    path: "/player/:id",
+    name: "player",
+    component: Player,
+    props: true,
+    redirect: { name: "player.overview" },
+    children: [
+      {
+        path: "overview",
+        name: "player.overview",
+        component: PlayerOverview,
+        props: true,
+      },
+      {
+        path: "matches",
+        name: "player.matches",
+        component: PlayerMatches,
+        props: true,
+      }
+    ]
+  },
+  {
     path: "/tournament/:organizer/:eventId/",
     name: "tournament",
     component: Tournament,
     props: true,
+    redirect: { name: "tournament.standings", params: { game: "overall" } },
     children: [
       {
         path: "standings/:game?",
