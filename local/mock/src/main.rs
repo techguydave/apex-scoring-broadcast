@@ -17,8 +17,8 @@ fn write_file(mut file: &File, line: &str) {
 }
 
 fn main() {
-    let file_path_in = String::from("./mock.json");
-    let file_path_out = String::from("./out.json");
+    let file_path_in = String::from("../../server/mock/live/livedata.json");
+    let file_path_out = String::from("../../server/mock/live/out.json");
     let out_file = File::create(file_path_out).expect("Unable to create file");
 
     println!("In file {}", file_path_in);

@@ -1,10 +1,11 @@
-extern crate native_windows_derive as nwd;
-extern crate native_windows_gui as nwg;
+use std::{path::Path, time::Duration};
 
-use tokio::sync::mpsc::{self, Sender};
+use tokio::{
+    sync::mpsc::{self, Sender},
+    time::sleep,
+};
 
 mod file_reader;
-mod ui;
 mod ws_handler;
 
 const WS_ENDPOINT: &str = "ws://localhost:9001/";
@@ -12,8 +13,11 @@ const WS_ENDPOINT: &str = "ws://localhost:9001/";
 async fn main() {
     let (tx, mut rx) = mpsc::channel(32);
 
-    ui::init();
-
-    tokio::spawn(file_reader::start_file_watch(tx));
     tokio::spawn(ws_handler::connect(WS_ENDPOINT, rx));
+    tokio::spawn(async { file_reader::start_file_watch(tx) });
+
+    loop {
+        sleep(Duration::from_secs(10)).await;
+    }
+    println!("hi")
 }
