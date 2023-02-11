@@ -12,7 +12,8 @@
                   <v-card-text>
                     <v-text-field v-model="usernameForm" label="Username"
                       @v-on:keyup="loginFailed = false"></v-text-field>
-                    <v-text-field v-model="apiKeyForm" type="password" label="API Key" @v-on:keyup="loginFailed = false"></v-text-field>
+                    <v-text-field v-model="apiKeyForm" type="password" label="API Key"
+                      @v-on:keyup="loginFailed = false"></v-text-field>
                     <v-text-field v-model="eventIdForm" label="Tournament ID" @v-on:keyup="loginFailed = false"
                       @v-on:keyup.enter="login"></v-text-field>
 
@@ -21,7 +22,7 @@
                     </v-alert>
                   </v-card-text>
                   <v-card-actions>
-                    <v-btn color="blue" @click="login">Go</v-btn>
+                    <v-btn color="primary" @click="login">Go</v-btn>
                   </v-card-actions>
                 </v-card>
               </v-col>
@@ -30,7 +31,7 @@
               <v-col sm="12" lg="12">
                 <v-card>
                   <v-card-title>Tournament: {{ eventId }}
-                    <v-btn @click="changeEvent()" color="blue" class="ma-2">Change</v-btn>
+                    <v-btn @click="changeEvent()" color="primary" class="ma-2">Change</v-btn>
                   </v-card-title>
                 </v-card>
               </v-col>
