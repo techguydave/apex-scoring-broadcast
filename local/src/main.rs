@@ -1,6 +1,6 @@
 use std::io::{self, Write};
 
-use tokio::sync::broadcast;
+use tokio::sync::{broadcast, mpsc};
 
 mod file_reader;
 mod ws_handler;
@@ -26,16 +26,18 @@ async fn main() {
 
     let hostname = gethostname().into_string().unwrap();
 
-    let (tx, rx) = broadcast::channel(32);
+    let (ws_tx, ws_rx) = mpsc::channel(32);
+    let (file_tx, file_rx) = mpsc::channel(32);
 
-    tokio::spawn(async { file_reader::start_file_watch(tx) });
+    tokio::spawn(file_reader::start_file_watch(ws_tx, file_rx));
 
     ws_handler::WsConnection::connect(
         WS_ENDPOINT,
-        tx,
-        rx,
+        file_tx,
+        ws_rx,
         username.trim().to_owned(),
         key.trim().to_owned(),
         hostname.trim().to_owned(),
-    );
+    )
+    .await;
 }

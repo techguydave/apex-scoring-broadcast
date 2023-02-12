@@ -14,7 +14,7 @@ fn remove_extra_comma(str: &str) -> &str {
 fn write_file(mut file: &File, line: &str) {
     println!("Writing {}", line);
     writeln!(file, "{}", line).expect("Unable to write file");
-    file.sync_all().unwrap();
+    // file.sync_all().unwrap();
 }
 
 fn main() {

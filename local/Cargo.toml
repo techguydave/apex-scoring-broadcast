@@ -8,10 +8,10 @@ edition = "2021"
 [dependencies]
 linemux="0.3"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
-notify = "4.0.17"
+notify = { version = "5.1.0", default-features = false, features = ["macos_kqueue"] }
 tokio-tungstenite = "0.18.0"
 url = "2.3.1"
 futures-util = "0.3.26"
 gethostname = "0.4.1"
 json = "0.12.4"
-
+futures = "*"

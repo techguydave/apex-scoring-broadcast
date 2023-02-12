@@ -1,12 +1,13 @@
-use notify::DebouncedEvent::{Create, NoticeWrite, Write};
-use notify::{watcher, RecursiveMode, Watcher};
-use std::fs;
-use std::path::PathBuf;
-use std::sync::mpsc::channel;
-use std::time::Duration;
-use tokio::sync::broadcast::Sender;
-
 use crate::ws_handler::WsMessage;
+use tokio::sync::mpsc;
+
+use notify::EventKind::{Create, Modify};
+use notify::RecursiveMode;
+use notify::Watcher;
+use std::fs;
+use std::path::Path;
+use std::path::PathBuf;
+use tokio::sync::mpsc::{Receiver, Sender};
 const LIVE_DATA_DIR: &str =
     "C:\\Users\\drew\\Documents\\programming\\projects\\apex\\broadcast\\server\\mock\\live";
 
@@ -27,18 +28,14 @@ impl LiveFile {
         self.file.to_str().unwrap() == other.to_str().unwrap()
     }
 
-    async fn start_poll(&mut self, path: &PathBuf, tx: &Sender<WsMessage>) {
-        match fs::read_to_string(path) {
+    async fn read_file_contents(&mut self, tx: &Sender<WsMessage>) {
+        match fs::read_to_string(&self.file) {
             Ok(contents) => {
-                if self.cursor == 0 {
-                    println!("New File {}", path.to_str().unwrap());
-                }
                 for (i, x) in contents.lines().into_iter().enumerate() {
                     if i >= self.cursor {
-                        println!("Print Line {}: {}", self.cursor, x);
-                        tx.send(WsMessage::new(String::from("event"), x.to_string().into()))
-                            .await
-                            .unwrap();
+                        //println!("Print Line {}: {}", self.cursor, x);
+                        tx.send(WsMessage::new("livedata".to_string(), x.into()))
+                            .await;
                         self.cursor = i + 1;
                     }
                 }
@@ -50,35 +47,54 @@ impl LiveFile {
     }
 }
 
-pub fn start_file_watch(tx: Sender<WsMessage>) {
-    println!("Watching dir");
-    // Create a channel to receive the events.
-    let (sender, receiver) = channel();
+pub async fn start_file_watch(tx: Sender<WsMessage>, mut rx: Receiver<WsMessage>) {
+    println!("Starting watch");
+    let (watch_tx, mut watch_rx) = mpsc::channel(1);
 
-    // Create a watcher object, delivering debounced events.
-    // The notification back-end is selected based on the platform.
-    let mut watcher = watcher(sender, Duration::from_secs(1)).unwrap();
+    let mut watcher = notify::recommended_watcher(move |res| {
+        futures::executor::block_on(async {
+            watch_tx.send(res).await.unwrap();
+        })
+    })
+    .unwrap();
 
-    // Add a path to be watched. All files and directories at that path and
-    // below will be monitored for changes.
     watcher
-        .watch(LIVE_DATA_DIR, RecursiveMode::Recursive)
+        .watch(Path::new(LIVE_DATA_DIR), RecursiveMode::NonRecursive)
         .unwrap();
 
     let mut live_file = LiveFile::new(PathBuf::new());
 
     loop {
-        match receiver.recv() {
-            Ok(event) => match &event {
-                Create(path) | Write(path) | NoticeWrite(path) => {
-                    if !live_file.is_same(path.to_path_buf()) {
-                        live_file = LiveFile::new(path.to_path_buf());
+        tokio::select! {
+        event = watch_rx.recv() => {
+            match event.unwrap() {
+                Ok(event) => {
+                    let paths = event.paths;
+                    match event.kind {
+                        Create(_) | Modify(_) => {
+                            if !live_file.is_same(paths[0].clone()) {
+                                live_file = LiveFile::new(paths[0].clone());
+                            }
+                            live_file.read_file_contents(&tx).await;
+                        }
+                        _ => {}
                     }
-                    live_file.start_poll(path, &tx).await;
                 }
-                _ => (),
-            },
-            Err(e) => println!("watch error: {:?}", e),
+                Err(e) => {
+                    println!("Error with event {}", e)
+                }
+            }
+        }
+        msg = rx.recv() => {
+            match msg.unwrap_or_else(|| WsMessage::noop()).msg_type.as_str() {
+                "request_full" => {
+                    live_file.cursor = 0;
+                }
+            _ => {}
+            }
+        }
+
+
         }
     }
 }

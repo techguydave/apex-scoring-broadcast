@@ -1,4 +1,4 @@
-use crate::ws_handler::Message::Text;
+use crate::ws_handler::Message::{Close, Text};
 use futures_util::{
     stream::{SplitSink, SplitStream},
     SinkExt, StreamExt, TryFutureExt,
@@ -6,7 +6,7 @@ use futures_util::{
 use json::JsonValue;
 use tokio::{
     net::TcpStream,
-    sync::broadcast::{Receiver, Sender},
+    sync::mpsc::{Receiver, Sender},
 };
 use tokio_tungstenite::{
     connect_async,
@@ -17,11 +17,17 @@ use url::Url;
 
 #[derive(Debug, Clone)]
 pub struct WsMessage {
-    msg_type: String,
-    body: JsonValue,
+    pub msg_type: String,
+    pub body: JsonValue,
 }
 
 impl WsMessage {
+    pub fn noop() -> WsMessage {
+        WsMessage {
+            msg_type: String::from("noop"),
+            body: object! {},
+        }
+    }
     pub fn new(msg_type: String, body: JsonValue) -> WsMessage {
         WsMessage {
             msg_type: msg_type,
@@ -83,8 +89,15 @@ impl WsConnection {
         loop {
             tokio::select! {
                 result = rx.recv() => {
-                    if connection.connected {
-                        connection.send_message(result.unwrap()).await.unwrap();
+                    match result {
+                        Some(msg) => {
+                            if connection.connected {
+                                connection.send_message(msg).await.unwrap();
+                            }
+                        }
+                        None => {
+                            println!("Error recevin ws to send");
+                        }
                     }
                 }
                 result = read.next() => {
@@ -101,15 +114,12 @@ impl WsConnection {
                                         "auth_denied" => {
                                             break;
                                         }
-                                        "request_full" => {
-                                            tx.send("request_full");
-                                        }
                                         _ => {
-                                            println!("Receieved unknown message type")
+                                            tx.send(msg);
                                         }
                                     }
                                 }
-                                Close => {
+                                Close(_) => {
                                     break;
                                 }
                                 t => {println!("Recieved invalid message {:?}", t)}
