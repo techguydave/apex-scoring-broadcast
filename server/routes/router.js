@@ -8,9 +8,11 @@ const authService = require("../services/auth.service");
 const adminService = require("../services/admin.service");
 const cache = require("../services/cache.service");
 const shortLinkService = require("../services/short_link.service.js");
+const wsHandlerService = require("../services/ws_handler.service.js");
 const liveService = require("../services/live.service");
 const { getOr } = require("../utils/utils");
 const playerService = require("../services/player.service");
+const redis = require("../connectors/redis");
 
 const SHORT_LINK_PREFIX = "_";
 module.exports = function router(app) {
@@ -334,9 +336,8 @@ module.exports = function router(app) {
         res.send(await playerService.getMatches(req.params.id, req.query.start, req.query.count));
     })
 
-    app.ws("/live/write/:organizer", (ws, req) => {
-        console.log("sdf");
-        liveService.connectWrite(ws, req.params.organizer);
+    app.ws("/live/write", (ws) => {
+        wsHandlerService.connectWrite(ws);
     })
 
 

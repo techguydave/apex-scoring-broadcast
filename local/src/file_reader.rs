@@ -1,10 +1,12 @@
 use notify::DebouncedEvent::{Create, NoticeWrite, Write};
 use notify::{watcher, RecursiveMode, Watcher};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::mpsc::channel;
 use std::time::Duration;
-use tokio::sync::mpsc::Sender;
+use tokio::sync::broadcast::Sender;
+
+use crate::ws_handler::WsMessage;
 const LIVE_DATA_DIR: &str =
     "C:\\Users\\drew\\Documents\\programming\\projects\\apex\\broadcast\\server\\mock\\live";
 
@@ -25,17 +27,18 @@ impl LiveFile {
         self.file.to_str().unwrap() == other.to_str().unwrap()
     }
 
-    fn read_live_file(&mut self, path: &PathBuf, tx: &Sender<&str>) {
-        println!("CUROSOR {}", self.cursor);
+    async fn start_poll(&mut self, path: &PathBuf, tx: &Sender<WsMessage>) {
         match fs::read_to_string(path) {
             Ok(contents) => {
                 if self.cursor == 0 {
                     println!("New File {}", path.to_str().unwrap());
                 }
-                let iter = contents.lines();
-                for (i, x) in iter.into_iter().enumerate() {
+                for (i, x) in contents.lines().into_iter().enumerate() {
                     if i >= self.cursor {
                         println!("Print Line {}: {}", self.cursor, x);
+                        tx.send(WsMessage::new(String::from("event"), x.to_string().into()))
+                            .await
+                            .unwrap();
                         self.cursor = i + 1;
                     }
                 }
@@ -47,7 +50,8 @@ impl LiveFile {
     }
 }
 
-pub fn start_file_watch(tx: Sender<&str>) {
+pub fn start_file_watch(tx: Sender<WsMessage>) {
+    println!("Watching dir");
     // Create a channel to receive the events.
     let (sender, receiver) = channel();
 
@@ -61,19 +65,16 @@ pub fn start_file_watch(tx: Sender<&str>) {
         .watch(LIVE_DATA_DIR, RecursiveMode::Recursive)
         .unwrap();
 
-    let mut liveFile = LiveFile::new(PathBuf::new());
+    let mut live_file = LiveFile::new(PathBuf::new());
 
     loop {
         match receiver.recv() {
             Ok(event) => match &event {
-                Write(path) | NoticeWrite(path) => {
-                    if !liveFile.is_same(path.to_path_buf()) {
-                        liveFile = LiveFile::new(path.to_path_buf());
+                Create(path) | Write(path) | NoticeWrite(path) => {
+                    if !live_file.is_same(path.to_path_buf()) {
+                        live_file = LiveFile::new(path.to_path_buf());
                     }
-                    liveFile.read_live_file(path, &tx);
-                }
-                Create(path) => {
-                    println!("Notice create {}", path.to_str().unwrap());
+                    live_file.start_poll(path, &tx).await;
                 }
                 _ => (),
             },

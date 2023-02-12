@@ -14,6 +14,7 @@ fn remove_extra_comma(str: &str) -> &str {
 fn write_file(mut file: &File, line: &str) {
     println!("Writing {}", line);
     writeln!(file, "{}", line).expect("Unable to write file");
+    file.sync_all().unwrap();
 }
 
 fn main() {
@@ -55,7 +56,8 @@ fn main() {
                             out_file.sync_all().expect("File didn't sync");
                             let sleep = diff - elapsed;
                             println!("Sleeping for {}", sleep);
-                            thread::sleep(Duration::from_secs(sleep));
+                            //  thread::sleep(Duration::from_secs(sleep));
+                            thread::sleep(Duration::from_millis(500));
                         }
                         write_file(&out_file, line);
                     }

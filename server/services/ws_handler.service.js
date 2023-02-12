@@ -5,41 +5,35 @@ const authService = require("./auth.service");
 
 const sockets = {};
 
-function processData(organizer, eventId, data) {
-
-}
 
 
-function connectWrite(ws, organizerName) {
+function connectWrite(ws) {
     console.log("New Websocket Connect")
     let organizer;
-    let eventId;
+    let hostname;
+
+    ws.sendMsg = function (type, body) {
+        let msg = JSON.stringify({ type, body });
+        console.log("Sending ", msg)
+        this.send(msg);
+    }
+
     ws.on("message", async msg => {
+        console.log(msg);
         let parsed = JSON.parse(msg);
-        let command = parsed.cmd;
+        let type = parsed.type;
         let body = parsed.body;
 
-        if (command == "auth") {
-            organizer = await authService.getOrganizer(organizerName, body);
+        if (type == "auth") {
+            let organizer = await authService.getOrganizer(body.username, body.key);
             if (organizer) {
-
-                ws.send(JSON.stringify({ success: "auth" }))
+                console.log("Auth Accepted for " + organizer.username)
+                ws.sendMsg("auth_accepted")
+                organizer = organizer;
+                hostname = body.hostname;
             } else {
-                ws.send(JSON.stringify({ failed: "auth" }))
+                ws.sendMsg("auth_denied")
             }
-        } else if (organizer) {
-            if (command == "set.event") {
-                eventId = body;
-                ws.send(JSON.stringify({ success: "event" }))
-            }
-            else if (command == "data.live") {
-                if ()
-            }
-            else {
-                ws.send(JSON.stringify({ failed: "cmd" }))
-            }
-        } else {
-            ws.send(JSON.stringify({ failed: "auth" }))
         }
     })
 }
