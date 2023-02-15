@@ -12,6 +12,10 @@ function generateKey() {
     return randomString;
 }
 
+async function getOrganizerByKey(key) {
+    return await db("organizers").where({ key }).select("id", "username").first();
+}
+
 async function getOrganizer(username, key) {
     if (!username || !key) {
         return false;
@@ -34,5 +38,6 @@ async function createOrganizer(username) {
 module.exports = {
     getOrganizer,
     getOrganizerId,
-    createOrganizer
+    createOrganizer,
+    getOrganizerByKey,
 }

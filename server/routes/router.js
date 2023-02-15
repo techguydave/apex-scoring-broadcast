@@ -340,6 +340,11 @@ module.exports = function router(app) {
         wsHandlerService.connectWrite(ws);
     })
 
+    app.ws("/live/test", (ws) => {
+        console.log("Connected")
+        ws.on("message", console.log);
+    })
+
 
     // app.ws("/live/read/:organizer", (ws, req) => {
     //     liveService.connectRead(ws, req.params.organizer);

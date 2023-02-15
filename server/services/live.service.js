@@ -1,6 +1,6 @@
 const _ = require("lodash");
 
-const defaultStruck = () => ({
+const defaultStruct = () => ({
     match_start: 0,
     state: "preinit",
     totalTeams: 0,
@@ -18,7 +18,7 @@ const STATUS = {
     ELIMINATED: "eliminated"
 }
 
-function processDataDump(chunk, data = defaultStruck()) {
+function processDataDump(chunk, data = defaultStruct()) {
     for (let line of chunk) {
         processDataLine(line, data);
     }
