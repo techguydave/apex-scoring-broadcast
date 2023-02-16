@@ -12,7 +12,7 @@ async function setBroadcastSettings(organizer, settings) {
         .onConflict(["organizer"])
         .merge();
 
-    cache.del(getCacheKey(organizer.name, 0, "broadcast"));
+    cache.del(getCacheKey(organizer.username, 0, "broadcast"));
 }
 
 async function getBroadcastSettings(organizerName) {
@@ -35,7 +35,7 @@ async function setMatchSettings(organizer, eventId, settings) {
         .onConflict(["organizer", "eventId"])
         .merge();
 
-    cache.del(getCacheKey(organizer.name, eventId, "match"));
+    cache.del(getCacheKey(organizer.username, eventId, "match"));
 }
 
 async function getMatchSettings(organizerName, event) {
