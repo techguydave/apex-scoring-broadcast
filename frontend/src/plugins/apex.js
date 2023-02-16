@@ -61,13 +61,13 @@ function apexService(config) {
         await axios.delete(config.baseUrl + "stats/" + organizer + "/" + eventId + "/" + game, { headers: getApiKeyHeaders() });
     }
 
-    async function getBroadcastSettings(organizer, eventId) {
-        let data = await axios.get(config.baseUrl + "settings/broadcast/" + organizer + "/" + eventId);
+    async function getBroadcastSettings(organizer) {
+        let data = await axios.get(config.baseUrl + "settings/broadcast/" + organizer);
         return data.data;
     }
 
-    async function setBroadcastSettings(organizer, eventId, display) {
-        await axios.post(config.baseUrl + "settings/broadcast/" + organizer + "/" + eventId, display, { headers: getApiKeyHeaders() });
+    async function setBroadcastSettings(organizer, display) {
+        await axios.post(config.baseUrl + "settings/broadcast/" + organizer, display, { headers: getApiKeyHeaders() });
     }
 
     async function getPublicSettings(organizer, eventId) {

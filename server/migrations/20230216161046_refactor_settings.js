@@ -11,7 +11,7 @@ exports.up = function (knex) {
         CREATE TABLE IF NOT EXISTS "broadcast_settings"(
             "id" serial,
             "organizer" integer,
-            "broadcast" jsonb,
+            "settings" jsonb,
             PRIMARY KEY(id)
         );
     

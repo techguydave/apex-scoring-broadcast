@@ -21,10 +21,11 @@
                             </v-col>
                         </v-row>
                         <v-select :items="displayOptions.game" v-model="displayChoices.game"></v-select>
-                        <v-select :items="displayOptions.mode" v-model="displayChoices.mode" @change="
-                            this.displayChoices.display = undefined;
-                        this.displayChoices.display2 = undefined;
-                                                                                "></v-select>
+                        <v-select :items="displayOptions.mode" v-model="displayChoices.mode"
+                            @change="
+                                this.displayChoices.display = undefined;
+                            this.displayChoices.display2 = undefined;
+                                                                                                                                                                            "></v-select>
                         <v-select v-if="displayChoices.mode" :items="displayOptions.display[displayChoices.mode]"
                             v-model="displayChoices.display"></v-select>
                         <v-select v-if="displayChoices.mode" :items="displayOptions.display[displayChoices.mode]"
@@ -58,7 +59,7 @@
 
 
 <script>
-import Broadcast from "@/pages/Broadcast.vue";
+import Broadcast from "@/pages/BroadcastPage.vue";
 
 import { displayOptions } from "../../utils/statsUtils";
 
@@ -91,11 +92,11 @@ export default {
     },
     methods: {
         updateDisplayView() {
-            this.$apex.setBroadcastSettings(this.organizer, this.eventId, this.displayChoices);
+            this.$apex.setBroadcastSettings(this.organizer, this.displayChoices);
         },
         async refreshBroadcastOptions() {
             if (this.eventId) {
-                let options = await this.$apex.getBroadcastSettings(this.organizer, this.eventId);
+                let options = await this.$apex.getBroadcastSettings(this.organizer);
                 if (options) {
                     this.displayChoices = options;
                 }

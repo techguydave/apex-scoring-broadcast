@@ -1,11 +1,11 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Admin from "../pages/Admin";
-import Broadcast from "../pages/Broadcast";
+import Admin from "../pages/AdminPage";
+import Broadcast from "../pages/BroadcastPage";
 import Index from "../pages/Index";
-import Tournament from "../pages/Tournament";
-import Players from "../pages/Players";
-import Player from "../pages/Player";
+import Tournament from "../pages/TournamentPage";
+import Players from "../pages/PlayersPage";
+import Player from "../pages/PlayerPage";
 
 import Standings from "../views/tournament/Standings";
 import Stats from "../views/tournament/Stats";

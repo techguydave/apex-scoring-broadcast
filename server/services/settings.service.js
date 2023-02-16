@@ -15,15 +15,16 @@ async function setBroadcastSettings(organizer, settings) {
     cache.del(getCacheKey(organizer.name, 0, "broadcast"));
 }
 
-async function getBroadcastSettings(organizerName, event) {
-    return cache.getOrSet(getCacheKey(organizerName, event, "broadcast"), async () => {
-        let result = await db("match_settings")
-            .join("organizers", "organizers.id", "match_settings.organizer")
-            .where({ "username": organizerName, eventId: event })
-            .first("*");
+async function getBroadcastSettings(organizerName) {
+    let result = await cache.getOrSet(getCacheKey(organizerName, 0, "broadcast"), async () => {
+        let result = await db("broadcast_settings")
+            .join("organizers", "organizers.id", "broadcast_settings.organizer")
+            .where({ "username": organizerName })
+            .first("settings");
 
-        return result;
-    })
+        return result.settings;
+    }, 300)
+    return result;
 }
 
 
@@ -42,10 +43,10 @@ async function getMatchSettings(organizerName, event) {
         let result = await db("match_settings")
             .join("organizers", "organizers.id", "match_settings.organizer")
             .where({ "username": organizerName, eventId: event })
-            .first("*");
+            .first("settings");
 
-        return result;
-    })
+        return result.settings;
+    }, 300)
 }
 
 module.exports = {

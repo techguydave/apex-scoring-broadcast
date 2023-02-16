@@ -73,17 +73,17 @@ module.exports = function router(app) {
     })
 
     app.post("/settings/broadcast/:organizer", verifyOrganizerHeaders, async (req, res) => {
-        await settingService.setBroadcastSettings(req.organizer.id, req.params.organizer, req.params.eventId, req.body);
+        await settingService.setBroadcastSettings(req.organizer, req.body);
         res.sendStatus(200);
     })
 
     app.get("/settings/broadcast/:organizer", async (req, res) => {
-        let result = await settingService.getBroadcastSettings(req.params.organizer, req.params.eventId);
+        let result = await settingService.getBroadcastSettings(req.params.organizer);
         res.send(result);
     })
 
     app.post("/settings/match/:organizer/:eventId", verifyOrganizerHeaders, async (req, res) => {
-        await settingService.setPublicSettings(req.organizer.id, req.params.organizer, req.params.eventId, req.body);
+        await settingService.setPublicSettings(req.organizer, req.params.eventId, req.body);
         res.sendStatus(200);
     })
 
