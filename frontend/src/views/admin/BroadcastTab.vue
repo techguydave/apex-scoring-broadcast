@@ -17,15 +17,14 @@
                                 <v-checkbox label="Show Header" v-model="displayChoices.header"></v-checkbox>
                             </v-col>
                             <v-col cols="3">
-                                <v-checkbox label="Show Characters"
-                                    v-model="displayChoices.showCharacters"></v-checkbox>
+                                <v-checkbox label="Show Characters" v-model="displayChoices.showCharacters"></v-checkbox>
                             </v-col>
                         </v-row>
                         <v-select :items="displayOptions.game" v-model="displayChoices.game"></v-select>
                         <v-select :items="displayOptions.mode" v-model="displayChoices.mode" @change="
-        this.displayChoices.display = undefined;
-    this.displayChoices.display2 = undefined;
-                        "></v-select>
+                            this.displayChoices.display = undefined;
+                        this.displayChoices.display2 = undefined;
+                                                                                "></v-select>
                         <v-select v-if="displayChoices.mode" :items="displayOptions.display[displayChoices.mode]"
                             v-model="displayChoices.display"></v-select>
                         <v-select v-if="displayChoices.mode" :items="displayOptions.display[displayChoices.mode]"
@@ -54,12 +53,12 @@
                 </v-card>
             </v-col>
         </v-row>
-    </v-container>
+</v-container>
 </template>
 
 
 <script>
-import Broadcast from "../../views/Broadcast.vue";
+import Broadcast from "@/pages/Broadcast.vue";
 
 import { displayOptions } from "../../utils/statsUtils";
 

@@ -16,11 +16,11 @@
         <div id="credit1" class="credit" :class="{ dark: displayOptions.dark }"><span class="power">Powered by
             </span><br />overstat.gg</div>
         <!-- <div id="credit2" class="credit" :class="{ dark: displayOptions.dark }">Powered by overstat.gg</div> -->
-    </div>
+</div>
 </template>
 
 <script>
-import ScoreTable from "../components/broadcast/ScoreTable.vue"
+import ScoreTable from "../views/broadcast/ScoreTable.vue"
 export default {
     components: {
         ScoreTable,

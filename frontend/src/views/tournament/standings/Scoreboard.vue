@@ -19,12 +19,12 @@
                             <v-col sm="2" class="score">{{ team.overall_stats.score }} </v-col>
                             <v-col sm="2" class="score">{{
                                 team.overall_stats.bestPlacement ?
-                                    team.overall_stats.bestPlacement : team.overall_stats.teamPlacement
+                                team.overall_stats.bestPlacement : team.overall_stats.teamPlacement
                             }} </v-col>
                             <v-col sm="2" class="score">{{ team.overall_stats.kills }}</v-col>
                             <v-btn icon class="float-icon" @click="updateExpanded(team.name)"><v-icon>{{
                                 expanded[team.name]
-                                    ? 'mdi-menu-up' : 'mdi-menu-down'
+                                ? 'mdi-menu-up' : 'mdi-menu-down'
                             }}</v-icon></v-btn>
 
                         </v-row>
@@ -45,30 +45,30 @@
                         </v-row>
                     </div>
                     <!-- <div class="entry-expanded entry-sub">
-                    <v-row>
-                        <v-col>
-                            <div>&nbsp;</div>
-                            <div v-for="key in statsToShow" :key="key" class="text-right pr-5 text-capitalize">{{getDisplayName(key)}}</div>
-                        </v-col>
-                        <v-col v-for="player in team.player_stats" :key="player.id">
-                            <div  class="table-header">{{player.name}}</div>
-                            <div v-for="key in statsToShow" :key="key">{{player[key]}}&nbsp;</div>
-                        </v-col>
-                        <v-col>
-                            <div>Team</div>
-                            <div v-for="key in statsToShow" :key="key">{{team.overall_stats[key]}}&nbsp;</div>
-                        </v-col>
-                    </v-row>
-                </div>-->
+                        <v-row>
+                            <v-col>
+                                <div>&nbsp;</div>
+                                <div v-for="key in statsToShow" :key="key" class="text-right pr-5 text-capitalize">{{getDisplayName(key)}}</div>
+                            </v-col>
+                            <v-col v-for="player in team.player_stats" :key="player.id">
+                                <div  class="table-header">{{player.name}}</div>
+                                <div v-for="key in statsToShow" :key="key">{{player[key]}}&nbsp;</div>
+                            </v-col>
+                            <v-col>
+                                <div>Team</div>
+                                <div v-for="key in statsToShow" :key="key">{{team.overall_stats[key]}}&nbsp;</div>
+                            </v-col>
+                        </v-row>
+                    </div>-->
                 </div>
             </div>
         </div>
-    </div>
+</div>
 </template>
 
 <script>
 import { displayOptions, getDisplayName } from '@/utils/statsUtils';
-import PlayerLink from '../../PlayerLink.vue';
+import PlayerLink from '@/components/PlayerLink.vue';
 export default {
     components: {
         PlayerLink

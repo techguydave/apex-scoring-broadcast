@@ -23,11 +23,11 @@
         </router-link>
 
         <Pagnation v-model="start" :count="count" :total="matches.total"></Pagnation>
-    </div>
+</div>
 </template>
 
 <script>
-import Pagnation from '../Pagnation.vue';
+import Pagnation from '@/components/Pagnation.vue';
 export default {
     components: {
         Pagnation
@@ -62,6 +62,4 @@ export default {
     }
 }
 </script>
-<style scoped lang="scss">
-
-</style>
+<style scoped lang="scss"></style>

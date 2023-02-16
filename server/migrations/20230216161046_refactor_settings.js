@@ -3,7 +3,7 @@
  * @returns { Promise<void> }
  */
 exports.up = function (knex) {
-    knex.raw(`
+    return knex.raw(`
         ALTER TABLE admin_settings RENAME TO match_settings;
         ALTER TABLE match_settings DROP COLUMN broadcast;
         ALTER TABLE match_settings RENAME COLUMN public TO settings;

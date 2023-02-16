@@ -68,14 +68,14 @@
         </v-container>
       </div>
     </v-app>
-  </div>
+</div>
 </template>
 
 
 <script>
-import GameTab from "../components/admin/GameTab.vue"
-import BroadcastTab from "../components/admin/BroadcastTab.vue"
-import PublicTab from "../components/admin/PublicTab.vue"
+import GameTab from "../views/admin/GameTab.vue"
+import BroadcastTab from "../views/admin/BroadcastTab.vue"
+import PublicTab from "../views/admin/PublicTab.vue"
 import NavBar from "../components/NavBar.vue"
 export default {
   components: {
@@ -127,6 +127,4 @@ export default {
   }
 };
 </script>
-<style scoped>
-
-</style>
+<style scoped></style>

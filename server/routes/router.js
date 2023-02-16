@@ -72,22 +72,22 @@ module.exports = function router(app) {
         res.send(organizer);
     })
 
-    app.post("/settings/broadcast/:organizer/:eventId", verifyOrganizerHeaders, async (req, res) => {
+    app.post("/settings/broadcast/:organizer", verifyOrganizerHeaders, async (req, res) => {
         await settingService.setBroadcastSettings(req.organizer.id, req.params.organizer, req.params.eventId, req.body);
         res.sendStatus(200);
     })
 
-    app.get("/settings/broadcast/:organizer/:eventId", async (req, res) => {
+    app.get("/settings/broadcast/:organizer", async (req, res) => {
         let result = await settingService.getBroadcastSettings(req.params.organizer, req.params.eventId);
         res.send(result);
     })
 
-    app.post("/settings/public/:organizer/:eventId", verifyOrganizerHeaders, async (req, res) => {
+    app.post("/settings/match/:organizer/:eventId", verifyOrganizerHeaders, async (req, res) => {
         await settingService.setPublicSettings(req.organizer.id, req.params.organizer, req.params.eventId, req.body);
         res.sendStatus(200);
     })
 
-    app.get("/settings/public/:organizer/:eventId", async (req, res) => {
+    app.get("/settings/match/:organizer/:eventId", async (req, res) => {
         let result = await settingService.getPublicSettings(req.params.organizer, req.params.eventId);
         res.send(result);
     })
@@ -221,7 +221,7 @@ module.exports = function router(app) {
             return `${body} -- (after ${stats.total} games)`;
         }, 300)
 
-        let settings = await adminService.getPublicSettings(organizer, eventId);
+        let settings = await settingService.getMatchSettings(organizer, eventId);
         let title = (settings && settings.title) || `${organizer} - ${eventId}`;
 
         res.send(`--- ${title} --- ${message}`);
@@ -278,7 +278,7 @@ module.exports = function router(app) {
         }
 
         let matches = await statsService.getLatest();
-        let settings = await Promise.all(matches.map(async match => adminService.getPublicSettings(match.username, match.eventId)));
+        let settings = await Promise.all(matches.map(async match => settingService.getMatchSettings(match.username, match.eventId)));
 
         if (matches) {
             let stats = matches.map((match, id) => {
