@@ -12,7 +12,7 @@ const wsHandlerService = require("../services/ws_handler.service.js");
 const liveService = require("../services/live.service");
 const { getOr } = require("../utils/utils");
 const playerService = require("../services/player.service");
-const redis = require("../connectors/redis");
+const { redis } = require("../connectors/redis");
 
 const SHORT_LINK_PREFIX = "_";
 module.exports = function router(app) {
@@ -336,8 +336,12 @@ module.exports = function router(app) {
         res.send(await playerService.getMatches(req.params.id, req.query.start, req.query.count));
     })
 
-    app.ws("/live/write", (ws) => {
-        wsHandlerService.connectWrite(ws);
+    app.ws("/live/write/:key", (ws, req) => {
+        wsHandlerService.connectWrite(ws, req.params.key, req.socket.remoteAddress);
+    })
+
+    app.ws("/live/read/:org", (ws, req) => {
+        wsHandlerService.connectRead(ws, req.params.org);
     })
 
     app.ws("/live/test", (ws) => {

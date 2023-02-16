@@ -1,106 +1,95 @@
 
-const redis = require("../connectors/redis");
+const { redis, pubsub } = require("../connectors/redis");
 const authService = require("./auth.service");
 const liveService = require("./live.service");
+const jsondiff = require("../utils/jsondiff");
 
-function getLiveFeedKey(organizer, hostname, filename) {
-    return `livedata:feed-${organizer.username}-${hostname}-${filename}`;
+function getLiveFeedKey(organizer, client, gameId) {
+    return `livedata:feed-${organizer.username}-${client}-${gameId}`;
 }
 
-function getLiveGameKey(organizer, hostname, filename) {
-    return `livedata:game-${organizer.username}-${hostname}-${filename}`;
+function getLiveGameKey(organizer) {
+    return `livedata:game-${organizer.username}`;
 }
 
-async function processUpdate(organizer, hostname, filename, body) {
+async function processUpdate(organizer, client, gameId, body) {
     const expr = 60 * 6;
-    let gameKey = getLiveGameKey(organizer, hostname, filename);
-    let feedKey = getLiveGameKey(organizer, hostname, filename);
+    let gameKey = getLiveGameKey(organizer);
+    let feedKey = getLiveFeedKey(organizer, client, gameId);
+    let channel = "ld-" + organizer.username;
     let current = JSON.parse(await redis.get(gameKey));
     let line = JSON.parse(body);
 
     // Push our new line to the feed
-    await redis.lpush(getLiveFeedKey(organizer, hostname, filename), body);
+    await redis.lpush(feedKey, body);
 
-    // We dont have a live data, lets read the current feed and init one
-    if (!current) {
-        let feed = (await redis.lrange(feedKey, 0 - 1)).map(JSON.parse);
-        if (feed.length > 0) {
-            current = liveService.processDataDump(feed);
-        }
-    }
-
-    // We already have data, lets process the new line and update
-    else {
-        current = liveService.processDataLine(current, line);
-    }
+    // null apparently counts as a value for default function values, change it to undef
+    current = current || undefined;
+    let newData = liveService.processDataLine(line, jsondiff.clone(current));
 
     // Set our data and make sure everything expires, we dont want MB of data setting around forever
-    await redis.set(gameKey, JSON.stringify(current), expr);
+    await redis.set(gameKey, JSON.stringify(newData));
     await redis.expire(feedKey, expr);
+    await redis.expire(gameKey, expr);
+
+    if (!current) {
+        // if we dont have a current, publish full
+        redis.publish(channel, JSON.stringify({ type: "ldfull", body: newData }));
+        console.log("Sending full",)
+    } else {
+        // else publish the diff 
+        let diff = jsondiff.diff(current, newData);
+        redis.publish(channel, JSON.stringify({ type: "lddiff", body: diff }));
+        console.log("Sending diff", diff)
+    }
+
 }
 
-// live api v1,
-
-// async function authHandler(ws, body) {
-//     let organizer = await authService.getOrganizer(body.username, body.key);
-//     if (organizer) {
-//         ws.sendMsg("auth_accepted")
-//         return { organizer, hostname: body.hostname };
-//     } else {
-//         ws.sendMsg("auth_denied")
-//     }
-// }
-
-// function  connectWrite(ws) {
-//     console.log("New Websocket Connect")
-//     let organizer;
-//     let hostname;
-//     let filename;
-
-//     ws.sendMsg = function (type, body) {
-//         let msg = JSON.stringify({ type, body });
-//         this.send(msg);
-//     }
-
-//     ws.on("message", async msg => {
-//         console.log(msg);
-//         let parsed = JSON.parse(msg);
-//         let type = parsed.type;
-//         let body = parsed.body;
-
-//         if (type == "auth") {
-//             ({ organizer, hostname } = await authHandler(ws, body));
-//         }
-
-//         else if (organizer) {
-//             switch (type) {
-//                 case "new_file":
-//                     filename = body;
-//                     // Delete any previous data, we will resend all this after the new file message
-//                     await redis.del(getLiveGameKey(organizer, hostname, filename), getLiveFeedKey(organizer, hostname, filename));
-//                     break;
-//                 case "line":
-//                     await processUpdate(organizer, hostname, filename, body);
-//                     break;
-//             }
-//         }
-//     })
-// }
-
-async function connectWrite(ws, api_key) {
-
+async function connectWrite(ws, api_key, client) {
     let org = await authService.getOrganizerByKey(api_key);
+    let gameId;
 
     if (!org) {
         return;
     }
 
+    console.log("WS Auth ", org.username);
+
     ws.on("message", async msg => {
-        await processUpdate()
+        if (!gameId) {
+            let parsed = JSON.parse(msg);
+            if (parsed.category == "init") {
+                await redis.del(getLiveGameKey(org.username));
+                gameId = parsed.timestamp;
+            }
+        }
+
+        if (gameId) {
+            await processUpdate(org, client, gameId, msg);
+        }
     })
 }
 
+function connectRead(ws, orgUser) {
+    console.log("Connected read for ", orgUser);
+    const channel = "ld-" + orgUser;
+    pubsub.subscribe(channel);
+
+    pubsub.on("message", (incomingChannel, msg) => {
+        if (incomingChannel == channel) {
+            ws.send(msg);
+        }
+    })
+
+    ws.on("message", async msg => {
+        msg = JSON.parse(msg);
+        if (msg.type == "ldrqall") {
+            ws.send(JSON.stringify({ type: "ldfull", body: JSON.parse(await redis.get(getLiveGameKey(orgUser))) }));
+        }
+    })
+}
 
 module.exports = {
-    connectWrite
+    connectWrite,
+    connectRead,
 }

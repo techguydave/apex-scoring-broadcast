@@ -6,7 +6,7 @@ const history = require('connect-history-api-fallback');
 const app = express()
 const port = 3000;
 const { db } = require("./connectors/db");
-const redis = require("./connectors/redis");
+const { redis } = require("./connectors/redis");
 const expressWs = require("express-ws");
 const fileUpload = require("express-fileupload");
 

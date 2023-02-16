@@ -1,6 +1,7 @@
 const Redis = require("ioredis");
 const config = require("../config/config.json");
 const redis = new Redis(config.redis);
+const pubsub = new Redis(config.redis);
 
 redis.isConnected = async () => {
     try {
@@ -12,4 +13,4 @@ redis.isConnected = async () => {
     }
 }
 
-module.exports = redis;
+module.exports = { redis, pubsub };

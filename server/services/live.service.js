@@ -20,12 +20,12 @@ const STATUS = {
 
 function processDataDump(chunk, data = defaultStruct()) {
     for (let line of chunk) {
-        processDataLine(line, data);
+        data = processDataLine(line, data);
     }
     return data;
 }
 
-function processDataLine(line, data) {
+function processDataLine(line, data = defaultStruct()) {
     let pid = line.player ? line.player.nucleusHash : undefined;
     let players = data.players;
 

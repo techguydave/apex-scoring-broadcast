@@ -1,4 +1,4 @@
-const redis = require("../connectors/redis");
+const { redis } = require("../connectors/redis");
 const config = require("../config/config.json");
 
 const PREFIX = config.cachePrefix || "CACHE:";
@@ -26,9 +26,9 @@ async function getOrSet(key, func, time) {
     if (result) {
         return result;
     }
-    
+
     result = await func();
- 
+
     if (result) {
         await put(key, result, time);
     }

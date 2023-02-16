@@ -109,6 +109,14 @@ function apexService(config) {
         return data.data;
     }
 
+    let connection;
+    async function getLiveDataWs(organizer) {
+        if (!connection) {
+            connection = new WebSocket(`${config.wsUrl}live/read/${organizer}`);
+        }
+        return connection;
+    }
+
     return {
         config,
         getStats,
@@ -127,5 +135,6 @@ function apexService(config) {
         getPlayers,
         getPlayer,
         getPlayerMatches,
+        getLiveDataWs,
     }
 }
