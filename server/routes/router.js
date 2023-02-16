@@ -5,14 +5,13 @@ config.statsUrl = process.argv[2] || config.statsUrl;
 const { verifyOrganizerHeaders, verifyAdminHeaders } = require("../middleware/auth");
 const apexService = new require("../services/apex.service")(config);
 const authService = require("../services/auth.service");
-const adminService = require("../services/admin.service");
+const settingService = require("../services/settings.service");
 const cache = require("../services/cache.service");
 const shortLinkService = require("../services/short_link.service.js");
 const wsHandlerService = require("../services/ws_handler.service.js");
 const liveService = require("../services/live.service");
 const { getOr } = require("../utils/utils");
 const playerService = require("../services/player.service");
-const { redis } = require("../connectors/redis");
 
 const SHORT_LINK_PREFIX = "_";
 module.exports = function router(app) {
@@ -73,23 +72,23 @@ module.exports = function router(app) {
         res.send(organizer);
     })
 
-    app.post("/settings/broadcast/:organizer/:eventId", verifyOrganizerHeaders, (req, res) => {
-        adminService.setBroadcastSettings(req.organizer.id, req.params.organizer, req.params.eventId, req.body);
+    app.post("/settings/broadcast/:organizer/:eventId", verifyOrganizerHeaders, async (req, res) => {
+        await settingService.setBroadcastSettings(req.organizer.id, req.params.organizer, req.params.eventId, req.body);
         res.sendStatus(200);
     })
 
     app.get("/settings/broadcast/:organizer/:eventId", async (req, res) => {
-        let result = await adminService.getBroadcastSettings(req.params.organizer, req.params.eventId);
+        let result = await settingService.getBroadcastSettings(req.params.organizer, req.params.eventId);
         res.send(result);
     })
 
-    app.post("/settings/public/:organizer/:eventId", verifyOrganizerHeaders, (req, res) => {
-        adminService.setPublicSettings(req.organizer.id, req.params.organizer, req.params.eventId, req.body);
+    app.post("/settings/public/:organizer/:eventId", verifyOrganizerHeaders, async (req, res) => {
+        await settingService.setPublicSettings(req.organizer.id, req.params.organizer, req.params.eventId, req.body);
         res.sendStatus(200);
     })
 
     app.get("/settings/public/:organizer/:eventId", async (req, res) => {
-        let result = await adminService.getPublicSettings(req.params.organizer, req.params.eventId);
+        let result = await settingService.getPublicSettings(req.params.organizer, req.params.eventId);
         res.send(result);
     })
 

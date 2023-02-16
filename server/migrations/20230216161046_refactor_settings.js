@@ -5,7 +5,8 @@
 exports.up = function (knex) {
     knex.raw(`
         ALTER TABLE admin_settings RENAME TO match_settings;
-        ALTER TABLE public.admin_settings DROP COLUMN broadcast;
+        ALTER TABLE match_settings DROP COLUMN broadcast;
+        ALTER TABLE match_settings RENAME COLUMN public TO settings;
 
         CREATE TABLE IF NOT EXISTS "broadcast_settings"(
             "id" serial,
@@ -14,7 +15,7 @@ exports.up = function (knex) {
             PRIMARY KEY(id)
         );
     
-        CREATE UNIQUE INDEX broadcast_settings_organizer_idx ON admin_settings ("organizer");
+        CREATE UNIQUE INDEX broadcast_settings_organizer_idx ON broadcast_settings ("organizer");
     `)
 };
 
