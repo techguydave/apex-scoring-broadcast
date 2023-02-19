@@ -1,23 +1,31 @@
 <template>
-    <div>
-        <score-table :settings="displayOptions" :stats="stats" />
+    <div class="broadcast-page">
+        <component :is="'TeamStatus'" :settings="displayOptions" :stats="stats" :liveData="liveData" />
         <div id="credit1" class="credit" :class="{ dark: displayOptions.dark }"><span class="power">Powered by
             </span><br />overstat.gg</div>
         <!-- <div id="credit2" class="credit" :class="{ dark: displayOptions.dark }">Powered by overstat.gg</div> -->
-</div>
+    </div>
 </template>
 
 <script>
-import ScoreTable from "@/views/broadcast/Scoreboard.vue"
+/* eslint-disable vue/no-unused-components */
+import Scoreboard from "@/views/broadcast/Scoreboard.vue"
+import LivedataTest from "../views/broadcast/LivedataTest.vue";
+import TeamStatus from "../views/broadcast/TeamStatus.vue";
+import { processWsData } from "@/utils/liveData";
 export default {
     components: {
-        ScoreTable,
+        Scoreboard,
+        LivedataTest,
+        TeamStatus
     },
     props: ["organizer", "eventId"],
     data() {
         return {
             stats: [],
+            liveData: {},
             interval: 0,
+            ws: undefined,
             displayOptions: {}
         }
     },
@@ -38,6 +46,12 @@ export default {
         this.interval = setInterval(async () => {
             this.updateScores()
         }, 3000);
+
+        this.ws = this.$apex.getLiveDataWs(this.organizer);
+        console.log(this.ws);
+        processWsData(this.ws, (data) => {
+            this.$set(this, 'liveData', data);
+        });
     },
     destroyed() {
         clearInterval(this.interval);
@@ -46,6 +60,10 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.broadcast-page {
+    font-family: "Heebo", sans-serif;
+}
+
 .credit {
     position: absolute;
 

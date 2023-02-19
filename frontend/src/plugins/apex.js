@@ -110,7 +110,7 @@ function apexService(config) {
     }
 
     let connection;
-    async function getLiveDataWs(organizer) {
+    function getLiveDataWs(organizer) {
         if (!connection) {
             connection = new WebSocket(`${config.wsUrl}live/read/${organizer}`);
         }

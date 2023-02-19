@@ -8,41 +8,54 @@ function getLiveFeedKey(organizer, client, gameId) {
     return `livedata:feed-${organizer.username}-${client}-${gameId}`;
 }
 
-function getLiveGameKey(organizer) {
-    return `livedata:game-${organizer.username}`;
+let liveData = {};
+
+function getLiveData(orgName) {
+    return liveData[orgName];
 }
 
-async function processUpdate(organizer, client, gameId, body) {
+function setLiveData(orgName, data) {
+    if (!data) {
+        delete liveData[orgName];
+    } else {
+        liveData[orgName] = data;
+    }
+}
+
+function diffLine(left, right, line) {
+    let feed = right.feed.splice(left.feed.length, right.feed.length);
+    let players = Object.keys(line).map(key => line[key].nucleusHash).filter(val => !!val).map(player => right.players[player]);
+    let keyDiff = {};
+    Object.keys(right).filter(key => !left[key] || (!(right[key] instanceof Object) && right[key] != left[key])).forEach(k => keyDiff[k] = right[k]);
+    return { ...keyDiff, feed, players };
+}
+
+async function processUpdate(organizer, client, gameId, line, body) {
     const expr = 60 * 6;
-    let gameKey = getLiveGameKey(organizer);
     let feedKey = getLiveFeedKey(organizer, client, gameId);
     let channel = "ld-" + organizer.username;
-    let current = JSON.parse(await redis.get(gameKey));
-    let line = JSON.parse(body);
 
     // Push our new line to the feed
     await redis.lpush(feedKey, body);
-
-    // null apparently counts as a value for default function values, change it to undef
-    current = current || undefined;
-    let newData = liveService.processDataLine(line, jsondiff.clone(current));
-
-    // Set our data and make sure everything expires, we dont want MB of data setting around forever
-    await redis.set(gameKey, JSON.stringify(newData));
     await redis.expire(feedKey, expr);
-    await redis.expire(gameKey, expr);
+
+    let current = getLiveData(organizer.username);
+    let newData = liveService.processDataLine(line, current);
+    setLiveData(organizer.username, newData);
 
     if (!current) {
         // if we dont have a current, publish full
         redis.publish(channel, JSON.stringify({ type: "ldfull", body: newData }));
-        console.log("Sending full",)
+        console.log("Sending full", newData)
     } else {
-        // else publish the diff 
-        let diff = jsondiff.diff(current, newData);
-        redis.publish(channel, JSON.stringify({ type: "lddiff", body: diff }));
-        console.log("Sending diff", diff)
-    }
+        // else publish the diff
+        let diff = diffLine(current, newData, line);
+        // console.log(diff);
 
+        if (diff) {
+            redis.publish(channel, JSON.stringify({ type: "lddiff", body: diff }));
+        }
+    }
 }
 
 async function connectWrite(ws, api_key, client) {
@@ -56,24 +69,31 @@ async function connectWrite(ws, api_key, client) {
     console.log("WS Auth ", org.username);
 
     ws.on("message", async msg => {
-        if (!gameId) {
-            let parsed = JSON.parse(msg);
-            if (parsed.category == "init") {
-                await redis.del(getLiveGameKey(org.username));
-                gameId = parsed.timestamp;
-            }
+        let parsed = JSON.parse(msg);
+
+        if (parsed.category == "init") {
+            setLiveData(org.username, undefined);
+            gameId = parsed.timestamp;
+            console.log("Setting gameId to", gameId);
         }
 
         if (gameId) {
-            await processUpdate(org, client, gameId, msg);
+            await processUpdate(org, client, gameId, parsed, msg);
+        } else {
+            console.log("Game not starting from init, cannot process");
         }
     })
 }
 
-function connectRead(ws, orgUser) {
+async function connectRead(ws, orgUser) {
     console.log("Connected read for ", orgUser);
     const channel = "ld-" + orgUser;
     pubsub.subscribe(channel);
+
+    let sendFull = async () => {
+        console.log("/sending full");
+        ws.send(JSON.stringify({ type: "ldfull", body: getLiveData(orgUser) }));
+    };
 
     pubsub.on("message", (incomingChannel, msg) => {
         if (incomingChannel == channel) {
@@ -83,8 +103,8 @@ function connectRead(ws, orgUser) {
 
     ws.on("message", async msg => {
         msg = JSON.parse(msg);
-        if (msg.type == "ldrqall") {
-            ws.send(JSON.stringify({ type: "ldfull", body: JSON.parse(await redis.get(getLiveGameKey(orgUser))) }));
+        if (msg.type == "ldrqfull") {
+            await sendFull();
         }
     })
 }

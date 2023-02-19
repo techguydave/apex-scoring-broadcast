@@ -26,6 +26,7 @@ function processDataDump(chunk, data = defaultStruct()) {
 }
 
 function processDataLine(line, data = defaultStruct()) {
+    data = JSON.parse(JSON.stringify(data));
     let pid = line.player ? line.player.nucleusHash : undefined;
     let players = data.players;
 
@@ -56,7 +57,7 @@ function processDataLine(line, data = defaultStruct()) {
             case "playerConnected":
             case "characterSelected":
                 // Dont include spectators
-                if (line.player.teamId > 1)
+                if (line.player.teamId > 1) {
                     players[pid] = {
                         ...line.player,
                         currentWeapon: undefined,
@@ -72,9 +73,10 @@ function processDataLine(line, data = defaultStruct()) {
                         kills: 0,
                         status: STATUS.ALIVE,
                     };
+                }
                 break;
             case "weaponSwitched":
-                players[pid].currentWeapon = line.newWeapon;
+                getPlayer(players, pid).currentWeapon = line.newWeapon;
                 break;
             case "playerDamaged":
                 if (line.attacker.nucleusHash) {
@@ -99,14 +101,14 @@ function processDataLine(line, data = defaultStruct()) {
                 break;
             case "playerAbilityUsed":
                 if (line.linkedEntity.includes("Tactical")) {
-                    players[pid].tacticalsUsed += 1;
+                    getPlayer(players, pid).tacticalsUsed += 1;
                 } else if (line.linkedEntity.includes("Ultimate")) {
-                    players[pid].ultimatesUsed += 1;
+                    getPlayer(players, pid).ultimatesUsed += 1;
                 }
                 break;
             case "grenadeThrown":
                 if (!line.linkedEntity.includes("Tactical") && !line.linkedEntity.includes("Ultimate")) {
-                    players[pid].grenadesThrown += 1;
+                    getPlayer(players, pid).grenadesThrown += 1;
                 }
                 break;
             case "playerDowned":
@@ -159,14 +161,25 @@ function processDataLine(line, data = defaultStruct()) {
         }
 
         if (line.player && line.player.teamId > 1) {
-            players[pid].currentHealth = line.player.currentHealth;
-            players[pid].shieldHealth = line.player.shieldHealth;
+            getPlayer(players, pid).maxHealth = line.player.maxHealth;
+            getPlayer(players, pid).shieldMaxHealth = line.player.shieldMaxHealth;
+            getPlayer(players, pid).currentHealth = line.player.currentHealth;
+            getPlayer(players, pid).shieldHealth = line.player.shieldHealth;
         }
     } catch (err) {
         console.log(err);
         console.log(line);
+        console.log(JSON.stringify(data.players));
     }
     return data;
+}
+
+function getPlayer(players, pid) {
+    let player = players[pid];
+    if (!player) {
+        console.log("UNDEF PLAYER", pid);
+    }
+    return player;
 }
 
 function convertLiveDataToRespawnApi(data) {
