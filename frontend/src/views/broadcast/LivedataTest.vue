@@ -1,7 +1,7 @@
 <template>
     <div class="d">
         <v-row>
-            <v-col cols="3" v-for="team in liveData.teams" :key="team">
+            <v-col cols="2" v-for="team in liveData.teams" :key="team">
                 <table>
                     <th>
                     <td>{{ team[0].teamName }}</td>
@@ -10,7 +10,7 @@
                         <td>
                             <div><img class="team-character" height="20"
                                     :src="'/legend_icons/' + player.character + '.webp'">{{ player.name }} {{ player.kills
-                                    }}</div>
+                                    }} - {{ player.currentWeapon }}</div>
                             <div v-if="player.status == 'alive'" class=" prog-bar"
                                 :style="{ width: (player.maxHealth + player.shieldMaxHealth) + 'px' }">
                                 <div class="hb health" :style="{ width: player.currentHealth + 'px' }"></div>
@@ -27,17 +27,17 @@
         </v-row>
 
         <!-- <tr v-for="player in liveData.players" :key="player.name">
-                                                                            <td>{{ player.name }}: ({{ player.character }})</td>
-                                                                            <td>{{ player.status }}</td>
-                                                                            <td>{{ player.currentWeapon }}</td>
-                                                                            <td>{{ player.damageDealt }}</td>
+                                                                                                <td>{{ player.name }}: ({{ player.character }})</td>
+                                                                                                <td>{{ player.status }}</td>
+                                                                                                <td>{{ player.currentWeapon }}</td>
+                                                                                                <td>{{ player.damageDealt }}</td>
 
-                                                                            <td>{{ player.kills }}</td>
-                                                                            <td>
-                                                                               
-                                                                            </td>
-                                                                        </tr>
-                                                                    </table> -->
+                                                                                                <td>{{ player.kills }}</td>
+                                                                                                <td>
+                                                                                                   
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                        </table> -->
     </div>
 </template>
 

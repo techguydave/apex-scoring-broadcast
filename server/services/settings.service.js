@@ -1,6 +1,35 @@
 const cache = require("./cache.service");
 const { db } = require("../connectors/db");
 
+const defaultBroadcastSettings = [
+    {
+        name: "Output 1",
+        selectedScene: 1,
+        selectedMatch: undefined,
+        scenes: [
+            {
+                id: 1,
+                name: "Scene 1",
+                overlays: [
+                    {
+                        id: "scoreboard",
+                        settings: {
+                            "dark": true,
+                            "game": "overall",
+                            "mode": "team",
+                            "header": true,
+                            "styled": true,
+                            "showCharacters": true,
+                            "display": "score",
+                            "display2": "kills",
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+]
+
 function getCacheKey(org, event, option) {
     return `SETTINGS:${org}-${event}-${option}`;
 }
@@ -22,7 +51,7 @@ async function getBroadcastSettings(organizerName) {
             .where({ "username": organizerName })
             .first("settings");
 
-        return result.settings;
+        return result?.settings ?? defaultBroadcastSettings;
     }, 300)
     return result;
 }
@@ -45,7 +74,7 @@ async function getMatchSettings(organizerName, event) {
             .where({ "username": organizerName, eventId: event })
             .first("settings");
 
-        return result.settings;
+        return result?.settings;
     }, 300)
 }
 

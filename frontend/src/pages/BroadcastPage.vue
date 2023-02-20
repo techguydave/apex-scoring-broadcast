@@ -1,6 +1,6 @@
 <template>
     <div class="broadcast-page">
-        <component :is="'TeamStatus'" :settings="displayOptions" :stats="stats" :liveData="liveData" />
+        <component :is="'LivedataTest'" :settings="displayOptions" :stats="stats" :liveData="liveData" />
         <div id="credit1" class="credit" :class="{ dark: displayOptions.dark }"><span class="power">Powered by
             </span><br />overstat.gg</div>
         <!-- <div id="credit2" class="credit" :class="{ dark: displayOptions.dark }">Powered by overstat.gg</div> -->

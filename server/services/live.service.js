@@ -79,18 +79,19 @@ function processDataLine(line, data = defaultStruct()) {
                 getPlayer(players, pid).currentWeapon = line.newWeapon;
                 break;
             case "playerDamaged":
+                let damage = parseInt(line.damageInflicted)
                 if (line.attacker.nucleusHash) {
                     let attacker = players[line.attacker.nucleusHash]
-                    attacker.damageDealt += line.damageInflicted;
+                    attacker.damageDealt += damage;
                 }
 
                 let previous = data.feed[data.feed.length - 1];
                 // console.log(previous, line);
 
                 if (previous && previous.type == "damage" && previous.player.nucleusHash == line.attacker.nucleusHash && previous.victim.nucleusHash == line.victim.nucleusHash && previous.weapon == line.weapon) {
-                    previous.damage += line.damageInflicted;
+                    previous.damage += damage;
                 } else {
-                    data.feed.push({ timestamp: line.timestamp, type: "damage", player: line.attacker, victim: line.victim, weapon: line.weapon, damage: line.damageInflicted });
+                    data.feed.push({ timestamp: line.timestamp, type: "damage", player: line.attacker, victim: line.victim, weapon: line.weapon, damage: damage });
                 }
 
 
