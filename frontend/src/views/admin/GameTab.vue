@@ -93,8 +93,8 @@
 										</v-tooltip>
 									</v-card-subtitle>
 									<v-card-text>
-										<v-file-input v-model="liveData" truncate-length="15" label="Upload live-data"
-											chips prepend-icon=""></v-file-input>
+										<v-file-input v-model="liveData" truncate-length="15" label="Upload live-data" chips
+											prepend-icon=""></v-file-input>
 									</v-card-text>
 								</v-card>
 							</v-tab-item>
@@ -144,8 +144,8 @@
 </template>
 
 <script>
-import SimpleScoreTable from './subcomponents/SimpleScoreTable.vue';
-import GameSelect from './subcomponents/GameSelect.vue';
+import SimpleScoreTable from '@/components/SimpleScoreTable.vue';
+import GameSelect from '@/components/GameSelect.vue';
 
 export default {
 	components: {
