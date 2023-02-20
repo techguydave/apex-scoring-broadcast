@@ -64,6 +64,7 @@ const mapMap = {
     "mp_rr_canyonlands_hu": "Kings Canyon (Season 14)",
     "mp_rr_tropic_island_mu1": "Storm Point (Season 13)",
     "mp_rr_desertlands_mu3": "Worlds Edge (Season 10)",
+    "mp_rr_desertlands_mu4": "Worlds Edge (Season 16)",
     "mp_rr_olympus_mu2": "Olympus (Season 12)",
     "mp_rr_divided_moon": "Broken Moon (Season 15)"
 }
@@ -72,6 +73,7 @@ const mapMapShort = {
     "mp_rr_canyonlands_hu": "Kings Canyon",
     "mp_rr_tropic_island_mu1": "Storm Point",
     "mp_rr_desertlands_mu3": "Worlds Edge",
+    "mp_rr_desertlands_mu4": "Worlds Edge",
     "mp_rr_olympus_mu2": "Olympus",
     "mp_rr_divided_moon": "Broken Moon"
 }
@@ -98,7 +100,28 @@ function getStatsByMode(teams, mode) {
     if (mode == "team") {
         return teams.map(team => ({ teamId: team.teamId, ...team.overall_stats }));
     } else {
-        return teams.map(team => [...team.player_stats]).flat();
+        let result = _(teams)
+            .map(team => [...team.player_stats])
+            .flatten()
+            .groupBy("playerId")
+            .map(player => player.reduce((val, cur) => {
+                console.log("val", val);
+                Object.keys(cur).forEach(key => {
+                    if (!val[key]) {
+                        val[key] = cur[key]
+                    } else if (key != "teamId" && !isNaN(cur[key])) {
+                        val[key] += cur[key];
+                    } else {
+                        val[key] = cur[key];
+                    }
+                })
+                return val;
+            }, {}))
+            .flatten()
+            .value();
+        console.log(result);
+
+        return result;
     }
 }
 
