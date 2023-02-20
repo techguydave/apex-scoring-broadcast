@@ -38,7 +38,9 @@
                                         :src="'/legend_icons/' + character + '.webp'"></template>
                                 <img v-else class="team-character" height="20"
                                     :src="'/legend_icons/' + player.characterName + '.webp'">
-                                &nbsp;{{ player.name }} ({{ player.kills }})
+                                &nbsp;<PlayerLink :player="player">{{ player.name }} ({{
+                                    player.kills
+                                }})</PlayerLink>
                             </v-col>
                         </v-row>
                     </div>
@@ -66,7 +68,11 @@
 
 <script>
 import { displayOptions, getDisplayName } from '@/utils/statsUtils';
+import PlayerLink from '../../PlayerLink.vue';
 export default {
+    components: {
+        PlayerLink
+    },
     props: ["stats"],
     data() {
         return {

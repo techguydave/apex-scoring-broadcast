@@ -94,6 +94,21 @@ function apexService(config) {
         return data.data;
     }
 
+    async function getPlayers(start, count, search) {
+        let data = await axios.get(`${config.baseUrl}players?start=${start}&count=${count}&search=${search}`);
+        return data.data;
+    }
+
+    async function getPlayer(id) {
+        let data = await axios.get(`${config.baseUrl}player/${id}`);
+        return data.data;
+    }
+
+    async function getPlayerMatches(id, start, count) {
+        let data = await axios.get(`${config.baseUrl}player/${id}/matches?start=${start}&count=${count}`);
+        return data.data;
+    }
+
     return {
         config,
         getStats,
@@ -108,6 +123,9 @@ function apexService(config) {
         deleteStats,
         getLatest,
         getShortLink,
-        getLiveData
+        getLiveData,
+        getPlayers,
+        getPlayer,
+        getPlayerMatches,
     }
 }

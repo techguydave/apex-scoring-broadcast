@@ -26,7 +26,10 @@ async function getStats(organizer, eventId, game) {
             .select("*");
 
         let teams = await db("team_game_stats").whereIn("gameId", games.map(game => game.id))
-        let players = await db("player_game_stats").whereIn("gameId", games.map(game => game.id))
+        let players = await db("player_game_stats")
+            .select(db.raw("player_game_stats.*, players.id as \"playerId\""))
+            .join("players", "players.playerId", "=", "player_game_stats.playerId")
+            .whereIn("gameId", games.map(game => game.id));
 
         return assembleStatsDocuments(games, teams, players);
     } catch (err) {
@@ -101,7 +104,8 @@ async function writeStats(organizer, eventId, game, data, source) {
                     ...team.overall_stats,
                     teamId: team.id,
                     gameId: gameId,
-                    name: team.name
+                    name: team.name,
+                    matchId,
                 }
             });
 
@@ -111,7 +115,8 @@ async function writeStats(organizer, eventId, game, data, source) {
                         ...player,
                         teamId: team.id,
                         playerId: player.nidHash,
-                        gameId
+                        gameId,
+                        matchId
                     }
                     delete playerData.nidHash;
                     delete playerData.playerName;
