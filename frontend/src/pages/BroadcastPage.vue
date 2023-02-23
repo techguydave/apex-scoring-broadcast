@@ -1,7 +1,8 @@
 <template>
     <div class="broadcast-page">
-        <component :is="'LivedataTest'" :settings="displayOptions" :stats="stats" :liveData="liveData" />
-        <div id="credit1" class="credit" :class="{ dark: displayOptions.dark }"><span class="power">Powered by
+        <component v-for="overlay in scene.overlays" :is="overlay.type" :settings="overlay.settings" :stats="stats"
+            :liveData="liveData" :key="overlay.id" />
+        <div id="credit1" class="credit dark"><span class="power">Powered by
             </span><br />overstat.gg</div>
         <!-- <div id="credit2" class="credit" :class="{ dark: displayOptions.dark }">Powered by overstat.gg</div> -->
     </div>
@@ -9,34 +10,36 @@
 
 <script>
 /* eslint-disable vue/no-unused-components */
-import Scoreboard from "@/views/broadcast/Scoreboard.vue"
+import TeamScoreboard from "@/views/broadcast/TeamScoreboard.vue"
 import LivedataTest from "../views/broadcast/LivedataTest.vue";
 import TeamStatus from "../views/broadcast/TeamStatus.vue";
 import { processWsData } from "@/utils/liveData";
 export default {
     components: {
-        Scoreboard,
+        TeamScoreboard,
         LivedataTest,
         TeamStatus
     },
-    props: ["organizer", "eventId"],
+    props: ["organizer", "display"],
     data() {
         return {
             stats: [],
             liveData: {},
             interval: 0,
             ws: undefined,
-            displayOptions: {}
+            displayOptions: {},
+            scene: {},
+            eventId: undefined,
         }
     },
 
     methods: {
         async updateScores() {
-            this.displayOptions = await this.$apex.getBroadcastSettings(this.organizer);
-
-            if (this.displayOptions.game && this.displayOptions.mode && this.displayOptions.display) {
-                this.stats = await this.$apex.getStats(this.organizer, this.eventId, this.displayOptions.game);
-            }
+            let displays = await this.$apex.getBroadcastSettings(this.organizer, this.display);
+            this.displayOptions = displays.find(d => d.id == this.display);
+            this.scene = this.displayOptions.scenes.find(s => this.displayOptions.activeScene == s.id);
+            this.eventId = await this.$apex.getSelectedMatch(this.organizer);
+            this.stats = await this.$apex.getStats(this.organizer, this.eventId, "overall");
         }
 
     },

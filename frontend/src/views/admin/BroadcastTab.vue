@@ -1,52 +1,85 @@
+<!-- This whole file is disgusting and probably needs to be refactored -->
+
 <template>
     <v-container>
+        <v-row v-if="settings">
+            <v-col sm="12" lg="2">
+                <div class="selector">
 
-        <v-row>
-            <v-col sm="12" lg="6">
+
+                    <!-- this can probably be abstracted to its own component if I want to spend the time detangling the functionality  -->
+
+                    <div v-for="(display, i) in settings" :key="display.id" class="display-wrap">
+                        <div @click="selectorValue = [i]" class="item display"
+                            :class="{ selected: ld.isEqual(selectorValue, [i]) }">
+                            <span class="material-symbols-outlined">tv</span>
+                            <span class="main-text">{{ display.name }}</span>
+                            <IconBtn @click="addScene(display)" icon="docs_add_on" />
+                            <IconBtn @click="setValue([i], undefined)" icon="delete" />
+
+                        </div>
+
+
+                        <div v-for="(scene, i2) in display.scenes" :key="scene.name" class="scene-wrap">
+                            <div @click="selectorValue = [i, i2]" class="item scene"
+                                :class="{ selected: ld.isEqual(selectorValue, [i, i2]) }">
+                                <IconBtn @click="setActive(display, scene)"
+                                    :icon="display.activeScene == scene.id ? 'check_box' : 'check_box_outline_blank'" />
+
+                                <span class="main-text">{{ scene.name }}</span>
+
+                                <IconBtn @click="addOverlay(scene)" icon="docs_add_on" />
+                                <IconBtn @click="setValue([i, i2])" icon="delete" />
+
+                            </div>
+
+
+                            <div v-for="(overlay, i3) in scene.overlays" :key="overlay.id" class="overlay-wrap">
+                                <div @click="selectorValue = [i, i2, i3]" class="item overlay"
+                                    :class="{ selected: ld.isEqual(selectorValue, [i, i2, i3]) }">
+                                    <span class="main-text">{{ overlay.name }}</span>
+                                    <IconBtn font-size="20px" @click="setValue([i, i2, i3])" icon="delete" />
+
+                                </div>
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+                </div>
+                <div class="add item">
+                    <IconBtn @click="addDisplay()" icon="add"></IconBtn> New Display
+                </div>
+
+            </v-col>
+            <v-col sm="12" lg="5">
                 <v-card>
                     <v-card-title>Settings</v-card-title>
-                    <v-card-text>
-                        <v-row>
-                            <v-col cols="3">
-                                <v-checkbox label="Styled" v-model="displayChoices.styled"></v-checkbox>
-                            </v-col>
-                            <v-col cols="3">
-                                <v-checkbox label="Light Text" v-model="displayChoices.dark"></v-checkbox>
-                            </v-col>
-                            <v-col cols="3">
-                                <v-checkbox label="Show Header" v-model="displayChoices.header"></v-checkbox>
-                            </v-col>
-                            <v-col cols="3">
-                                <v-checkbox label="Show Characters" v-model="displayChoices.showCharacters"></v-checkbox>
-                            </v-col>
-                        </v-row>
-                        <v-select :items="displayOptions.game" v-model="displayChoices.game"></v-select>
-                        <v-select :items="displayOptions.mode" v-model="displayChoices.mode"
-                            @change="
-                                this.displayChoices.display = undefined;
-                            this.displayChoices.display2 = undefined;
-                                                                                                                                                                            "></v-select>
-                        <v-select v-if="displayChoices.mode" :items="displayOptions.display[displayChoices.mode]"
-                            v-model="displayChoices.display"></v-select>
-                        <v-select v-if="displayChoices.mode" :items="displayOptions.display[displayChoices.mode]"
-                            v-model="displayChoices.display2" clearable></v-select>
-                        <v-btn @click="updateDisplayView" color="blue" class="ma-2">Update</v-btn>
-                    </v-card-text>
-                </v-card>
-                <v-card>
-                    <v-card-title>Link</v-card-title>
-                    <v-card-text>
-                        <v-form><v-text-field solo :value="broadcastLink" readonly></v-text-field></v-form>
+                    <v-card-text><template v-if="selectorValue.length == 1">
+                            <display-settings :settings="selectedOption" :eventId="eventId"
+                                :organizer="organizer"></display-settings>
+                        </template>
+                        <template v-else-if="selectorValue.length == 2">
+                            <display-settings :settings="selectedOption" :eventId="eventId"
+                                :organizer="organizer"></display-settings>
+                        </template>
+                        <template v-else-if="selectorValue.length == 3">
+                            <component :is="selectedOption.type + 'Settings'" v-model="selectedOption" :eventId="eventId"
+                                :organizer="organizer" />
+                        </template>
                     </v-card-text>
                 </v-card>
             </v-col>
-            <v-col sm="12" lg="6">
+            <v-col sm="12" lg="5">
                 <v-card>
-                    <v-card-title>Broadcast Output</v-card-title>
+                    <v-card-title>Broadcast Display</v-card-title>
                     <v-card-text>
                         <div v-if="eventId" class="display-wrapper">
                             <router-link target="_blank" :to="{ name: 'broadcast', params: { eventId, organizer } }">
-                                <broadcast class="display-viewport" :organizer="organizer" :eventId="eventId">
+                                <broadcast class="display-viewport" :organizer="organizer" :display="selectedDisplay">
                                 </broadcast>
                             </router-link>
                         </div>
@@ -54,18 +87,53 @@
                 </v-card>
             </v-col>
         </v-row>
-</v-container>
+        <v-dialog v-model="dialog" max-width="600px">
+            <v-card>
+                <v-card-text>
+                    <v-select v-model="overlayAdd" :items="overlayOptions"></v-select>
+                    <v-btn color="primary" block @click="doAddOverlay">Add</v-btn>
+                </v-card-text>
+            </v-card>
+        </v-dialog>
+    </v-container>
 </template>
 
 
 <script>
+/* eslint-disable */
 import Broadcast from "@/pages/BroadcastPage.vue";
+import TreeSelector from "../../components/TreeSelector.vue";
+import DisplaySettings from "../../components/broadcast-settings/DisplaySettings.vue";
+import TeamScoreboardSettings from "../../components/broadcast-settings/TeamScoreboardSettings.vue";
+import IconBtn from "../../components/IconBtnFilled.vue";
 
-import { displayOptions } from "../../utils/statsUtils";
+import _ from "lodash";
+const { v4: uuid } = require('uuid');
+const overlayDefaults = [
+    {
+        type: "TeamScoreboard",
+        name: "Scoreboard",
+        settings: {
+            "dark": true,
+            "game": "overall",
+            "mode": "team",
+            "header": true,
+            "styled": true,
+            "showCharacters": true,
+            "display": "score",
+            "display2": "kills",
+        }
+    }
+]
+
 
 export default {
     components: {
-        Broadcast
+        Broadcast,
+        TreeSelector,
+        DisplaySettings,
+        TeamScoreboardSettings,
+        IconBtn
     },
     props: [
         "organizer",
@@ -73,54 +141,168 @@ export default {
     ],
     data() {
         return {
-            displayChoices: {
-                styled: true,
-                mode: undefined,
-                display: undefined,
-                display2: undefined,
-                header: true,
-                game: "overall",
-                dark: false,
-            },
-            displayOptions,
+            selectorValue: [0],
+            settings: undefined,
+            ld: _,
+            dialog: false,
+            addingScene: undefined,
+            overlayAdd: undefined,
         }
     },
     computed: {
-        broadcastLink() {
-            return window.location.origin + this.$router.resolve({ name: 'broadcast', params: { eventId: this.eventId, organizer: this.organizer } }).href;
+        selectedOption: {
+            get() {
+                let s = this.selectorValue;
+                return this.getSettingsValue(s)[s[s.length - 1]];
+            },
+            set(value) {
+                this.setValue(this.selectorValue, value)
+            }
+        },
+        overlayOptions() {
+            return overlayDefaults.map(o => ({ text: o.name, value: o.type }));
+        },
+        selectedDisplay() {
+            return this.selectedOption.id;
         }
     },
     methods: {
-        updateDisplayView() {
-            this.$apex.setBroadcastSettings(this.organizer, this.displayChoices);
+        getSettingsValue(s) {
+            if (s.length == 1) return this.settings;
+            if (s.length == 2) return this.settings[s[0]].scenes;
+            if (s.length == 3) return this.settings[s[0]].scenes[s[1]].overlays;
+        },
+        setValue(s, value) {
+            if (value)
+                this.getSettingsValue(s).splice(s[s.length - 1], 1, value);
+            else
+                this.getSettingsValue(s).splice(s[s.length - 1], 1);
         },
         async refreshBroadcastOptions() {
             if (this.eventId) {
-                let options = await this.$apex.getBroadcastSettings(this.organizer);
-                if (options) {
-                    this.displayChoices = options;
-                }
+                this.settings = await this.$apex.getBroadcastSettings(this.organizer);
             }
+        },
+        addDisplay() {
+            let display = {
+                id: uuid(),
+                name: "Display " + (this.settings.length + 1),
+                scenes: [],
+            }
+            this.addScene(display)
+            display.activeScene = display.scenes[0].id;
+            this.settings.push(display)
+        },
+        addScene(display) {
+            display.scenes.push({
+                id: uuid(),
+                name: "Scene " + (display.scenes.length + 1),
+                overlays: [],
+            })
+        },
+        addOverlay(scene) {
+            this.addingScene = scene;
+            this.dialog = true;
+            console.log(this.addingScene);
+        },
+        doAddOverlay() {
+            let value = overlayDefaults.find(i => i.type == this.overlayAdd);
+            value = _.cloneDeep(value);
+            value.id = uuid();
+            this.addingScene.overlays.push(value);
+            this.dialog = false;
+        },
+        setActive(display, scene) {
+            display.activeScene = scene.id;
+        }
+    },
+    watch: {
+        settings: {
+            handler() {
+                this.$apex.setBroadcastSettings(this.organizer, this.settings);
+            },
+            deep: true,
         }
     },
     async mounted() {
-        await this.refreshBroadcastOptions();
+        this.refreshBroadcastOptions();
     }
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .display-viewport {
     transform: scale(.43);
     transform-origin: left;
 }
 
-.display-viewport>>>.scoreboard-wrap {
+.display-viewport ::v-deep .scoreboard-wrap {
     border: 4px solid #333;
+}
+
+::v-deep .v-messages {
+    display: none;
 }
 
 .display-wrapper {
     position: relative;
     height: 465px;
+}
+
+.selected.item {
+    background: #{$primary}77;
+}
+
+.material-symbols-outlined {
+    padding: 0 5px;
+}
+
+.selector {
+    // border: 1px solid black;
+    border-radius: 3px;
+    max-height: 600px;
+    overflow: auto;
+}
+
+.display-wrap {
+    // border: 1px solid black;
+    margin: 3px;
+    padding: 3px;
+}
+
+.scene-wrap {
+    border-left: 1px solid black;
+    margin-left: 25px;
+}
+
+.overlay-wrap {
+    border-left: 1px solid black;
+    margin-left: 25px;
+    padding-left: 10px;
+}
+
+.item {
+    padding: 3px 10px;
+    display: flex;
+    align-items: center;
+    font-size: 1em;
+
+    .main-text {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding-left: 3px;
+    }
+
+    &.scene {
+        padding-bottom: 0px;
+    }
+
+    &.overlay {}
+
+    &.add {
+        margin: 5px 0px;
+        padding: 5px;
+    }
 }
 </style>

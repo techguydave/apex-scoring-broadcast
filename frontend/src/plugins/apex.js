@@ -15,10 +15,10 @@ function getApiKeyHeaders() {
 
 function apexService(config) {
 
-    async function checkApiKey(username, key) {
+    async function login(username, key) {
         let result = await axios.post(`${config.baseUrl}auth/organizer`, { username, key });
 
-        return result.data.valid;
+        return result.data;
     }
 
     async function getStatsFromCode(statsCode) {
@@ -79,6 +79,21 @@ function apexService(config) {
         await axios.post(config.baseUrl + "settings/public/" + organizer + "/" + eventId, display, { headers: getApiKeyHeaders() });
     }
 
+    async function setSelectedMatch(organizer, match) {
+        console.log({ match })
+        await axios.post(config.baseUrl + "settings/match/" + organizer, { match }, { headers: getApiKeyHeaders() });
+    }
+
+    async function getSelectedMatch(organizer) {
+        let { data } = await axios.get(config.baseUrl + "settings/match/" + organizer, { headers: getApiKeyHeaders() });
+        return data.selected_match;
+    }
+
+    async function getMatchList(organizer) {
+        let result = await axios.get(config.baseUrl + "settings/match_list/" + organizer, { headers: getApiKeyHeaders() });
+        return result.data;
+    }
+
     async function getLatest() {
         let data = await axios.get(config.baseUrl + "stats/latest");
         return data.data;
@@ -125,8 +140,11 @@ function apexService(config) {
         setBroadcastSettings,
         getPublicSettings,
         setPublicSettings,
+        getMatchList,
+        getSelectedMatch,
+        setSelectedMatch,
         getStatsFromCode,
-        checkApiKey,
+        login,
         getGameList,
         deleteStats,
         getLatest,

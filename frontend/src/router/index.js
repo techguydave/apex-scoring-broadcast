@@ -33,13 +33,13 @@ const routes = [
     props: true,
   },
   {
-    path: "/broadcast/:organizer/:eventId",
+    path: "/broadcast/:organizer/:display",
     name: "broadcast",
     component: Broadcast,
     props: true,
   },
   {
-    path: '/admin/:organizer?/:eventId?',
+    path: '/admin/:organizer?',
     name: 'admin',
     component: Admin,
     props: true,

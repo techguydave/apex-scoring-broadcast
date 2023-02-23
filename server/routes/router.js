@@ -57,9 +57,7 @@ module.exports = function router(app) {
 
         let organizer = await authService.getOrganizer(username, key);
 
-        res.send({
-            valid: organizer != undefined
-        })
+        res.send(organizer)
     })
 
     app.post("/auth/create", verifyAdminHeaders, async (req, res) => {
@@ -89,6 +87,21 @@ module.exports = function router(app) {
 
     app.get("/settings/match/:organizer/:eventId", async (req, res) => {
         let result = await settingService.getPublicSettings(req.params.organizer, req.params.eventId);
+        res.send(result);
+    })
+
+    app.get("/settings/match_list/:organizer", async (req, res) => {
+        let result = await settingService.getMatchList(req.params.organizer);
+        res.send(result);
+    })
+
+    app.post("/settings/match/:organizer/", async (req, res) => {
+        await settingService.setOrganizerMatch(req.params.organizer, req.body.match);
+        res.sendStatus(200);
+    })
+
+    app.get("/settings/match/:organizer/", async (req, res) => {
+        let result = await settingService.getOrganizerMatch(req.params.organizer);
         res.send(result);
     })
 

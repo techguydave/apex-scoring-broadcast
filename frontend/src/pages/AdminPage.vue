@@ -5,7 +5,7 @@
         <nav-bar></nav-bar>
         <v-container>
           <v-row>
-            <template v-if="!eventId">
+            <template v-if="!loggedIn">
               <v-col sm="12" lg="12">
                 <v-card>
                   <v-card-title>Tournament Admin</v-card-title>
@@ -14,8 +14,6 @@
                       @v-on:keyup="loginFailed = false"></v-text-field>
                     <v-text-field v-model="apiKeyForm" type="password" label="API Key"
                       @v-on:keyup="loginFailed = false"></v-text-field>
-                    <v-text-field v-model="eventIdForm" label="Tournament ID" @v-on:keyup="loginFailed = false"
-                      @v-on:keyup.enter="login"></v-text-field>
 
                     <v-alert v-show="loginFailed" dense type="error">
                       Invalid API key
@@ -30,8 +28,8 @@
             <template v-else>
               <v-col sm="12" lg="12">
                 <v-card>
-                  <v-card-title>Tournament: {{ eventId }}
-                    <v-btn @click="changeEvent()" color="primary" class="ma-2">Change</v-btn>
+                  <v-card-title>Match:
+                    <v-select class="ma-2" solo :items="matchList" v-model="eventId"></v-select>
                   </v-card-title>
                 </v-card>
               </v-col>
@@ -68,7 +66,7 @@
         </v-container>
       </div>
     </v-app>
-</div>
+  </div>
 </template>
 
 
@@ -84,46 +82,51 @@ export default {
     PublicTab,
     NavBar,
   },
-  props: ["organizer", "eventId"],
   data() {
     return {
-      eventIdForm: undefined,
       apiKeyForm: undefined,
       usernameForm: undefined,
       loginFailed: false,
       tabs: undefined,
+      eventId: undefined,
+      matchList: [],
+      loggedIn: false,
+      organizer: undefined,
     };
   },
   methods: {
     async login() {
-      let valid = await this.$apex.checkApiKey(this.usernameForm, this.apiKeyForm);
+      let valid = await this.$apex.login(this.usernameForm, this.apiKeyForm);
 
+      console.log(valid)
       if (valid) {
         localStorage.setItem("organizer-key", this.apiKeyForm);
         localStorage.setItem("organizer-username", this.usernameForm);
-        localStorage.setItem("eventId", this.eventIdForm);
 
-        this.$router.replace({ "name": "admin", params: { organizer: this.usernameForm, eventId: this.eventIdForm } });
+        this.eventId = valid.selected_match;
+        this.loggedIn = true;
+        this.organizer = valid.username;
+
+        this.matchList = await this.$apex.getMatchList(this.organizer);
       } else {
         this.loginFailed = true;
         setTimeout(() => this.loginFailed = false, 3000);
       }
     },
-    changeEvent() {
-      localStorage.removeItem("eventId");
-
-      this.$router.replace({ "name": "admin", params: { eventId: undefined } });
-    },
+  },
+  watch: {
+    eventId() {
+      console.log("event", this.eventId)
+      this.$apex.setSelectedMatch(this.organizer, this.eventId);
+    }
   },
   async mounted() {
     this.apiKeyForm = localStorage.getItem("organizer-key");
     this.usernameForm = localStorage.getItem("organizer-username");
 
-    if (localStorage.getItem("eventId")) {
-      this.eventIdForm = localStorage.getItem("eventId");
-
+    if (this.apiKeyForm && this.usernameForm)
       await this.login();
-    }
+
   }
 };
 </script>

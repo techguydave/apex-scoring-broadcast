@@ -190,6 +190,9 @@ export default {
 		async statsCode() {
 			this.games = await this.$apex.getStatsFromCode(this.statsCode);
 			this.selectedGame = undefined;
+		},
+		eventId() {
+			this.updateStats();
 		}
 	},
 	methods: {
