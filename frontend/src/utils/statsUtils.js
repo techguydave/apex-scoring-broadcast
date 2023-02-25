@@ -23,10 +23,9 @@ const displayOptions = {
             "bestKills",
         ],
         player: [
-            "characterName",
+            "score",
             "kills",
             "damageDealt",
-            "damageTaken",
             "knockdowns",
             "assists",
             "survivalTime",
@@ -35,6 +34,9 @@ const displayOptions = {
             "shots",
             "respawnsGiven",
             "revivesGiven",
+            "characterName",
+            "damageTaken",
+
             "grenadesThrown",
             "tacticalsUsed",
             "ultimatesUsed",
@@ -101,12 +103,15 @@ function getStatsByMode(teams, mode) {
         return teams.map(team => ({ teamId: team.teamId, ...team.overall_stats }));
     } else {
         let result = _(teams)
-            .map(team => [...team.player_stats])
+            .map(team => [...team.player_stats.map(p => ({ ...p, score: team.overall_stats.score }))])
             .flatten()
             .groupBy("playerId")
             .map(player => player.reduce((val, cur) => {
-                console.log("val", val);
+                // player["score"] = (player["score"] ?? 0) + teams[player.teamId].score
+
                 Object.keys(cur).forEach(key => {
+                    console.log("val", JSON.stringify(val), JSON.stringify(cur), JSON.stringify(key));
+
                     if (!val[key]) {
                         val[key] = cur[key]
                     } else if (key != "teamId" && !isNaN(cur[key])) {
