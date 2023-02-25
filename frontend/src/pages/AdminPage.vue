@@ -3,67 +3,44 @@
     <v-app>
       <div>
         <nav-bar></nav-bar>
-        <v-container>
-          <v-row>
-            <template v-if="!loggedIn">
-              <v-col sm="12" lg="12">
-                <v-card>
-                  <v-card-title>Tournament Admin</v-card-title>
-                  <v-card-text>
-                    <v-text-field v-model="usernameForm" label="Username"
-                      @v-on:keyup="loginFailed = false"></v-text-field>
-                    <v-text-field v-model="apiKeyForm" type="password" label="API Key"
-                      @v-on:keyup="loginFailed = false"></v-text-field>
+        <div class="admin-wrap">
+          <template v-if="!loggedIn">
+            <v-card>
+              <v-card-title>Tournament Admin</v-card-title>
+              <v-card-text>
+                <v-text-field v-model="usernameForm" label="Username" @v-on:keyup="loginFailed = false"></v-text-field>
+                <v-text-field v-model="apiKeyForm" type="password" label="API Key"
+                  @v-on:keyup="loginFailed = false"></v-text-field>
 
-                    <v-alert v-show="loginFailed" dense type="error">
-                      Invalid API key
-                    </v-alert>
-                  </v-card-text>
-                  <v-card-actions>
-                    <v-btn color="primary" @click="login">Go</v-btn>
-                  </v-card-actions>
-                </v-card>
+                <v-alert v-show="loginFailed" dense type="error">
+                  Invalid API key
+                </v-alert>
+              </v-card-text>
+              <v-card-actions>
+                <v-btn color="primary" @click="login">Go</v-btn>
+              </v-card-actions>
+            </v-card>
+          </template>
+          <template v-else>
+            <v-row>
+              <v-col sm="2" cols="12">
+                <v-select class="ma-2" solo :items="matchList" v-model="eventId"></v-select>
+                <h3>Match</h3>
+                <admin-menu-item id="GameTab" v-model="selectedTab"> Game Manager</admin-menu-item>
+                <admin-menu-item id="PublicTab" v-model="selectedTab"> Public Settings </admin-menu-item>
+                <h3>Broadcast</h3>
+                <admin-menu-item id="BroadcastTab" v-model="selectedTab">Broadcast Settings </admin-menu-item>
               </v-col>
-            </template>
-            <template v-else>
-              <v-col sm="12" lg="12">
-                <v-card>
-                  <v-card-title>Match:
-                    <v-select class="ma-2" solo :items="matchList" v-model="eventId"></v-select>
-                  </v-card-title>
-                </v-card>
+              <v-col sm="10" cols="12">
+
+
+                <component :is="selectedTab" :organizer="organizer" :eventId="eventId"></component>
+
+
               </v-col>
-              <v-col sm="12">
-                <v-card>
-                  <v-card-text>
-                    <v-tabs v-model="tabs">
-                      <v-tab>
-                        Game Manager
-                      </v-tab>
-                      <v-tab>
-                        Broadcast Settings
-                      </v-tab>
-                      <v-tab>
-                        Public Settings
-                      </v-tab>
-                    </v-tabs>
-                    <v-tabs-items v-model="tabs">
-                      <v-tab-item>
-                        <game-tab :organizer="organizer" :eventId="eventId"></game-tab>
-                      </v-tab-item>
-                      <v-tab-item>
-                        <broadcast-tab :organizer="organizer" :eventId="eventId"></broadcast-tab>
-                      </v-tab-item>
-                      <v-tab-item>
-                        <public-tab :organizer="organizer" :eventId="eventId"></public-tab>
-                      </v-tab-item>
-                    </v-tabs-items>
-                  </v-card-text>
-                </v-card>
-              </v-col>
-            </template>
-          </v-row>
-        </v-container>
+            </v-row>
+          </template>
+        </div>
       </div>
     </v-app>
   </div>
@@ -75,12 +52,14 @@ import GameTab from "../views/admin/GameTab.vue"
 import BroadcastTab from "../views/admin/BroadcastTab.vue"
 import PublicTab from "../views/admin/PublicTab.vue"
 import NavBar from "../components/NavBar.vue"
+import AdminMenuItem from "../components/AdminMenuItem.vue"
 export default {
   components: {
     BroadcastTab,
     GameTab,
     PublicTab,
     NavBar,
+    AdminMenuItem,
   },
   data() {
     return {
@@ -92,6 +71,7 @@ export default {
       matchList: [],
       loggedIn: false,
       organizer: undefined,
+      selectedTab: "GameTab",
     };
   },
   methods: {
@@ -130,4 +110,8 @@ export default {
   }
 };
 </script>
-<style scoped></style>
+<style scoped lang="scss">
+.admin-wrap {
+  margin: 20px;
+}
+</style>

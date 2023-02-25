@@ -1,9 +1,7 @@
-<!-- This whole file is disgusting and probably needs to be refactored -->
-
 <template>
-    <v-container>
+    <div>
         <v-row v-if="settings">
-            <v-col sm="12" lg="2">
+            <v-col sm="12" xl="2" md="4">
                 <div class="selector">
 
 
@@ -55,36 +53,43 @@
                 </div>
 
             </v-col>
-            <v-col sm="12" lg="5">
-                <v-card>
-                    <v-card-title>Settings</v-card-title>
-                    <v-card-text><template v-if="selectorValue.length == 1">
-                            <display-settings :settings="selectedOption" :eventId="eventId"
-                                :organizer="organizer"></display-settings>
-                        </template>
-                        <template v-else-if="selectorValue.length == 2">
-                            <display-settings :settings="selectedOption" :eventId="eventId"
-                                :organizer="organizer"></display-settings>
-                        </template>
-                        <template v-else-if="selectorValue.length == 3">
-                            <component :is="selectedOption.type + 'Settings'" v-model="selectedOption" :eventId="eventId"
-                                :organizer="organizer" />
-                        </template>
-                    </v-card-text>
-                </v-card>
-            </v-col>
-            <v-col sm="12" lg="5">
-                <v-card>
-                    <v-card-title>Broadcast Display</v-card-title>
-                    <v-card-text>
-                        <div v-if="eventId" class="display-wrapper">
-                            <router-link target="_blank" :to="{ name: 'broadcast', params: { eventId, organizer } }">
-                                <broadcast class="display-viewport" :organizer="organizer" :display="selectedDisplay">
-                                </broadcast>
-                            </router-link>
-                        </div>
-                    </v-card-text>
-                </v-card>
+            <v-col sm="12" md="8">
+                <v-row>
+                    <v-col sm="12" lg="6">
+                        <v-card>
+                            <v-card-title>Settings</v-card-title>
+                            <v-card-text><template v-if="selectorValue.length == 1">
+                                    <display-settings :settings="selectedOption" :eventId="eventId"
+                                        :organizer="organizer"></display-settings>
+                                </template>
+                                <template v-else-if="selectorValue.length == 2">
+                                    <display-settings :settings="selectedOption" :eventId="eventId"
+                                        :organizer="organizer"></display-settings>
+                                </template>
+                                <template v-else-if="selectorValue.length == 3">
+                                    <component :is="selectedOption.type + 'Settings'" v-model="selectedOption"
+                                        :eventId="eventId" :organizer="organizer" />
+                                </template>
+                            </v-card-text>
+                        </v-card>
+                    </v-col>
+                    <v-col sm="12" lg="6">
+                        <v-card>
+                            <v-card-title>Broadcast Display</v-card-title>
+                            <v-card-text>
+                                <div v-if="eventId" class="display-wrapper">
+                                    <router-link target="_blank"
+                                        :to="{ name: 'broadcast', params: { eventId, organizer } }">
+                                        <broadcast class="display-viewport" :organizer="organizer"
+                                            :display="selectedDisplay">
+                                        </broadcast>
+                                    </router-link>
+                                </div>
+                            </v-card-text>
+                        </v-card>
+                    </v-col>
+                </v-row>
+
             </v-col>
         </v-row>
         <v-dialog v-model="dialog" max-width="600px">
@@ -95,7 +100,7 @@
                 </v-card-text>
             </v-card>
         </v-dialog>
-    </v-container>
+    </div>
 </template>
 
 
