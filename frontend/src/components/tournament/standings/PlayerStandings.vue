@@ -2,7 +2,7 @@
     <div v-if="stats && stats.teams">
         <v-data-table class="standing-table" :items-per-page="-1" hide-default-footer :headers="headers"
             :items="playerStats" dense>
-            <template v-slot:item.no="{ index }">{{ index + 1}}</template>
+            <template v-slot:item.no="{ index }">{{ index + 1 }}</template>
             <template v-slot:item.name="{ item }">
                 <PlayerLink :player="item">{{ item.name }}</PlayerLink>
             </template>
@@ -37,7 +37,7 @@ export default {
             ];
         },
         playerStats() {
-            let stats = getStatsByMode(this.stats.teams, "player");
+            let stats = getStatsByMode(this.stats.teams, "player", this.stats);
             return stats;
         }
     },

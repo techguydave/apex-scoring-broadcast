@@ -22,8 +22,7 @@
           <div class="score-wrap">
             <div class="score-item score-index" :class="{ 'score-index-styled': styled }"> {{ score.index }} </div>
             <div v-if="mode == 'team'" class="score-item score-name" :class="{ 'score-name-styled': styled }">
-              <div class="team-name-character-wrapper"
-                :class="{ 'team-name-wrapper-override': score.name.length > 14 }">
+              <div class="team-name-character-wrapper" :class="{ 'team-name-wrapper-override': score.name.length > 14 }">
                 <div class="team-name" :class="{ 'team-name-override': score.name.length > 14 }"> {{ score.name }}
                 </div>
                 <template v-if="showCharacters">
@@ -47,7 +46,7 @@
                   :src="'/legend_icons/' + character + '.webp'">
               </span>
               <span class="fix-player-name" :style="{ 'top': showCharacters ? '-25px' : '5px' }">{{ mode == 'player' ?
-              score.name : cleanPlayerName(score.teamName, score.playerName) }}</span>
+                score.name : cleanPlayerName(score.teamName, score.playerName) }}</span>
             </div>
             <div class="score-item score-value" :class="{ 'score-value-styled': styled }">
               <template v-if="display2">&nbsp;{{ score[display] }}&nbsp;</template>
@@ -94,7 +93,7 @@ export default {
       return this.stats.teams
     },
     scoresByMode() {
-      return getStatsByMode(this.teams, this.mode)
+      return getStatsByMode(this.teams, this.mode, this.stats.games ? this.stats : undefined)
     }
   },
   methods: {
