@@ -103,7 +103,7 @@ function getStatsByMode(teams, mode, overall) {
     } else {
         console.log("teams", JSON.stringify(teams));
         let result = _(teams)
-            .map(team => [...team.player_stats.map(p => ({ ...p, score: overall?.games ? _.sum(overall.games.map(g => g.teams.find(t => t.player_stats.find(pl => pl.playerId == p.playerId)).overall_stats.score)) : team.overall_stats.score }))])
+            .map(team => [...team.player_stats.map(p => ({ ...p, score: overall?.games ? _.sum(overall.games.map(g => g?.teams?.find(t => t.player_stats.find(pl => pl.playerId == p.playerId))?.overall_stats?.score ?? 0)) : team.overall_stats.score }))])
             .flatten()
             .groupBy("playerId")
             .map(player => player.reduce((val, cur) => {
