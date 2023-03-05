@@ -161,9 +161,8 @@ module.exports = function router(app) {
         try {
             //console.log(JSON.stringify(gameStats))
             let gameId = await statsService.writeStats(req.organizer.id, eventId, game, gameStats, source);
-            console.log(!!liveDataJson, gameId)
             if (liveDataJson && gameId) {
-                await statsService.writeLiveData(gameId, liveDataJson)
+                await statsService.writeLiveData(gameId, liveDataJson, res.organizer.id)
             }
             await deleteCache(req.organizer.username, eventId, game);
 
@@ -202,6 +201,10 @@ module.exports = function router(app) {
         } catch (err) {
             res.send({ err: "err_retriving_data", msg: "Error getting live data" });
         }
+    })
+
+    app.get("/stats/unclaimed_livedata", verifyOrganizerHeaders, async (req, res) => {
+        res.send(await statsService.getUnclaimedLiveData(req.organizer.id));
     })
 
     app.get("/games/:organizer/:eventId", async (req, res) => {

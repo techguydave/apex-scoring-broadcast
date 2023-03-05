@@ -1,10 +1,12 @@
 <template>
-    <div class="broadcast-page">
-        <component v-for="overlay in scene.overlays" :is="overlay.type" :settings="overlay.settings" :stats="stats"
-            :liveData="liveData" :key="overlay.id" />
-        <div id="credit1" class="credit dark"><span class="power">Powered by
-            </span><br />overstat.gg</div>
-        <!-- <div id="credit2" class="credit" :class="{ dark: displayOptions.dark }">Powered by overstat.gg</div> -->
+    <div>
+        <div class="broadcast-page">
+            <component v-for="overlay in scene.overlays" :is="overlay.type" :settings="overlay.settings" :stats="stats"
+                :liveData="liveData" :key="overlay.id" />
+            <div id="credit1" class="credit dark"><span class="power">Powered by
+                </span><br />overstat.gg</div>
+            <!-- <div id="credit2" class="credit" :class="{ dark: displayOptions.dark }">Powered by overstat.gg</div> -->
+        </div>
     </div>
 </template>
 
@@ -12,13 +14,15 @@
 /* eslint-disable vue/no-unused-components */
 import TeamScoreboard from "@/views/broadcast/TeamScoreboard.vue"
 import LivedataTest from "../views/broadcast/LivedataTest.vue";
-import TeamStatus from "../views/broadcast/TeamStatus.vue";
+import LiveTeamStatus from "../views/broadcast/LiveTeamStatus.vue";
+import LiveCharacterSelect from "../views/broadcast/LiveCharacterSelect.vue";
 import { processWsData } from "@/utils/liveData";
 export default {
     components: {
         TeamScoreboard,
         LivedataTest,
-        TeamStatus
+        LiveTeamStatus,
+        LiveCharacterSelect,
     },
     props: ["organizer", "display"],
     data() {
@@ -35,6 +39,7 @@ export default {
 
     methods: {
         async updateScores() {
+            console.log(this.display)
             let displays = await this.$apex.getBroadcastSettings(this.organizer, this.display);
             this.displayOptions = displays.find(d => d.id == this.display);
             this.scene = this.displayOptions.scenes.find(s => this.displayOptions.activeScene == s.id);
@@ -65,6 +70,11 @@ export default {
 <style scoped lang="scss">
 .broadcast-page {
     font-family: "Heebo", sans-serif;
+
+    position: absolute;
+    width: 1920px;
+    height: 1080px;
+
 }
 
 .credit {

@@ -2,46 +2,53 @@
 const { redis, pubsub } = require("../connectors/redis");
 const authService = require("./auth.service");
 const liveService = require("./live.service");
-const jsondiff = require("../utils/jsondiff");
+const statsService = require("./stats.service");
 
 function getLiveFeedKey(organizer, client, gameId) {
     return `livedata:feed-${organizer.username}-${client}-${gameId}`;
 }
 
 let liveData = {};
+let rawFeed = {};
 
-function getLiveData(orgName) {
-    return liveData[orgName];
+function getLiveData(org) {
+    return liveData[org.id];
 }
 
-function setLiveData(orgName, data) {
+async function setLiveData(org, data) {
+    let id = org.id;
     if (!data) {
-        delete liveData[orgName];
+
+        delete liveData[id];
+        delete rawFeed[id];
     } else {
-        liveData[orgName] = data;
+        liveData[id] = data;
     }
 }
 
 function diffLine(left, right, line) {
     let feed = right.feed.splice(left.feed.length, right.feed.length);
-    let players = Object.keys(line).map(key => line[key].nucleusHash).filter(val => !!val).map(player => right.players[player]);
+    let players = Object.keys(line).map(key => line[key].nucleusHash).filter(val => !!val && right.players[val]).map(player => right.players[player]);
+    let observers = Object.keys(line).map(key => line[key].nucleusHash).filter(val => !!val && right.observers[val]).map(player => right.players[player]);
     let keyDiff = {};
     Object.keys(right).filter(key => !left[key] || (!(right[key] instanceof Object) && right[key] != left[key])).forEach(k => keyDiff[k] = right[k]);
-    return { ...keyDiff, feed, players };
+    return { ...keyDiff, feed, players, observers };
 }
 
-async function processUpdate(organizer, client, gameId, line, body) {
-    const expr = 60 * 6;
-    let feedKey = getLiveFeedKey(organizer, client, gameId);
+async function processUpdate(organizer, client, gameId, line) {
     let channel = "ld-" + organizer.username;
+    let orgId = organizer.id;
 
-    // Push our new line to the feed
-    await redis.lpush(feedKey, body);
-    await redis.expire(feedKey, expr);
+    (rawFeed[orgId] = rawFeed[orgId] ?? []).push(line);
 
-    let current = getLiveData(organizer.username);
+    if (line?.state == "Postmatch" && rawFeed[orgId].find(feed => feed.state == "WaitingForPlayers")) {
+        let data = rawFeed[orgId];
+        statsService.writeLiveData(null, data, orgId);
+    }
+
+    let current = getLiveData(organizer);
     let newData = liveService.processDataLine(line, current);
-    setLiveData(organizer.username, newData);
+    setLiveData(organizer, newData);
 
     if (!current) {
         // if we dont have a current, publish full
@@ -66,13 +73,11 @@ async function connectWrite(ws, api_key, client) {
         return;
     }
 
-    console.log("WS Auth ", org.username);
-
     ws.on("message", async msg => {
         let parsed = JSON.parse(msg);
 
         if (parsed.category == "init") {
-            setLiveData(org.username, undefined);
+            await setLiveData(org, undefined);
             gameId = parsed.timestamp;
             console.log("Setting gameId to", gameId);
         }

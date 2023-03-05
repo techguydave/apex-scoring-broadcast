@@ -7,6 +7,7 @@ const defaultStruct = () => ({
     teamsAlive: 0,
     serverConfig: {},
     players: {},
+    observers: {},
     feed: [],
 })
 
@@ -55,8 +56,22 @@ function processDataLine(line, data = defaultStruct()) {
                 data.serverConfig = line;
                 break;
             case "playerConnected":
-            case "characterSelected":
                 // Dont include spectators
+                if (line.player.teamId > 1) {
+                    players[pid] = {
+                        ...line.player,
+                        ...players[pid],
+                    }
+                } else {
+                    data.observers[pid] = {
+                        nucleusHash: pid,
+                        name: line.player.name,
+                        target: {},
+                        targetTeam: [],
+                    }
+                }
+                break;
+            case "characterSelected":
                 if (line.player.teamId > 1) {
                     players[pid] = {
                         ...line.player,
@@ -72,8 +87,14 @@ function processDataLine(line, data = defaultStruct()) {
                         revives: 0,
                         kills: 0,
                         status: STATUS.ALIVE,
+                        characterSelected: true,
                     };
                 }
+                break;
+            case "observerSwitched":
+                let bid = line.observer.nucleusHash;
+                data.observers[bid].target = line.target;
+                data.observers[bid].targetTeam = line.targetTeam;
                 break;
             case "weaponSwitched":
                 getPlayer(players, pid).currentWeapon = line.newWeapon;
@@ -86,7 +107,6 @@ function processDataLine(line, data = defaultStruct()) {
                 }
 
                 let previous = data.feed[data.feed.length - 1];
-                // console.log(previous, line);
 
                 if (previous && previous.type == "damage" && previous.player.nucleusHash == line.attacker.nucleusHash && previous.victim.nucleusHash == line.victim.nucleusHash && previous.weapon == line.weapon) {
                     previous.damage += damage;

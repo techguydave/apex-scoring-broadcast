@@ -177,9 +177,14 @@ async function getLatest() {
 }
 
 
-async function writeLiveData(gameId, data) {
+async function writeLiveData(gameId, data, organizer) {
     data = JSON.stringify(data);
-    await db("livedata").insert({ gameId, data });
+    let date = new Date();
+    await db("livedata").insert({ gameId, data, date, organizer });
+}
+
+async function setLiveDataGame(liveId, gameId) {
+    await db("livedata").update({ gameId }).where({ id: liveId });
 }
 
 async function hasLiveData(organizer, eventId, game) {
@@ -198,6 +203,14 @@ async function getLiveData(gameId) {
     return JSON.parse(data.data);
 }
 
+async function getUnclaimedLiveData(organizer) {
+    let data = await db("livedata")
+        .select(["id", "date"])
+        .where({ organizer })
+        .whereNull("gameId");
+    return data;
+}
+
 module.exports = {
     writeStats,
     getStats,
@@ -207,4 +220,6 @@ module.exports = {
     writeLiveData,
     hasLiveData,
     getLiveData,
+    setLiveDataGame,
+    getUnclaimedLiveData,
 }

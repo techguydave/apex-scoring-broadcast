@@ -1,7 +1,7 @@
 <template>
     <div>
         <v-row v-if="settings">
-            <v-col sm="12" xl="2" md="4">
+            <v-col sm="12" md="3">
                 <div class="selector">
 
 
@@ -53,9 +53,9 @@
                 </div>
 
             </v-col>
-            <v-col sm="12" md="8">
+            <v-col sm="12" md="8" lg="9">
                 <v-row>
-                    <v-col sm="12" lg="6">
+                    <v-col sm="12" lg="12">
                         <v-card>
                             <v-card-title>Settings</v-card-title>
                             <v-card-text><template v-if="selectorValue.length == 1">
@@ -63,8 +63,8 @@
                                         :organizer="organizer"></display-settings>
                                 </template>
                                 <template v-else-if="selectorValue.length == 2">
-                                    <display-settings :settings="selectedOption" :eventId="eventId"
-                                        :organizer="organizer"></display-settings>
+                                    <scene-settings :settings="selectedOption" :eventId="eventId"
+                                        :organizer="organizer"></scene-settings>
                                 </template>
                                 <template v-else-if="selectorValue.length == 3">
                                     <component :is="selectedOption.type + 'Settings'" v-model="selectedOption"
@@ -73,15 +73,15 @@
                             </v-card-text>
                         </v-card>
                     </v-col>
-                    <v-col sm="12" lg="6">
+                    <v-col sm="12" lg="12">
                         <v-card>
-                            <v-card-title>Broadcast Display</v-card-title>
+                            <v-card-title>Output: {{ selectedDisplay.name }} </v-card-title>
                             <v-card-text>
                                 <div v-if="eventId" class="display-wrapper">
                                     <router-link target="_blank"
-                                        :to="{ name: 'broadcast', params: { eventId, organizer } }">
+                                        :to="{ name: 'broadcast', params: { display: selectedDisplay.id, organizer } }">
                                         <broadcast class="display-viewport" :organizer="organizer"
-                                            :display="selectedDisplay">
+                                            :display="selectedDisplay.id">
                                         </broadcast>
                                     </router-link>
                                 </div>
@@ -109,7 +109,10 @@
 import Broadcast from "@/pages/BroadcastPage.vue";
 import TreeSelector from "../../components/TreeSelector.vue";
 import DisplaySettings from "../../components/broadcast-settings/DisplaySettings.vue";
+import SceneSettings from "../../components/broadcast-settings/SceneSettings.vue";
 import TeamScoreboardSettings from "../../components/broadcast-settings/TeamScoreboardSettings.vue";
+import LiveTeamStatusSelect from "../../components/broadcast-settings/LiveTeamStatusSettings.vue";
+import LiveCharacterSelectSettings from "../../components/broadcast-settings/LiveCharacterSelectSettings.vue";
 import IconBtn from "../../components/IconBtnFilled.vue";
 
 import _ from "lodash";
@@ -128,6 +131,20 @@ const overlayDefaults = [
             "display": "score",
             "display2": "kills",
         }
+    },
+    {
+        type: "LiveTeamStatus",
+        name: "(Live) Team Status",
+        settings: {
+
+        }
+    },
+    {
+        type: "LiveCharacterSelect",
+        name: "(Live) Character Select",
+        settings: {
+            styled: true,
+        }
     }
 ]
 
@@ -137,8 +154,10 @@ export default {
         Broadcast,
         TreeSelector,
         DisplaySettings,
+        SceneSettings,
         TeamScoreboardSettings,
-        IconBtn
+        IconBtn,
+        LiveCharacterSelectSettings,
     },
     props: [
         "organizer",
@@ -157,8 +176,7 @@ export default {
     computed: {
         selectedOption: {
             get() {
-                let s = this.selectorValue;
-                return this.getSettingsValue(s)[s[s.length - 1]];
+                return this.getSettingsValueDeep(this.selectorValue);
             },
             set(value) {
                 this.setValue(this.selectorValue, value)
@@ -168,7 +186,7 @@ export default {
             return overlayDefaults.map(o => ({ text: o.name, value: o.type }));
         },
         selectedDisplay() {
-            return this.selectedOption.id;
+            return this.getSettingsValueDeep([this.selectorValue[0]]);
         }
     },
     methods: {
@@ -176,6 +194,9 @@ export default {
             if (s.length == 1) return this.settings;
             if (s.length == 2) return this.settings[s[0]].scenes;
             if (s.length == 3) return this.settings[s[0]].scenes[s[1]].overlays;
+        },
+        getSettingsValueDeep(s) {
+            return this.getSettingsValue(s)[s[s.length - 1]];
         },
         setValue(s, value) {
             if (value)
@@ -239,10 +260,12 @@ export default {
 .display-viewport {
     transform: scale(.43);
     transform-origin: left;
+    background: black;
 }
 
-.display-viewport ::v-deep .scoreboard-wrap {
+.display-viewport ::v-deep .broadcast-page {
     border: 4px solid #333;
+    background: black;
 }
 
 ::v-deep .v-messages {

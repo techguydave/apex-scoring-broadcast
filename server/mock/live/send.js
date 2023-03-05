@@ -11,12 +11,12 @@ function wait(time) {
 ws.onopen = async function () {
     let start = livedata[0].timestamp;
     await wait(500);
-    livedata.forEach(async (line, count) => {
-        await wait((line.timestamp - start) * 200);
-        // await wait(count * 50);
+    await Promise.all(livedata.map(async (line, count) => {
+        //        await wait((line.timestamp - start) * 200);
+        await wait(count * 1);
 
         ws.send(JSON.stringify(line));
-    })
+    }));
     console.log("done");
 }
 
