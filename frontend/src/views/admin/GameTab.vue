@@ -61,38 +61,37 @@
 												</v-expansion-panel-content>
 											</v-expansion-panel>
 										</v-expansion-panels>
+										<!-- <v-checkbox v-model="autoLivedata" label="Automatically Attach Live Data">
+										</v-checkbox> -->
 									</v-card-text>
 								</v-card>
 							</v-tab-item>
+
 							<v-tab-item>
 								<v-card class="elevation-0 grey darken-4">
 									<!-- <v-card-title>Live Data</v-card-title> -->
-									<v-card-subtitle>Experimental live-data support (optional). Can be used to add extra
-										stats, or
-										used in place of a stats code for custom lobbies.
+									<v-card-subtitle>Supports both LiveData v1 and v2.
 
-										<v-tooltip bottom style="pointer-events: all" v-model="showLiveHelp">
-											<template v-slot:activator="{}">
-												<v-btn @click="showLiveHelp = !showLiveHelp" color="primary"
-													text><v-icon>mdi-information</v-icon>How
-													To</v-btn>
-											</template>
-											<ul>
-												<li>Add the launch arg:
-													<pre>+cl_liveapi_enabled 1</pre>
-												</li>
-												<li>Create a custom lobby and join the observer slot.
-												</li>
-												<li>Start the game. <i>You must be an observer</i></li>
-												<li>When the game is finished the data will be in
-													<pre>%USERPROFILE%\Saved Games\Respawn\Apex\assets\temp\live_api</pre>
-												</li>
-												<li>Upload the file that coresponds with this game (probably the latest)
-												</li>
-											</ul>
-										</v-tooltip>
+
 									</v-card-subtitle>
+
 									<v-card-text>
+										<h3>Live Data v2 (Streamed)</h3>
+										<v-divider class="my-2" />
+
+										<v-item-group v-if="unclaimedLiveData?.length > 0" v-model="selectedUnclaimed">
+											<v-item class="live-data-item" v-for="unclaimed in unclaimedLiveData"
+												v-slot="{ toggle }" :key="unclaimed.id">
+												<div @click="toggle"> {{ getDate(unclaimed.timestamp * 1000) }} {{
+													getTime(unclaimed.timestamp * 1000) }} -
+													{{ getRelative(unclaimed.timestamp * 1000) }}
+												</div>
+											</v-item>
+										</v-item-group>
+										<div v-else><i>No Streamed Live Data. </i></div>
+										<h3 class="pt-4">Live Data v1 (Manual Upload) </h3>
+										<v-divider class="my-2" />
+
 										<v-file-input v-model="liveData" truncate-length="15" label="Upload live-data" chips
 											prepend-icon=""></v-file-input>
 									</v-card-text>
@@ -104,7 +103,8 @@
 				</v-card-text>
 
 				<v-card-actions>
-					<v-btn :loading="loading" color="blue" block :disabled="loading || !statsCode && !liveData"
+					<v-btn :loading="loading" color="primary" block
+						:disabled="loading || !statsCode && !liveData && selectedUnclaimed === undefined"
 						@click="addGame">Add
 						Game</v-btn>
 				</v-card-actions>
@@ -140,12 +140,39 @@
 				</v-btn>
 			</template>
 		</v-snackbar>
+
+
+		<!-- <v-tooltip bottom style="pointer-events: all" v-model="showLiveHelp">
+			<template v-slot:activator="{}">
+				<v-btn @click="showLiveHelp = !showLiveHelp" color="primary"
+					text><v-icon>mdi-information</v-icon>How
+					To</v-btn>
+			</template>
+			<ul>
+				<li>Add the launch arg:
+					<pre>+cl_liveapi_enabled 1</pre>
+				</li>
+				<li>Create a custom lobby and join the observer slot.
+				</li>
+				<li>Start the game. <i>You must be an observer</i></li>
+				<li>When the game is finished the data will be in
+					<pre>%USERPROFILE%\Saved Games\Respawn\Apex\assets\temp\live_api</pre>
+				</li>
+				<li>Upload the file that coresponds with this game (probably the latest)
+				</li>
+			</ul>
+		</v-tooltip> -->
+
 	</v-row>
 </template>
 
 <script>
 import SimpleScoreTable from '@/components/SimpleScoreTable.vue';
 import GameSelect from '@/components/GameSelect.vue';
+import Day from "dayjs";
+
+let relativeTime = require("dayjs/plugin/relativeTime");
+Day.extend(relativeTime);
 
 export default {
 	components: {
@@ -173,9 +200,12 @@ export default {
 				teams: []
 			},
 			liveData: undefined,
+			autoLivedata: true,
 			error: {},
 			showLiveHelp: false,
 			loading: false,
+			unclaimedLiveData: [],
+			selectedUnclaimed: undefined,
 		}
 	},
 	computed: {
@@ -205,6 +235,8 @@ export default {
 				this.selectedGame,
 				this.killPoints,
 				this.placementPoints,
+				this.autoLivedata,
+				this.unclaimedLiveData?.[this.selectedUnclaimed]?.id,
 				this.liveData,
 			);
 			if (result.err) {
@@ -224,16 +256,34 @@ export default {
 		async deleteStats(game) {
 			await this.$apex.deleteStats(this.organizer, this.eventId, game);
 			await this.updateStats();
+		},
+		async getUnclaimedLiveData() {
+			this.unclaimedLiveData = await this.$apex.getUnclaimedLiveData();
+		},
+		getDate(timestamp) {
+			return Intl.DateTimeFormat(navigator.language, { month: 'short', day: 'numeric', year: "numeric" }).format(new Date(timestamp))
+		},
+		getTime(timestamp) {
+			return Intl.DateTimeFormat(navigator.language, { hour: "numeric", minute: "numeric", hour12: true, timeZoneName: "short" }).format(new Date(timestamp));
+		},
+		getRelative(timestamp) {
+			return Day(timestamp).from(Day());
 		}
 	},
 	mounted() {
 		console.log("Getting Stats")
 		this.updateStats();
+
+		this.getUnclaimedLiveData();
+		this.inter = setInterval(() => this.getUnclaimedLiveData(), 2000);
+	},
+	destroyed() {
+		clearInterval(this.inter);
 	}
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .game-select {
 	max-height: 500px;
 	overflow: auto;
@@ -245,5 +295,17 @@ export default {
 
 .v-tooltip__content {
 	pointer-events: all;
+}
+
+.live-data-item {
+	border: 1px solid #333;
+	background: $second-tone;
+	padding: 5px 10px;
+	margin: 5px 3px;
+	border-radius: 5px;
+
+	&.v-item--active {
+		background: $primary;
+	}
 }
 </style>

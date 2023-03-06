@@ -36,7 +36,7 @@ function apexService(config) {
         return stats.data;
     }
 
-    async function generateStats(eventId, statsCode, game, startTime, killPoints, placementPoints, liveData) {
+    async function generateStats(eventId, statsCode, game, startTime, killPoints, placementPoints, autoAttachUnclaimed, selectedUnclaimed, liveData) {
         let form = new FormData();
 
         form.append("eventId", eventId);
@@ -46,6 +46,8 @@ function apexService(config) {
         form.append("placementPoints", placementPoints);
         if (startTime)
             form.append("startTime", startTime);
+        form.append("autoAttachUnclaimed", autoAttachUnclaimed);
+        form.append("selectedUnclaimed", selectedUnclaimed);
         form.append("liveData", liveData);
 
         try {
@@ -109,6 +111,11 @@ function apexService(config) {
         return data.data;
     }
 
+    async function getUnclaimedLiveData() {
+        let data = await axios.get(`${config.baseUrl}stats/unclaimed_livedata`, { headers: getApiKeyHeaders() });
+        return data.data;
+    }
+
     async function getPlayers(start, count, search) {
         let data = await axios.get(`${config.baseUrl}players?start=${start}&count=${count}&search=${search}`);
         return data.data;
@@ -154,5 +161,6 @@ function apexService(config) {
         getPlayer,
         getPlayerMatches,
         getLiveDataWs,
+        getUnclaimedLiveData,
     }
 }

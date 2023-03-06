@@ -113,8 +113,8 @@ module.exports = function router(app) {
     })
 
     app.post("/stats", verifyOrganizerHeaders, async (req, res) => {
-        let { eventId, game, statsCode, startTime, placementPoints, killPoints } = req.body;
-        const liveDataFile = getOr(req.files, {})["liveData"];
+        let { eventId, game, statsCode, startTime, placementPoints, autoAttachUnclaimed, selectedUnclaimed, killPoints } = req.body;
+        const liveDataFile = req.files?.["liveData"];
 
         placementPoints = placementPoints.split(",").map(n => parseInt(n))
 
@@ -123,16 +123,24 @@ module.exports = function router(app) {
             respawnStats = await apexService.getMatchFromCode(statsCode, startTime);
         }
 
-        if (!respawnStats && !liveDataFile) {
+        console.log(liveDataFile, selectedUnclaimed)
+
+        if (!respawnStats && !liveDataFile && !selectedUnclaimed) {
             return res.sendStatus(404);
         }
 
         let liveDataStats = undefined;
         let liveDataJson = undefined;
 
-        if (liveDataFile) {
+        if (selectedUnclaimed && selectedUnclaimed !== "undefined") {
+            liveDataJson = await statsService.getLiveDataById(selectedUnclaimed);
+        }
+        else if (liveDataFile) {
+            liveDataJson = JSON.parse(liveDataFile.data.toString());
+        }
+
+        if (liveDataJson) {
             try {
-                liveDataJson = JSON.parse(liveDataFile.data.toString());
                 liveDataStats = liveService.processDataDump(liveDataJson);
                 liveDataStats = liveService.convertLiveDataToRespawnApi(liveDataStats).matches[0];
             } catch (err) {
@@ -161,8 +169,10 @@ module.exports = function router(app) {
         try {
             //console.log(JSON.stringify(gameStats))
             let gameId = await statsService.writeStats(req.organizer.id, eventId, game, gameStats, source);
-            if (liveDataJson && gameId) {
+            if (!selectedUnclaimed && liveDataJson && gameId) {
                 await statsService.writeLiveData(gameId, liveDataJson, res.organizer.id)
+            } else if (selectedUnclaimed !== "undefined") {
+                statsService.setLiveDataGame(selectedUnclaimed, gameId)
             }
             await deleteCache(req.organizer.username, eventId, game);
 

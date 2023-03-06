@@ -3,6 +3,7 @@ const { redis, pubsub } = require("../connectors/redis");
 const authService = require("./auth.service");
 const liveService = require("./live.service");
 const statsService = require("./stats.service");
+const _ = require("lodash");
 
 function getLiveFeedKey(organizer, client, gameId) {
     return `livedata:feed-${organizer.username}-${client}-${gameId}`;
@@ -47,6 +48,12 @@ async function processUpdate(organizer, client, gameId, line) {
     }
 
     let current = getLiveData(organizer);
+    // performance, dont clone the feed array or we end up with server performance issues
+    if (current) {
+        let feed = current.feed;
+        current.feed = [];
+        current = { ..._.cloneDeep(current), ...feed };
+    }
     let newData = liveService.processDataLine(line, current);
     setLiveData(organizer, newData);
 

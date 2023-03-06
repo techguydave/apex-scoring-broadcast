@@ -27,7 +27,6 @@ function processDataDump(chunk, data = defaultStruct()) {
 }
 
 function processDataLine(line, data = defaultStruct()) {
-    data = JSON.parse(JSON.stringify(data));
     let pid = line.player ? line.player.nucleusHash : undefined;
     let players = data.players;
 

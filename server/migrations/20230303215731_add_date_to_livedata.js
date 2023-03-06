@@ -4,7 +4,7 @@
  */
 exports.up = function (knex) {
     return knex.raw(`
-    ALTER TABLE livedata ADD "date" date NULL;
+    ALTER TABLE livedata ADD "timestamp" integer NULL;
     ALTER TABLE livedata ADD "organizer" integer NULL;
     `)
 };
