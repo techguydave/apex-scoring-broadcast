@@ -5,25 +5,25 @@ const liveService = require("./live.service");
 const statsService = require("./stats.service");
 const _ = require("lodash");
 
-function getLiveFeedKey(organizer, client, gameId) {
-    return `livedata:feed-${organizer.username}-${client}-${gameId}`;
-}
-
 let liveData = {};
 let rawFeed = {};
 
-function getLiveData(org) {
-    return liveData[org.id];
+let clients = {};
+
+function getLiveData(orgUser, client) {
+    return liveData[orgUser]?.[client];
 }
 
-async function setLiveData(org, data) {
-    let id = org.id;
+async function setLiveData(orgUser, client, data) {
     if (!data) {
 
-        delete liveData[id];
-        delete rawFeed[id];
+        delete liveData[orgUser];
+        delete rawFeed[orgUser];
     } else {
-        liveData[id] = data;
+        if (!liveData[orgUser]) {
+            liveData[orgUser] = {}
+        }
+        liveData[orgUser][client] = data;
     }
 }
 
@@ -37,17 +37,21 @@ function diffLine(left, right, line) {
 }
 
 async function processUpdate(organizer, client, gameId, line) {
-    let channel = "ld-" + organizer.username;
-    let orgId = organizer.id;
+    let channel = "ld-" + organizer.username + "-" + client;
+    let orgUser = organizer.username;
 
-    (rawFeed[orgId] = rawFeed[orgId] ?? []).push(line);
-
-    if (line?.state == "Postmatch" && rawFeed[orgId].find(feed => feed.state == "WaitingForPlayers")) {
-        let data = rawFeed[orgId];
-        statsService.writeLiveData(null, data, orgId);
+    if (!rawFeed[orgUser]) {
+        rawFeed[orgUser] = {}
     }
 
-    let current = getLiveData(organizer);
+    (rawFeed[orgUser][client] = rawFeed[orgUser][client] ?? []).push(line);
+
+    if (line?.state == "Postmatch" && rawFeed[orgUser].find(feed => feed.state == "WaitingForPlayers")) {
+        let data = rawFeed[orgUser];
+        statsService.writeLiveData(null, data, organizer.id);
+    }
+
+    let current = getLiveData(orgUser, client);
     // performance, dont clone the feed array or we end up with server performance issues
     if (current) {
         let feed = current.feed;
@@ -55,12 +59,11 @@ async function processUpdate(organizer, client, gameId, line) {
         current = { ..._.cloneDeep(current), ...feed };
     }
     let newData = liveService.processDataLine(line, current);
-    setLiveData(organizer, newData);
+    setLiveData(orgUser, client, newData);
 
     if (!current) {
         // if we dont have a current, publish full
         redis.publish(channel, JSON.stringify({ type: "ldfull", body: newData }));
-        console.log("Sending full", newData)
     } else {
         // else publish the diff
         let diff = diffLine(current, newData, line);
@@ -72,6 +75,10 @@ async function processUpdate(organizer, client, gameId, line) {
     }
 }
 
+function getClients(orgName) {
+    return clients[orgName];
+}
+
 async function connectWrite(ws, api_key, client) {
     let org = await authService.getOrganizerByKey(api_key);
     let gameId;
@@ -80,13 +87,19 @@ async function connectWrite(ws, api_key, client) {
         return;
     }
 
+    addClient(org.username, client, true);
+
     ws.on("message", async msg => {
         let parsed = JSON.parse(msg);
 
         if (parsed.category == "init") {
-            await setLiveData(org, undefined);
+            await setLiveData(org.username, client, undefined);
             gameId = parsed.timestamp;
             console.log("Setting gameId to", gameId);
+        }
+
+        if (parsed.state) {
+            clients[org.username][client].state = parsed.state;
         }
 
         if (gameId) {
@@ -95,16 +108,18 @@ async function connectWrite(ws, api_key, client) {
             console.log("Game not starting from init, cannot process");
         }
     })
+
+    ws.on("close", () => clients[org.username][client].connected = false);
 }
 
-async function connectRead(ws, orgUser) {
-    console.log("Connected read for ", orgUser);
-    const channel = "ld-" + orgUser;
+async function connectRead(ws, orgUser, client) {
+    console.log("Connected read for ", orgUser, client);
+    const channel = "ld-" + orgUser + "-" + client;
     pubsub.subscribe(channel);
 
     let sendFull = async () => {
-        console.log("/sending full");
-        ws.send(JSON.stringify({ type: "ldfull", body: getLiveData(orgUser) }));
+        console.log("sending full");
+        ws.send(JSON.stringify({ type: "ldfull", body: getLiveData(orgUser, client) }));
     };
 
     pubsub.on("message", (incomingChannel, msg) => {
@@ -118,10 +133,19 @@ async function connectRead(ws, orgUser) {
         if (msg.type == "ldrqfull") {
             await sendFull();
         }
-    })
+    });
+
+    ws.on("close", () => console.log("closed"));
+}
+
+function addClient(organizerName, client, connected = false) {
+    clients[organizerName] = (clients[organizerName] ?? {})
+    clients[organizerName][client] = { connected, state: "preinit" };
 }
 
 module.exports = {
     connectWrite,
     connectRead,
+    getClients,
+    addClient,
 }

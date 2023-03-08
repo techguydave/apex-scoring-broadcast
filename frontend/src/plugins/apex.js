@@ -13,7 +13,13 @@ function getApiKeyHeaders() {
     }
 }
 
+
+
 function apexService(config) {
+
+    function getApiKey() {
+        return localStorage.getItem("organizer-key");
+    }
 
     async function login(username, key) {
         let result = await axios.post(`${config.baseUrl}auth/organizer`, { username, key });
@@ -82,7 +88,6 @@ function apexService(config) {
     }
 
     async function setSelectedMatch(organizer, match) {
-        console.log({ match })
         await axios.post(config.baseUrl + "settings/match/" + organizer, { match }, { headers: getApiKeyHeaders() });
     }
 
@@ -90,6 +95,16 @@ function apexService(config) {
         let { data } = await axios.get(config.baseUrl + "settings/match/" + organizer, { headers: getApiKeyHeaders() });
         return data.selected_match;
     }
+
+    async function setOrganizerDefaultApexClient(organizer, client) {
+        await axios.post(config.baseUrl + "settings/default_apex_client/" + organizer, { client }, { headers: getApiKeyHeaders() });
+    }
+
+    async function getOrganizerDefaultApexClient(organizer) {
+        let { data } = await axios.get(config.baseUrl + "settings/default_apex_client/" + organizer, { headers: getApiKeyHeaders() });
+        return data.selected_apex_client;
+    }
+
 
     async function getMatchList(organizer) {
         let result = await axios.get(config.baseUrl + "settings/match_list/" + organizer, { headers: getApiKeyHeaders() });
@@ -131,16 +146,31 @@ function apexService(config) {
         return data.data;
     }
 
-    let connection;
-    function getLiveDataWs(organizer) {
-        if (!connection) {
-            connection = new WebSocket(`${config.wsUrl}live/read/${organizer}`);
+    let connections = {};
+    function getLiveDataWs(organizer, client) {
+        const name = organizer + ":" + client;
+        if (!connections[name]) {
+            connections[name] = new WebSocket(`${config.wsUrl}live/read/${organizer}/${client}`);
+            connections[name].onclose = () => connections[name] = undefined;
         }
-        return connection;
+        return connections[name];
     }
+
+    async function getClients(organizer) {
+        let data = await axios.get(`${config.baseUrl}live/clients/${organizer}`);
+        return data.data;
+    }
+
+    async function addClient(client) {
+        let data = await axios.post(`${config.baseUrl}live/clients/`, { client }, { headers: getApiKeyHeaders() });
+        return data.data;
+    }
+
+
 
     return {
         config,
+        getApiKey,
         getStats,
         generateStats,
         getBroadcastSettings,
@@ -162,5 +192,9 @@ function apexService(config) {
         getPlayerMatches,
         getLiveDataWs,
         getUnclaimedLiveData,
+        getClients,
+        setOrganizerDefaultApexClient,
+        getOrganizerDefaultApexClient,
+        addClient,
     }
 }

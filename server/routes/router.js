@@ -105,6 +105,17 @@ module.exports = function router(app) {
         res.send(result);
     })
 
+    app.post("/settings/default_apex_client/:organizer/", async (req, res) => {
+        await settingService.setOrganizerDefaultApexClient(req.params.organizer, req.body.client);
+        res.sendStatus(200);
+    })
+
+    app.get("/settings/default_apex_client/:organizer/", async (req, res) => {
+        let result = await settingService.getOrganizerDefaultApexClient(req.params.organizer);
+        res.send(result);
+    })
+
+
     app.get("/stats/code/:statsCode", verifyOrganizerHeaders, async (req, res) => {
         let stats = await apexService.getStatsFromCode(req.params.statsCode);
         stats = stats.map(stat => apexService.generateGameReport(stat));
@@ -361,18 +372,28 @@ module.exports = function router(app) {
         res.send(await playerService.getMatches(req.params.id, req.query.start, req.query.count));
     })
 
-    app.ws("/live/write/:key", (ws, req) => {
-        wsHandlerService.connectWrite(ws, req.params.key, req.socket.remoteAddress);
+    app.ws("/live/write/:key/:client", (ws, req) => {
+        wsHandlerService.connectWrite(ws, req.params.key, req.params.client);
     })
 
-    app.ws("/live/read/:org", (ws, req) => {
-        wsHandlerService.connectRead(ws, req.params.org);
+    app.ws("/live/read/:org/:client", (ws, req) => {
+        wsHandlerService.connectRead(ws, req.params.org, req.params.client);
     })
 
-    app.ws("/live/test", (ws) => {
-        console.log("Connected")
-        ws.on("message", (msg) => console.log(msg));
+    app.get("/live/clients/:org", (req, res) => {
+        res.send(wsHandlerService.getClients(req.params.org));
     })
+
+    app.post("/live/clients/", verifyOrganizerHeaders, async (req, res) => {
+        const client = req.body.client.substring(0, 128);
+        let { selected_apex_client } = await settingService.getOrganizerDefaultApexClient(req.organizer.username);
+        if (!selected_apex_client) {
+            console.log("Setting Default Client")
+            await settingService.setOrganizerDefaultApexClient(req.organizer.username, client);
+        }
+        wsHandlerService.addClient(req.organizer.username, client);
+        res.sendStatus(200);
+    });
 
 
 }

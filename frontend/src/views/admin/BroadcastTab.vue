@@ -59,11 +59,11 @@
                         <v-card>
                             <v-card-title>Settings</v-card-title>
                             <v-card-text><template v-if="selectorValue.length == 1">
-                                    <display-settings :settings="selectedOption" :eventId="eventId"
+                                    <display-settings v-model="selectedOption" :eventId="eventId"
                                         :organizer="organizer"></display-settings>
                                 </template>
                                 <template v-else-if="selectorValue.length == 2">
-                                    <scene-settings :settings="selectedOption" :eventId="eventId"
+                                    <scene-settings v-model="selectedOption" :eventId="eventId"
                                         :organizer="organizer"></scene-settings>
                                 </template>
                                 <template v-else-if="selectorValue.length == 3">
@@ -110,7 +110,7 @@ import Broadcast from "@/pages/BroadcastPage.vue";
 import TreeSelector from "../../components/TreeSelector.vue";
 import DisplaySettings from "../../components/broadcast-settings/DisplaySettings.vue";
 import SceneSettings from "../../components/broadcast-settings/SceneSettings.vue";
-import TeamScoreboardSettings from "../../components/broadcast-settings/TeamScoreboardSettings.vue";
+import ScoreboardSettings from "../../components/broadcast-settings/ScoreboardSettings.vue";
 import LiveTeamStatusSelect from "../../components/broadcast-settings/LiveTeamStatusSettings.vue";
 import LiveCharacterSelectSettings from "../../components/broadcast-settings/LiveCharacterSelectSettings.vue";
 import IconBtn from "../../components/IconBtnFilled.vue";
@@ -119,7 +119,7 @@ import _ from "lodash";
 const { v4: uuid } = require('uuid');
 const overlayDefaults = [
     {
-        type: "TeamScoreboard",
+        type: "Scoreboard",
         name: "Scoreboard",
         settings: {
             "dark": true,
@@ -155,7 +155,7 @@ export default {
         TreeSelector,
         DisplaySettings,
         SceneSettings,
-        TeamScoreboardSettings,
+        ScoreboardSettings,
         IconBtn,
         LiveCharacterSelectSettings,
     },
@@ -229,7 +229,6 @@ export default {
         addOverlay(scene) {
             this.addingScene = scene;
             this.dialog = true;
-            console.log(this.addingScene);
         },
         doAddOverlay() {
             let value = overlayDefaults.find(i => i.type == this.overlayAdd);

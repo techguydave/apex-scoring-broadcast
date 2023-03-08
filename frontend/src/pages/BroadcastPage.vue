@@ -12,14 +12,14 @@
 
 <script>
 /* eslint-disable vue/no-unused-components */
-import TeamScoreboard from "@/views/broadcast/TeamScoreboard.vue"
+import Scoreboard from "@/views/broadcast/Scoreboard.vue"
 import LivedataTest from "../views/broadcast/LivedataTest.vue";
 import LiveTeamStatus from "../views/broadcast/LiveTeamStatus.vue";
 import LiveCharacterSelect from "../views/broadcast/LiveCharacterSelect.vue";
 import { processWsData } from "@/utils/liveData";
 export default {
     components: {
-        TeamScoreboard,
+        Scoreboard,
         LivedataTest,
         LiveTeamStatus,
         LiveCharacterSelect,
@@ -34,32 +34,56 @@ export default {
             displayOptions: {},
             scene: {},
             eventId: undefined,
+            apexClient: "",
         }
     },
+    computed: {
 
+    },
     methods: {
         async updateScores() {
-            console.log(this.display)
             let displays = await this.$apex.getBroadcastSettings(this.organizer, this.display);
             this.displayOptions = displays.find(d => d.id == this.display);
             this.scene = this.displayOptions.scenes.find(s => this.displayOptions.activeScene == s.id);
-            this.eventId = await this.$apex.getSelectedMatch(this.organizer);
-            this.stats = await this.$apex.getStats(this.organizer, this.eventId, "overall");
-        }
 
+            if (this.displayOptions.selectedMatch?.length > 0) {
+                this.eventId = this.displayOptions.selectedMatch;
+            } else {
+                this.eventId = await this.$apex.getSelectedMatch(this.organizer);
+            }
+
+            const current = this.apexClient;
+
+            if (this.displayOptions.selectedClient?.length > 0) {
+                this.apexClient = this.displayOptions.selectedClient;
+            }
+            else {
+                this.apexClient = await this.$apex.getOrganizerDefaultApexClient(this.organizer);
+            }
+
+            if (this.apexClient != current && this.ws) {
+                this.ws.close();
+                this.connectWs();
+            }
+
+            this.stats = await this.$apex.getStats(this.organizer, this.eventId, "overall");
+        },
+        async connectWs() {
+            console.log("Connecting to ws ", this.organizer, this.apexClient);
+            this.ws = this.$apex.getLiveDataWs(this.organizer, this.apexClient);
+            processWsData(this.ws, (data) => {
+                this.$set(this, 'liveData', data);
+            });
+        }
     },
     async mounted() {
         await this.$nextTick();
-        this.updateScores();
+        await this.updateScores();
         this.interval = setInterval(async () => {
             this.updateScores()
-        }, 3000);
+        }, 1000);
 
-        this.ws = this.$apex.getLiveDataWs(this.organizer);
-        console.log(this.ws);
-        processWsData(this.ws, (data) => {
-            this.$set(this, 'liveData', data);
-        });
+        this.connectWs();
     },
     destroyed() {
         clearInterval(this.interval);

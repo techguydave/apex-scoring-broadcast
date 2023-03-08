@@ -13,7 +13,7 @@ const defaultBroadcastSettings = [
                 name: "Scene 1",
                 overlays: [
                     {
-                        id: "teamscoreboard",
+                        type: "Scoreboard",
                         name: "Scoreboard",
                         settings: {
                             "dark": true,
@@ -34,6 +34,22 @@ const defaultBroadcastSettings = [
 
 function getCacheKey(org, event, option) {
     return `SETTINGS:${org}-${event}-${option}`;
+}
+
+async function getOrganizerDefaultApexClient(organizerName) {
+    return await cache.getOrSet(getCacheKey(organizerName, 0, "selected_apex_client"), async () => {
+        return await db("organizers")
+            .where({ username: organizerName })
+            .first("selected_apex_client")
+    }, 300);
+}
+
+async function setOrganizerDefaultApexClient(organizerName, apexClient) {
+    await db("organizers")
+        .where({ username: organizerName })
+        .update({ "selected_apex_client": apexClient })
+
+    cache.del(getCacheKey(organizerName, 0, "selected_apex_client"));
 }
 
 async function getOrganizerMatch(organizerName) {
@@ -114,4 +130,6 @@ module.exports = {
     getOrganizerMatch,
     setOrganizerMatch,
     getMatchList,
+    setOrganizerDefaultApexClient,
+    getOrganizerDefaultApexClient,
 }
