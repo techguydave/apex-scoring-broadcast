@@ -1,28 +1,45 @@
 <template>
-    <div class="wrap">
-        <div class="team-wrap" v-for="(team, index) in sortTeams(liveData.teams)" :key="team[0].teamId">
-            <div class="index ">{{ index + 1 }}. </div>
-            <div class="score ">{{ getTeamScore(team) }}
-
+    <div class="wrap" :class="{ styled: settings.styled }">
+        <div class="team-wrap" :class="{ dark: settings.dark }">
+            <div class="index ">
+                <IconSpan icon="tag" font-size="18px"></IconSpan>
             </div>
-            <div v-for="player in team" :key="player.nucleasHash" class="player-status">
-                <div class="player-status"><img class="team-character" height="25"
-                        :src="'/legend_icons/' + player.character + '.webp'"></div>
-                <div v-if="player.status == 'alive'" class="player-status prog-bar"
-                    :style="{ height: (player.maxHealth + player.shieldMaxHealth) / 8 + 2 + 'px' }">
-                    <div class="hb sheild"
-                        :style="{ bottom: player.currentHealth / 8 + 'px', height: player.shieldHealth / 8 + 'px', backgroundColor: getShieldColor(player.shieldMaxHealth) }">
+            <div class="score ">
+                <IconSpan icon="leaderboard" font-size="18px"></IconSpan>
+            </div>
+            <div class="score ">
+                <IconSpan icon="skull" font-size="18px"></IconSpan>
+            </div>
+            <div class="player-wrap"><span>Players</span></div>
+            <div class="team-name"><span>Team</span></div>
+        </div>
+        <div class="team-wrap" :class="{ dark: settings.dark }" :style="{ opacity: isAlive(team) ? 1 : .7 }"
+            v-for=" (team, index) in sortTeams(liveData.teams)" :key="team.teamId">
+            <div class="index "><span>{{ index + 1 }} </span></div>
+            <div class="score "><span>{{ getTeamScore(team) }}</span></div>
+            <div class="score "><span>{{ team.kills }} </span></div>
+
+            <div class="player-wrap">
+                <div v-for="player in team" :key="player.nucleasHash" class="player-status"
+                    :style="{ opacity: player.status == 'alive' ? .8 : .5 }">
+                    <div class="player-status">
+                        <img class="team-character" height="32" :src="'/legend_icons/' + player.character + '.webp'">
                     </div>
-                    <div class="hb health" :style="{ height: player.currentHealth / 8 + 'px' }"></div>
-                    <!-- <div class="hb sheild"
+                    <div v-if="player.status == 'alive'" class="player-status prog-bar" v-show="player.status == 'alive'"
+                        :style="{ height: calcHeight(player.maxHealth + player.shieldMaxHealth, 2) }">
+                        <div class="hb sheild"
+                            :style="{ bottom: calcHeight(player.currentHealth), height: calcHeight(player.shieldHealth), backgroundColor: getShieldColor(player.shieldMaxHealth) }">
+                        </div>
+                        <div class="hb health" :style="{ height: calcHeight(player.currentHealth) }"></div>
+                        <!-- <div class="hb sheild"
                         :style="{ height: (player.currentHealth + player.shieldHealth) / 8 + 'px', backgroundColor: getShieldColor(player.shieldMaxHealth) }"> -->
 
-                    <!-- </div> -->
+                        <!-- </div> -->
+                    </div>
+                    <div v-else class="player-status prog-bar" :style="{ opacity: 0 }"></div>
                 </div>
-                <div v-else class="player-status prog-bar"></div>
-
             </div>
-            <div class="team-name">{{ team.name }} ({{ team.kills }}) </div>
+            <div class="team-name"><span>{{ team.name }}</span> </div>
 
         </div>
 
@@ -31,9 +48,12 @@
 
 <script>
 import IconSpan from "@/components/IconSpan.vue";
+import _ from "lodash";
+
+const placementPoints = "12,12,9,7,5,4,3,3,2,2,2,1,1,1,1,1,0,0,0,0,0".split(",").map(n => parseInt(n.trim()))
 
 export default {
-    props: ["stats", "liveData"],
+    props: ["stats", "liveData", "settings"],
     components: {
         IconSpan,
     },
@@ -53,49 +73,80 @@ export default {
         },
         getTeamScore(team) {
             if (this.stats?.teams) {
-                let teamId = team[0].teamId;
-                let statsTeam = this.stats.teams.find(team => team.teamId == teamId);
-                return statsTeam.overall_stats.score;
+                let teamId = team.teamId;
+                let statsTeam = this.stats?.teams?.find(team => team.teamId == teamId);
+                return (statsTeam?.overall_stats?.score ?? 0) + team.kills + this.getPlacementPoints(team);
+            }
+            return team.kills + this.getPlacementPoints(team);
+        },
+        getPlacementPoints(team) {
+            if (team.placement && team.placement != -1) {
+                return placementPoints[team.placement];
+            } else {
+                return this.liveData.teamsAlive <= 0 ? 0 : placementPoints[this.liveData.teamsAlive];
             }
         },
         sortTeams(teams) {
             return Object.values(teams).sort((a, b) => this.getTeamScore(b) - this.getTeamScore(a));
+        },
+        calcHeight(health, add = 0) {
+            return ((health / 7.6) + add) + "px";
+        },
+        isAlive(team) {
+            return _.some(team, p => p.status == "alive")
         }
     }
 }
 </script>
 
-<style scoped> .wrap {
+<style scoped lang="scss"> .wrap {
      color: white;
      text-align: right;
      display: block;
-     width: 350px;
-     /* transform: translate(1550px, 270px); */
-     background: #000000dd;
-     box-shadow: 0 0 60px #000000dd;
+     //  width: 375px;
+     transform: translate(1500px, 300px);
  }
+
 
  .team-wrap {
      height: 30px;
-     width: 400px;
+     //  width: 375px;
      font-size: 16px;
      display: flex;
      align-items: center;
+     margin-bottom: 1px;
+     overflow: hidden;
      /* justify-content: end; */
  }
 
- .team-name {
-     padding-left: 5px;
+ .index {
+     height: 30px;
+     display: flex;
+     align-items: center;
+     width: 38px;
+
+     span {
+         flex: 1;
+         text-align: center;
+     }
  }
+
+
+
 
  .score {
-     padding: 0 5px;
-     width: 35px;
+     width: 38px;
+     height: 30px;
+     display: flex;
+     align-items: center;
+     margin-left: 1px;
+
+     span {
+         flex: 1;
+         text-align: center;
+     }
  }
 
- .index {
-     width: 25px;
- }
 
  .sub {
      font-size: 8px;
@@ -103,13 +154,20 @@ export default {
 
  .team-name {
      display: flex;
-     line-height: 30px;
+     align-items: center;
      height: 30px;
+     width: 150px;
+     margin-left: 1px;
+
+     span {
+         padding-top: 3px;
+         padding-left: 5px;
+     }
  }
 
 
  .prog-bar {
-     border: 1px solid rgba(255, 255, 255, .6);
+     border: 1px solid #fff8;
      width: 7px;
      display: flex;
      position: relative;
@@ -129,6 +187,58 @@ export default {
  }
 
  .player-status {
-     display: inline-block;
+     display: flex;
+     align-items: center;
+     margin-left: 0px;
+     padding-left: 2px;
+ }
+
+
+ .player-wrap {
+     margin-left: 1px;
+     display: flex;
+     width: 132px;
+     height: 30px;
+
+     span {
+         padding-left: 5px;
+         align-self: center;
+         text-align: left;
+         flex: 1;
+     }
+ }
+
+ .styled {
+     .index {
+         background-color: $primary;
+     }
+
+     .team-wrap {}
+
+     &.wrap {
+         //  background: #000000ee;
+     }
+
+     .score {
+         background-color: $second-tone;
+
+     }
+
+     .player-wrap {
+         background-color: $second-tone;
+
+     }
+
+     .team-name {
+         background-color: $second-tone;
+
+     }
+ }
+
+
+ .dark {
+     &.team-wrap {
+         color: black;
+     }
  }
 </style>

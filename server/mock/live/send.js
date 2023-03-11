@@ -12,8 +12,8 @@ ws.onopen = async function () {
     let start = livedata[0].timestamp;
     await wait(500);
     await Promise.all(livedata.map(async (line, count) => {
-        await wait((line.timestamp - start) * 200);
-        // await wait(count * 1000);
+        await wait((line.timestamp - start) * 100);
+        // await wait(count)
 
         ws.send(JSON.stringify(line));
     }));

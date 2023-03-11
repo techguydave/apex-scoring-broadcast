@@ -8,17 +8,17 @@ function patchData(data, patch) {
     delete patch.feed;
     delete patch.players;
     delete patch.observers;
-
     Object.keys(patch).forEach(k => data[k] = patch[k]);
 }
 
 function combindTeams(data) {
     data.teams = _.groupBy(data.players, "teamId");
-    Object.values(data.teams).forEach(team => {
+    Object.values(data.teams).map(team => {
         team.teamId = team[0].teamId;
         team.name = team[0].teamName;
-        team.kills = team.reduce((k, c) => k + c.kills, 0)
+        team.kills = team.reduce((k, c) => k + (c.kills ?? 0), 0)
         team.score = team.kills;
+        team.placement = team[0].teamPlacement;
     })
 }
 

@@ -1,9 +1,9 @@
 <template>
-    <span class="material-symbols-outlined">{{ icon }}</span>
+    <span class="material-symbols-outlined" :style="{ fontSize: fontSize }">{{ icon }}</span>
 </template>
 <script>
 export default {
-    props: ["icon"]
+    props: ["icon", "fontSize"]
 }
 </script>
 

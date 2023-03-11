@@ -127,6 +127,7 @@ module.exports = function router(app) {
         let { eventId, game, statsCode, startTime, placementPoints, autoAttachUnclaimed, selectedUnclaimed, killPoints } = req.body;
         const liveDataFile = req.files?.["liveData"];
 
+
         placementPoints = placementPoints.split(",").map(n => parseInt(n))
 
         let respawnStats = undefined;
@@ -180,10 +181,12 @@ module.exports = function router(app) {
         try {
             //console.log(JSON.stringify(gameStats))
             let gameId = await statsService.writeStats(req.organizer.id, eventId, game, gameStats, source);
-            if (!selectedUnclaimed && liveDataJson && gameId) {
-                await statsService.writeLiveData(gameId, liveDataJson, res.organizer.id)
-            } else if (selectedUnclaimed !== "undefined") {
+            if (selectedUnclaimed !== "undefined") {
                 statsService.setLiveDataGame(selectedUnclaimed, gameId)
+            }
+            else if (selectedUnclaimed === "undefined" && liveDataJson && gameId) {
+                console.log("Wrating live data", gameId, req.organizer.id);
+                await statsService.writeLiveData(gameId, liveDataJson, req.organizer.id)
             }
             await deleteCache(req.organizer.username, eventId, game);
 
@@ -221,6 +224,7 @@ module.exports = function router(app) {
             res.send(data);
         } catch (err) {
             res.send({ err: "err_retriving_data", msg: "Error getting live data" });
+            console.log(err)
         }
     })
 
@@ -395,5 +399,8 @@ module.exports = function router(app) {
         res.sendStatus(200);
     });
 
+    app.ws("/", (ws, req) => {
+        ws.on("message", (msg) => console.log(msg));
+    })
 
 }

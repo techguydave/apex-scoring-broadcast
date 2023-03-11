@@ -141,7 +141,7 @@ export default {
 }
 
 body {
-  background: black;
+  background: white;
 }
 
 #app {

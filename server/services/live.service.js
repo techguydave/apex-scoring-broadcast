@@ -41,6 +41,7 @@ function processDataLine(line, data = defaultStruct()) {
                 if (data.state === "PickLoadout") {
                     //determine # of starting teams
                     let count = _.uniqBy(Object.values(data.players), "teamId").length;
+                    console.log(count);
                     data.totalTeams = count;
                     data.teamsAlive = count;
                 }
@@ -115,7 +116,7 @@ function processDataLine(line, data = defaultStruct()) {
 
 
                 let victim = players[line.victim.nucleusHash];
-                victim.damageTaken += line.damageInflicted;
+                victim.damageTaken += damage;
                 victim.currentHealth = line.victim.currentHealth;
                 victim.shieldHealth = line.victim.shieldHealth;
                 break;
@@ -187,9 +188,9 @@ function processDataLine(line, data = defaultStruct()) {
             getPlayer(players, pid).shieldHealth = line.player.shieldHealth;
         }
     } catch (err) {
-        console.log(err);
-        console.log(line);
-        console.log(JSON.stringify(data.players));
+        // console.log(err);
+        // console.log(line);
+        // console.log(JSON.stringify(data.players));
     }
     return data;
 }

@@ -32,7 +32,9 @@ function diffLine(left, right, line) {
     let players = Object.keys(line).map(key => line[key].nucleusHash).filter(val => !!val && right.players[val]).map(player => right.players[player]);
     let observers = Object.keys(line).map(key => line[key].nucleusHash).filter(val => !!val && right.observers[val]).map(player => right.players[player]);
     let keyDiff = {};
-    Object.keys(right).filter(key => !left[key] || (!(right[key] instanceof Object) && right[key] != left[key])).forEach(k => keyDiff[k] = right[k]);
+
+    Object.keys(right).filter(key => !left[key] || (!(right[key] instanceof Object) && right[key] == left[key])).forEach(k => keyDiff[k] = right[k]);
+    // console.log(keyDiff)
     return { ...keyDiff, feed, players, observers };
 }
 
@@ -46,17 +48,18 @@ async function processUpdate(organizer, client, gameId, line) {
 
     (rawFeed[orgUser][client] = rawFeed[orgUser][client] ?? []).push(line);
 
-    if (line?.state == "Postmatch" && rawFeed[orgUser].find(feed => feed.state == "WaitingForPlayers")) {
-        let data = rawFeed[orgUser];
+    if (line?.state == "Postmatch" && rawFeed[orgUser][client].find(feed => feed.state == "WaitingForPlayers")) {
+        let data = rawFeed[orgUser][client];
         statsService.writeLiveData(null, data, organizer.id);
     }
 
     let current = getLiveData(orgUser, client);
+    let copy;
     // performance, dont clone the feed array or we end up with server performance issues
     if (current) {
         let feed = current.feed;
         current.feed = [];
-        current = { ..._.cloneDeep(current), ...feed };
+        copy = { ..._.cloneDeep(current), ...feed };
     }
     let newData = liveService.processDataLine(line, current);
     setLiveData(orgUser, client, newData);
@@ -66,7 +69,7 @@ async function processUpdate(organizer, client, gameId, line) {
         redis.publish(channel, JSON.stringify({ type: "ldfull", body: newData }));
     } else {
         // else publish the diff
-        let diff = diffLine(current, newData, line);
+        let diff = diffLine(copy, newData, line);
         // console.log(diff);
 
         if (diff) {
@@ -95,7 +98,7 @@ async function connectWrite(ws, api_key, client) {
         if (parsed.category == "init") {
             await setLiveData(org.username, client, undefined);
             gameId = parsed.timestamp;
-            console.log("Setting gameId to", gameId);
+            console.log("Setting gameId to", gameId, org.username, client);
         }
 
         if (parsed.state) {

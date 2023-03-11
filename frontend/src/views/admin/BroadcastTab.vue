@@ -111,7 +111,7 @@ import TreeSelector from "../../components/TreeSelector.vue";
 import DisplaySettings from "../../components/broadcast-settings/DisplaySettings.vue";
 import SceneSettings from "../../components/broadcast-settings/SceneSettings.vue";
 import ScoreboardSettings from "../../components/broadcast-settings/ScoreboardSettings.vue";
-import LiveTeamStatusSelect from "../../components/broadcast-settings/LiveTeamStatusSettings.vue";
+import LiveTeamStatusSettings from "../../components/broadcast-settings/LiveTeamStatusSettings.vue";
 import LiveCharacterSelectSettings from "../../components/broadcast-settings/LiveCharacterSelectSettings.vue";
 import IconBtn from "../../components/IconBtnFilled.vue";
 
@@ -158,6 +158,7 @@ export default {
         ScoreboardSettings,
         IconBtn,
         LiveCharacterSelectSettings,
+        LiveTeamStatusSettings
     },
     props: [
         "organizer",
