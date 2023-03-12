@@ -2,7 +2,8 @@
     <div>
         <div class="broadcast-page">
             <component v-for="overlay in scene.overlays" :is="overlay.type" :settings="overlay.settings" :stats="stats"
-                :liveData="liveData" :key="overlay.id" />
+                :liveData="liveData" :key="overlay.id" :observer="observer" :observerTeam="observerTeam"
+                :observerPlayer="observerPlayer" />
             <div id="credit1" class="credit dark"><span class="power">Powered by
                 </span><br />overstat.gg</div>
             <!-- <div id="credit2" class="credit" :class="{ dark: displayOptions.dark }">Powered by overstat.gg</div> -->
@@ -35,10 +36,20 @@ export default {
             scene: {},
             eventId: undefined,
             apexClient: "",
+            observerName: "",
         }
     },
     computed: {
-
+        observerPlayer() {
+            return this.observerTeam.find(p => this.observer.target.nucleusHash == p.nucleusHash);
+        },
+        observerTeam() {
+            console.log(this.observer.target.teamId);
+            return this.liveData?.teams?.[this.observer.target.teamId]
+        },
+        observer() {
+            return Object.values(this.liveData.observers).find(o => o.name == this.observerName);
+        }
     },
     methods: {
         async updateScores() {
@@ -60,6 +71,8 @@ export default {
             else {
                 this.apexClient = await this.$apex.getOrganizerDefaultApexClient(this.organizer);
             }
+
+            this.observerName = this.displayOptions.observerName;
 
             if (this.apexClient != current && this.ws) {
                 this.ws.close();

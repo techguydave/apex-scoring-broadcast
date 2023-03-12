@@ -14,7 +14,7 @@
             <div class="team-name"><span>Team</span></div>
         </div>
         <div class="team-wrap" :class="{ dark: settings.dark }" :style="{ opacity: isAlive(team) ? 1 : .7 }"
-            v-for=" (team, index) in sortTeams(liveData.teams)" :key="team.teamId">
+            v-for=" (team, index) in sortTeams(liveData.teams).slice(0, 20)" :key="team.teamId">
             <div class="index "><span>{{ index + 1 }} </span></div>
             <div class="score "><span>{{ getTeamScore(team) }}</span></div>
             <div class="score "><span>{{ team.kills }} </span></div>
@@ -103,7 +103,7 @@ export default {
      color: white;
      text-align: right;
      display: block;
-     //  width: 375px;
+     width: 400px;
      transform: translate(1500px, 300px);
  }
 
@@ -216,7 +216,7 @@ export default {
      .team-wrap {}
 
      &.wrap {
-         //  background: #000000ee;
+         background: #000000aa;
      }
 
      .score {

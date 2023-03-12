@@ -94,6 +94,8 @@
         </v-row>
         <v-dialog v-model="dialog" max-width="600px">
             <v-card>
+                <v-toolbar class="toolbar" flat>Add New Overlay<v-spacer></v-spacer><icon-btn icon="close"
+                        @click="dialog = false"></icon-btn></v-toolbar>
                 <v-card-text>
                     <v-select v-model="overlayAdd" :items="overlayOptions"></v-select>
                     <v-btn color="primary" block @click="doAddOverlay">Add</v-btn>
@@ -279,6 +281,10 @@ export default {
 
 .selected.item {
     background: #{$primary}77;
+}
+
+.toolbar.v-sheet.v-toolbar {
+    background-color: $primary !important;
 }
 
 .material-symbols-outlined {

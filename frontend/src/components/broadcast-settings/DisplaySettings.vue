@@ -20,7 +20,10 @@
             <v-card-text> <v-select :items="clientList" v-model="settingsCopy.selectedClient" clearable
                     placeholder="(default)" dense solo></v-select>
             </v-card-text>
-
+            <v-card-title>Observer Name</v-card-title>
+            <v-card-subtitle>Set the apex name of the observer this display should follow</v-card-subtitle>
+            <v-card-text> <v-text-field v-model="settingsCopy.observerName" solo placeholder="Observer Name"></v-text-field>
+            </v-card-text>
         </v-card>
     </div>
 </template>
