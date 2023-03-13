@@ -87,7 +87,7 @@ export default {
             }
         },
         sortTeams(teams) {
-            return Object.values(teams).sort((a, b) => this.getTeamScore(b) - this.getTeamScore(a));
+            return Object.values(teams ?? {}).sort((a, b) => this.getTeamScore(b) - this.getTeamScore(a));
         },
         calcHeight(health, add = 0) {
             return ((health / 7.6) + add) + "px";
