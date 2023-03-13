@@ -1,6 +1,12 @@
 <template>
     <div>
         <v-card>
+            <v-card-title>Name</v-card-title>
+            <v-card-text>
+                <v-form><v-text-field solo v-model="settingsCopy.name"></v-text-field></v-form>
+            </v-card-text>
+        </v-card>
+        <v-card>
             <v-card-title>Browser Source</v-card-title>
             <v-card-text>
                 <v-form><v-text-field solo :value="broadcastLink" readonly></v-text-field></v-form>

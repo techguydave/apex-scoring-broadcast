@@ -57,20 +57,32 @@
                 <v-row>
                     <v-col sm="12" lg="12">
                         <v-card>
-                            <v-card-title>Settings</v-card-title>
-                            <v-card-text><template v-if="selectorValue.length == 1">
-                                    <display-settings v-model="selectedOption" :eventId="eventId"
-                                        :organizer="organizer"></display-settings>
-                                </template>
-                                <template v-else-if="selectorValue.length == 2">
-                                    <scene-settings v-model="selectedOption" :eventId="eventId"
-                                        :organizer="organizer"></scene-settings>
-                                </template>
-                                <template v-else-if="selectorValue.length == 3">
-                                    <component :is="selectedOption.type + 'Settings'" v-model="selectedOption"
-                                        :eventId="eventId" :organizer="organizer" />
-                                </template>
+                            <v-card-text>
+
+                                <v-expansion-panels>
+                                    <v-expansion-panel>
+                                        <v-expansion-panel-header>
+                                            <h3>Settings</h3>
+                                        </v-expansion-panel-header>
+                                        <v-expansion-panel-content>
+
+                                            <template v-if="selectorValue.length == 1">
+                                                <display-settings v-model="selectedOption" :eventId="eventId"
+                                                    :organizer="organizer"></display-settings>
+                                            </template>
+                                            <template v-else-if="selectorValue.length == 2">
+                                                <scene-settings v-model="selectedOption" :eventId="eventId"
+                                                    :organizer="organizer"></scene-settings>
+                                            </template>
+                                            <template v-else-if="selectorValue.length == 3">
+                                                <component :is="selectedOption.type + 'Settings'" v-model="selectedOption"
+                                                    :eventId="eventId" :organizer="organizer" />
+                                            </template>
+                                        </v-expansion-panel-content>
+                                    </v-expansion-panel>
+                                </v-expansion-panels>
                             </v-card-text>
+
                         </v-card>
                     </v-col>
                     <v-col sm="12" lg="12">
