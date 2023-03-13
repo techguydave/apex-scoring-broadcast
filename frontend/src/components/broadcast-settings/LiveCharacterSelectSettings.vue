@@ -1,7 +1,6 @@
 <template>
     <div>
         <v-checkbox label="Styled" v-model="settings.styled"></v-checkbox>
-        <v-btn color="primary" @click="update()">Update</v-btn>
 
     </div>
 </template>
