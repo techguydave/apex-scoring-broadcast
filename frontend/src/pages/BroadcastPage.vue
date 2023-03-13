@@ -52,6 +52,13 @@ export default {
             return undefined;
         }
     },
+    watch: {
+        apexClient(old, n) {
+            if (old != n) {
+                this.ws.close();
+            }
+        }
+    },
     methods: {
         async updateScores() {
             let displays = await this.$apex.getBroadcastSettings(this.organizer, this.display);
@@ -88,6 +95,8 @@ export default {
             processWsData(this.ws, (data) => {
                 this.$set(this, 'liveData', data);
             });
+
+            this.ws.addEventListener("close", () => setTimeout(() => this.connectWs(), 1000));
         }
     },
     async mounted() {

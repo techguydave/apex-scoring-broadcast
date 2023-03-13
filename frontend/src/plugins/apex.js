@@ -156,7 +156,9 @@ function apexService(config) {
         const name = organizer + ":" + client;
         if (!connections[name]) {
             connections[name] = new WebSocket(`${config.wsUrl}live/read/${organizer}/${client}`);
-            connections[name].onclose = () => connections[name] = undefined;
+            connections[name].onclose = () => {
+                connections[name] = undefined
+            };
         }
         return connections[name];
     }
