@@ -138,7 +138,8 @@ const overlayDefaults = [
         type: "LiveTeamStatus",
         name: "(Live) Team Status",
         settings: {
-
+            styled: true,
+            dark: false,
         }
     },
     {
@@ -146,6 +147,7 @@ const overlayDefaults = [
         name: "(Live) Character Select",
         settings: {
             styled: true,
+            dark: false,
         }
     }
 ]
