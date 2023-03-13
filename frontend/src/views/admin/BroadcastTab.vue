@@ -336,6 +336,7 @@ export default {
     display: flex;
     align-items: center;
     font-size: 1em;
+    cursor: pointer;
 
     .main-text {
         flex: 1;
