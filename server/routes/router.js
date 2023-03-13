@@ -123,6 +123,11 @@ module.exports = function router(app) {
         res.send(stats);
     })
 
+    app.post("/match/:eventId", verifyOrganizerHeaders, async (req, res) => {
+        let id = await settingService.createMatch(req.organizer, req.params.eventId);
+        res.send({ match: id });
+    })
+
     app.post("/stats", verifyOrganizerHeaders, async (req, res) => {
         let { eventId, game, statsCode, startTime, placementPoints, autoAttachUnclaimed, selectedUnclaimed, killPoints } = req.body;
         const liveDataFile = req.files?.["liveData"];
@@ -180,7 +185,7 @@ module.exports = function router(app) {
 
         try {
             //console.log(JSON.stringify(gameStats))
-            let gameId = await statsService.writeStats(req.organizer.id, eventId, game, gameStats, source);
+            let gameId = await statsService.writeStats(req.organizer, eventId, game, gameStats, source);
             if (selectedUnclaimed !== "undefined") {
                 statsService.setLiveDataGame(selectedUnclaimed, gameId)
             }

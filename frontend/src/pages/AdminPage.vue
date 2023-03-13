@@ -25,7 +25,6 @@
             <v-row>
               <v-col sm="2" cols="12">
 
-                <!-- <IconBtnFilled icon="add"></IconBtnFilled> -->
                 <h3>Match</h3>
                 <v-select class="ma-2" outlined :items="matchList" v-model="eventId" dense append-outer-icon="mdi-plus"
                   hide-details @click:append-outer="newMatchId = ''; newMatchName = ''; newMatchDiag = true"></v-select>
@@ -35,6 +34,9 @@
                 <admin-menu-item id="BroadcastTab" v-model="selectedTab">Broadcast Control</admin-menu-item>
                 <h3>Observers</h3>
                 <admin-menu-item id="ObserverClientTab" v-model="selectedTab">Apex Clients</admin-menu-item>
+                <v-divider></v-divider>
+                <admin-menu-item id="Logout" @input="loggedIn = false">Change User</admin-menu-item>
+
               </v-col>
               <v-col sm="10" cols="12">
                 <component :is="selectedTab" :organizer="organizer" :eventId="eventId"></component>
@@ -136,8 +138,10 @@ export default {
     append(str, text) {
       return str + (str.length > 0 ? "_" : "") + text;
     },
-    newMatch() {
-
+    async newMatch() {
+      await this.$apex.createMatch(this.newMatchId);
+      this.newMatchDiag = false;
+      this.login();
     }
   },
   watch: {

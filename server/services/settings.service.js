@@ -73,10 +73,20 @@ async function getMatchList(organizerName) {
         let result = await db("match")
             .join("organizers", "organizers.id", "match.organizer")
             .where({ username: organizerName })
+            .orderBy("match.id", "desc")
             .select("eventId");
         return result.map(e => e.eventId)
     }, 300)
 }
+
+
+async function createMatch(organizer, eventId) {
+    let id = await db("match").insert({ organizer: organizer.id, eventId }, ["id"]);
+    await setOrganizerMatch(organizer.username, eventId);
+    await cache.del(getCacheKey(organizer.username, 0, "match_list"));
+    return id[0];
+}
+
 
 async function setBroadcastSettings(organizer, settings) {
     console.log(settings);
@@ -130,6 +140,7 @@ module.exports = {
     getOrganizerMatch,
     setOrganizerMatch,
     getMatchList,
+    createMatch,
     setOrganizerDefaultApexClient,
     getOrganizerDefaultApexClient,
 }

@@ -146,6 +146,11 @@ function apexService(config) {
         return data.data;
     }
 
+    async function createMatch(name) {
+        let data = await axios.post(`${config.baseUrl}match/${name}`, {}, { headers: getApiKeyHeaders() });
+        return data.data;
+    }
+
     let connections = {};
     function getLiveDataWs(organizer, client) {
         const name = organizer + ":" + client;
@@ -196,5 +201,6 @@ function apexService(config) {
         setOrganizerDefaultApexClient,
         getOrganizerDefaultApexClient,
         addClient,
+        createMatch,
     }
 }

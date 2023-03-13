@@ -1,7 +1,16 @@
 <template>
 	<v-row>
+		<template v-if="!eventId || eventId == ''">
+			<v-col sm="12" lg="6">
+				<v-card>
+					<v-card-text>
+						<i>Please choose or create a match</i>
+					</v-card-text>
+				</v-card>
+			</v-col>
+		</template>
 
-		<v-col sm="12" lg="6">
+		<v-col v-else sm="12" lg="6">
 			<v-card>
 				<v-card-text>
 					<v-card class="ma-1 grey darken-4">

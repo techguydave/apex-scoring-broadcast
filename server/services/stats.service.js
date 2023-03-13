@@ -1,5 +1,6 @@
 const { db } = require("../connectors/db");
 const _ = require("lodash");
+const settingService = require("./settings.service");
 
 function assembleStatsDocuments(games, teams, players) {
     let teamsByGame = _(teams).groupBy("gameId").value();
@@ -70,15 +71,14 @@ async function writeStats(organizer, eventId, game, data, source) {
         let gameId = undefined;
         await db.transaction(async trx => {
             console.log({ organizer, eventId, game })
-            await deleteStats(organizer, eventId, game);
+            await deleteStats(organizer.id, eventId, game);
 
             let matchId = await trx("match").where({
-                organizer, eventId
+                organizer: organizer.id, eventId
             }).first("id");
 
             if (!matchId) {
-                matchId = await trx("match").insert({ organizer, eventId }, ["id"]);
-                matchId = matchId[0];
+                matchId = await settingService.createMatch(organizer, eventId);
             }
 
             matchId = matchId.id;
@@ -88,7 +88,7 @@ async function writeStats(organizer, eventId, game, data, source) {
                 eventId,
                 game,
                 matchId,
-                organizer: organizer,
+                organizer: organizer.id,
                 match_start: data.match_start,
                 mid: data.mid,
                 map_name: data.map_name,
