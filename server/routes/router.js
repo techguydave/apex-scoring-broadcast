@@ -81,12 +81,12 @@ module.exports = function router(app) {
     })
 
     app.post("/settings/match/:organizer/:eventId", verifyOrganizerHeaders, async (req, res) => {
-        await settingService.setPublicSettings(req.organizer, req.params.eventId, req.body);
+        await settingService.setMatchSettings(req.organizer, req.params.eventId, req.body);
         res.sendStatus(200);
     })
 
     app.get("/settings/match/:organizer/:eventId", async (req, res) => {
-        let result = await settingService.getPublicSettings(req.params.organizer, req.params.eventId);
+        let result = await settingService.getMatchSettings(req.params.organizer, req.params.eventId);
         res.send(result);
     })
 
