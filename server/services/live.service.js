@@ -57,10 +57,11 @@ function processDataLine(line, data = defaultStruct()) {
                 break;
             case "playerConnected":
                 // Dont include spectators
-                if (line.player.teamId > 1) {
+                if (line.player.teamId > 1 && !players[pid]?.characterSelected) {
                     players[pid] = {
                         ...line.player,
                         ...players[pid],
+                        character: undefined,
                     }
                 } else {
                     data.observers[pid] = {
