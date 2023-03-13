@@ -1,36 +1,34 @@
 const cache = require("./cache.service");
 const { db } = require("../connectors/db");
 
-const defaultBroadcastSettings = [
-    {
-        selected: [0],
-        name: "Output 1",
-        activeScene: 0,
-        selectedMatch: undefined,
-        scenes: [
-            {
-                id: 1,
-                name: "Scene 1",
-                overlays: [
-                    {
-                        type: "Scoreboard",
-                        name: "Scoreboard",
-                        settings: {
-                            "dark": true,
-                            "game": "overall",
-                            "mode": "team",
-                            "header": true,
-                            "styled": true,
-                            "showCharacters": true,
-                            "display": "score",
-                            "display2": "kills",
-                        }
-                    }
-                ]
+const defaultBroadcastSettings = [{
+    "id": "8a0b9477-233a-42e6-b125-669f32a30614",
+    "name": "Display 1",
+    "scenes": [{
+        "id": "1a22079b-a358-47e4-937b-d5f01c675d49",
+        "name": "Scene 1",
+        "overlays": [{
+            "id": "c31a6190-e270-46a4-bfc9-ca6cad80e8ad",
+            "name": "Scoreboard",
+            "type": "Scoreboard",
+            "settings": {
+                "dark": true,
+                "game": "overall",
+                "mode": "team",
+                "header": true,
+                "styled": true,
+                "display": "score",
+                "display2": "kills",
+                "showCharacters": true
             }
-        ]
-    }
-]
+        }]
+    }],
+    "activeScene": "1a22079b-a358-47e4-937b-d5f01c675d49",
+    "observerName": null,
+    "selectedMatch": null,
+    "selectedClient": null
+}];
+
 
 function getCacheKey(org, event, option) {
     return `SETTINGS:${org}-${event}-${option}`;
