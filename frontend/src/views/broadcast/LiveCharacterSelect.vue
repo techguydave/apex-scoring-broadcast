@@ -1,5 +1,5 @@
 <template>
-    <div class="wrap" :class="{ styled: settings.styled }">
+    <div class="wrap" :class="{ styled: settings.settings.styled }">
         <v-row>
             <v-col cols="3" v-for="team in liveData.teams" :key="team.id">
                 <div class="cont">

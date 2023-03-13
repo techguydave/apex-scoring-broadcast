@@ -2,9 +2,8 @@
     <div>
         <div class="broadcast-page">
             <component v-for="overlay in scene.overlays" :is="overlay.type" :settings="overlay.settings" :stats="stats"
-                :liveData="liveData" :key="overlay.id" />
-            <!-- :observer="observer" :observerTeam="observerTeam"
-                :observerPlayer="observerPlayer" /> -->
+                :liveData="liveData" :key="overlay.id" :observer="observer" :observerTeam="observerTeam"
+                :observerPlayer="observerPlayer" />
             <div id="credit1" class="credit dark"><span class="power">Powered by
                 </span><br />overstat.gg</div>
             <!-- <div id="credit2" class="credit" :class="{ dark: displayOptions.dark }">Powered by overstat.gg</div> -->
@@ -41,16 +40,17 @@ export default {
         }
     },
     computed: {
-        // observerPlayer() {
-        //     return this.observerTeam.find(p => this.observer.target.nucleusHash == p.nucleusHash);
-        // },
-        // observerTeam() {
-        //     console.log(this.observer.target.teamId);
-        //     return this.liveData?.teams?.[this.observer.target.teamId]
-        // },
-        // observer() {
-        //     return Object.values(this.liveData.observers).find(o => o.name == this.observerName);
-        // }
+        observerPlayer() {
+            return this.observerTeam?.find(p => this.observer?.target?.nucleusHash == p.nucleusHash);
+        },
+        observerTeam() {
+            return this.liveData?.teams?.[this.observer?.target?.teamId]
+        },
+        observer() {
+            if (this.liveData.observers)
+                return Object.values(this.liveData.observers).find(o => o.name == this.observerName);
+            return undefined;
+        }
     },
     methods: {
         async updateScores() {

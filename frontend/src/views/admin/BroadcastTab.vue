@@ -136,7 +136,7 @@ const overlayDefaults = [
     },
     {
         type: "LiveTeamStatus",
-        name: "(Live) Team Status",
+        name: "(Live) Team Scoreboard",
         settings: {
             styled: true,
             dark: false,
@@ -206,8 +206,10 @@ export default {
         setValue(s, value) {
             if (value)
                 this.getSettingsValue(s).splice(s[s.length - 1], 1, value);
-            else
+            else {
                 this.getSettingsValue(s).splice(s[s.length - 1], 1);
+                this.selectorValue = [0]
+            }
         },
         async refreshBroadcastOptions() {
             if (this.eventId) {

@@ -12,7 +12,7 @@ export default {
     props: ["value"],
     data() {
         return {
-            settings: this.value,
+            settings: this.value.settings,
         }
     },
     methods: {

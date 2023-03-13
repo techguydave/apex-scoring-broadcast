@@ -9,7 +9,7 @@
                         <v-text-field v-model="publicData.title" label="Title"></v-text-field>
                     </v-card-text>
                     <v-card-actions>
-                        <v-btn @click="setPublicSettings" color="blue">Submit</v-btn>
+                        <v-btn @click="setPublicSettings" color="primary">Submit</v-btn>
                     </v-card-actions>
                 </v-card>
                 <v-card>
