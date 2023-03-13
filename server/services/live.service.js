@@ -88,7 +88,7 @@ function processDataLine(line, data = defaultStruct()) {
                         kills: 0,
                         status: STATUS.ALIVE,
                         characterSelected: true,
-                        character: line.character.toLowerCase()
+                        character: line.player.character.toLowerCase()
                     };
                 }
                 break;
