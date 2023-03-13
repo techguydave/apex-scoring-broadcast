@@ -1,6 +1,6 @@
 <template>
-    <div class="wrap" :class="{ styled: settings.settings.styled }">
-        <div class="team-wrap" :class="{ dark: settings.settings.dark }">
+    <div class="wrap" :class="{ styled: settings.styled }">
+        <div class="team-wrap" :class="{ dark: settings.dark }">
             <div class="index ">
                 <IconSpan icon="tag" font-size="18px"></IconSpan>
             </div>
