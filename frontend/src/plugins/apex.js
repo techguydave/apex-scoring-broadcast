@@ -79,12 +79,12 @@ function apexService(config) {
     }
 
     async function getPublicSettings(organizer, eventId) {
-        let data = await axios.get(config.baseUrl + "settings/public/" + organizer + "/" + eventId);
+        let data = await axios.get(config.baseUrl + "settings/match/" + organizer + "/" + eventId);
         return data.data;
     }
 
     async function setPublicSettings(organizer, eventId, display) {
-        await axios.post(config.baseUrl + "settings/public/" + organizer + "/" + eventId, display, { headers: getApiKeyHeaders() });
+        await axios.post(config.baseUrl + "settings/match/" + organizer + "/" + eventId, display, { headers: getApiKeyHeaders() });
     }
 
     async function setSelectedMatch(organizer, match) {
