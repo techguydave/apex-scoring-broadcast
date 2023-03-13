@@ -1,6 +1,7 @@
 const livedata = require("./livedata.json");
 const Websocket = require("websocket").w3cwebsocket;
-const ws = new Websocket("ws://localhost:3000/live/write/key1/Drews Client");
+// const ws = new Websocket("ws://localhost:3000/live/write/key1/Drews Client");
+const ws = new Websocket("wss://dev.overstat.gg/api/live/write/UTl5UyJE8sn3p3Bb01j6JjdVVZ4ukjRx/sdf");
 
 function wait(time) {
     return new Promise((res) => {
@@ -20,6 +21,6 @@ ws.onopen = async function () {
     console.log("done");
 }
 
-ws.onerror = () => console.log("Client DC")
+ws.onerror = (msg) => console.log("Client DC", msg)
 
-ws.onclose = () => console.log("Closed");
+ws.onclose = (msg) => console.log("Closed", msg);
