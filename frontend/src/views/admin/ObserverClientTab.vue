@@ -70,7 +70,7 @@ export default {
     },
     methods: {
         getLaunchArgs(client) {
-            return `+cl_liveapi_enabled 1 +cl_liveapi_ws_servers "wss://${window.location.host}/live/write/${this.$apex.getApiKey()}/${encodeURIComponent(client)}" +cl_liveapi_use_protobuf 0`
+            return `+cl_liveapi_enabled 1 +cl_liveapi_ws_servers "${this.$apex.config.wsUrl}/live/write/${this.$apex.getApiKey()}/${encodeURIComponent(client)}" +cl_liveapi_use_protobuf 0`
         },
         isConnected(client) {
             return this.clients[client].connected;
