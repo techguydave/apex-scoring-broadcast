@@ -312,6 +312,7 @@ export default {
 	padding: 5px 10px;
 	margin: 5px 3px;
 	border-radius: 5px;
+	cursor: pointer;
 
 	&.v-item--active {
 		background: $primary;
