@@ -1,7 +1,8 @@
 {
-    "api": {
-        "baseUrl": "http://localhost:3000/",
-        "fullUrl": "http://localhost:3000/",
-        "wsUrl": "ws://localhost:3000/"
-    }
+  "api": {
+    "baseUrl": "http://localhost:3000/",
+    "fullUrl": "http://localhost:3000/",
+    "wsReadUrl": "ws://localhost:3000/api/live/read",
+    "wsWriteUrl": "ws://localhost:3000/live/write"
+  }
 }
