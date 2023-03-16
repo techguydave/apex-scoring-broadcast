@@ -26,7 +26,7 @@
                             <v-text-field v-model="score"></v-text-field><v-btn color="primary"
                                 @click="editing = undefined; $emit('edit', { teamId: team.teamId, gameId: stats.id, score })">Update</v-btn>
                         </td>
-                        <td v-else>{{ team.overall_stats.score }} <IconBtnFilled
+                        <td v-else>{{ team.overall_stats.score }} <IconBtnFilled v-if="stats.id"
                                 @click="score = team.overall_stats.score; editing = team.teamId" icon="edit"
                                 font-size="14px">
                             </IconBtnFilled>
