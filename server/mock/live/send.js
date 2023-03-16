@@ -1,6 +1,8 @@
 const livedata = require("./livedata.json");
 const Websocket = require("websocket").w3cwebsocket;
-// const ws = new Websocket("ws://localhost:3000/live/write/key1/test");
+const ws = new Websocket("ws://localhost:3000/live/write/key1/test");
+// const ws = new Websocket("ws://overstat.gg/live/write/debfb094e22744b491f8dea0678931e1/Double0");
+// const ws = new Websocket("ws://dev.overstat.gg/live/write/Ds6WIE0j1hnKmRidM3k0J0t7e1MtBMMM/test");
 
 function wait(time) {
     return new Promise((res) => {

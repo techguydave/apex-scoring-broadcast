@@ -139,6 +139,18 @@ async function writeStats(organizer, eventId, game, data, source) {
     }
 }
 
+async function editScore(gameId, teamId, score) {
+    await db("team_game_stats").update({ score }).where({ gameId, teamId });
+}
+
+async function editKills(gameId, teamId, kills) {
+    await db("team_game_stats").update({ kills }).where({ gameId, teamId });
+}
+
+async function getGame(gameId) {
+    return db("game").first("*").where({ id: gameId });
+}
+
 async function getGameList(organizer, eventId) {
     try {
         let result = await db("game")
@@ -229,4 +241,7 @@ module.exports = {
     setLiveDataGame,
     getUnclaimedLiveData,
     getLiveDataById,
+    editScore,
+    editKills,
+    getGame,
 }

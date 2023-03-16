@@ -105,6 +105,10 @@ function apexService(config) {
         return data.selected_apex_client;
     }
 
+    async function editScore(gameId, teamId, score) {
+        let { data } = await axios.patch(`${config.baseUrl}stats/score/`, { gameId, teamId, score }, { headers: getApiKeyHeaders() });
+        return data;
+    }
 
     async function getMatchList(organizer) {
         let result = await axios.get(config.baseUrl + "settings/match_list/" + organizer, { headers: getApiKeyHeaders() });
@@ -204,5 +208,6 @@ function apexService(config) {
         getOrganizerDefaultApexClient,
         addClient,
         createMatch,
+        editScore,
     }
 }

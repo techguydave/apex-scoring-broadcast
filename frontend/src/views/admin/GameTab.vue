@@ -133,7 +133,7 @@
 						</v-tab-item>
 						<v-tab-item v-for="(game, index) in stats.games" :key="index">
 							<v-btn @click="deleteStats(game.game)">Delete</v-btn>
-							<simple-score-table :stats="game"></simple-score-table>
+							<simple-score-table :stats="game" @edit="edit"></simple-score-table>
 						</v-tab-item>
 					</v-tabs-items>
 				</v-card-text>
@@ -277,6 +277,10 @@ export default {
 		},
 		getRelative(timestamp) {
 			return Day(timestamp).from(Day());
+		},
+		async edit({ gameId, teamId, score }) {
+			await this.$apex.editScore(gameId, teamId, score);
+			await this.updateStats();
 		}
 	},
 	mounted() {

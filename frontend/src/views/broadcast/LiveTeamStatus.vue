@@ -48,9 +48,13 @@
 
 <script>
 import IconSpan from "@/components/IconSpan.vue";
-import _ from "lodash";
+import {
+    getTeamScore,
+    getPlacementPoints,
+    sortTeams,
+    isAlive,
+} from "@/utils/overlayUtils.js"
 
-const placementPoints = "12,12,9,7,5,4,3,3,2,2,2,1,1,1,1,1,0,0,0,0,0".split(",").map(n => parseInt(n.trim()))
 
 export default {
     props: ["stats", "liveData", "settings"],
@@ -71,30 +75,14 @@ export default {
 
             }
         },
-        getTeamScore(team) {
-            if (this.stats?.teams) {
-                let teamId = team.teamId;
-                let statsTeam = this.stats?.teams?.find(team => team.teamId == teamId);
-                return (statsTeam?.overall_stats?.score ?? 0) + team.kills + this.getPlacementPoints(team);
-            }
-            return team.kills + this.getPlacementPoints(team);
-        },
-        getPlacementPoints(team) {
-            if (team.placement && team.placement != -1) {
-                return placementPoints[team.placement];
-            } else {
-                return this.liveData.teamsAlive <= 0 ? 0 : placementPoints[this.liveData.teamsAlive];
-            }
-        },
-        sortTeams(teams) {
-            return Object.values(teams ?? {}).sort((a, b) => this.getTeamScore(b) - this.getTeamScore(a));
-        },
+
         calcHeight(health, add = 0) {
             return ((health / 7.6) + add) + "px";
         },
-        isAlive(team) {
-            return _.some(team, p => p.status == "alive")
-        }
+        getTeamScore,
+        getPlacementPoints,
+        sortTeams,
+        isAlive,
     }
 }
 </script>

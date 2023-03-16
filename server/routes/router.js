@@ -315,6 +315,20 @@ module.exports = function router(app) {
         res.sendStatus(200);
     })
 
+    app.patch("/stats/score/", verifyOrganizerHeaders, async (req, res) => {
+        const {
+            gameId,
+            teamId,
+            score,
+        } = req.body;
+
+        await statsService.editScore(gameId, teamId, score);
+        let game = await statsService.getGame(gameId);
+        console.log(game);
+        await deleteCache(req.organizer.username, game.eventId, game.game)
+        res.sendStatus(200);
+    })
+
     app.get("/stats/latest", async (req, res) => {
         const cacheKey = "latest";
 
