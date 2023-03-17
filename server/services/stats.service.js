@@ -169,7 +169,7 @@ async function getLatest() {
         let matches = await db("match")
             .join("organizers", "organizers.id", "match.organizer")
             .orderBy("match.id", "desc")
-            .limit(8)
+            .limit(30)
             .select("*");
 
         if (matches) {
@@ -177,7 +177,7 @@ async function getLatest() {
                 let stats = await getStats(match.organizer, match.eventId, "overall");
                 res({ ...match, stats })
             })));
-            return stats;
+            return stats.filter(match => match.stats.length > 0);
         } else {
             return [];
         }

@@ -339,7 +339,7 @@ module.exports = function router(app) {
 
         let matches = await statsService.getLatest();
         let settings = await Promise.all(matches.map(async match => settingService.getMatchSettings(match.username, match.eventId)));
-
+        matches = matches.slice(0, 8);
         if (matches) {
             let stats = matches.map((match, id) => {
                 return {
@@ -352,6 +352,7 @@ module.exports = function router(app) {
             });
 
             cache.put(cacheKey, stats, 300);
+
             res.send(stats);
         }
     })
