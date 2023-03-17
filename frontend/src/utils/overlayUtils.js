@@ -1,7 +1,17 @@
 const placementPoints = "12,12,9,7,5,4,3,3,2,2,2,1,1,1,1,1,0,0,0,0,0".split(",").map(n => parseInt(n.trim()))
 const _ = require("lodash")
 
-function getTeamScore(team) {
+function getTeamScoreByStatsTeam(team) {
+    let score = team.overall_stats.score;
+    let liveTeam = this.liveData?.teams?.[team.teamId];
+
+    if (liveTeam) {
+        score += liveTeam.kills + this.getPlacementPoints(liveTeam);
+    }
+    return score;
+}
+
+function getTeamScoreByLiveTeam(team) {
     if (this.stats?.teams) {
         let teamId = team.teamId;
         let statsTeam = this.stats?.teams?.find(team => team.teamId == teamId);
@@ -16,8 +26,13 @@ function getPlacementPoints(team) {
         return this.liveData.teamsAlive <= 0 ? 0 : placementPoints[this.liveData.teamsAlive];
     }
 }
-function sortTeams(teams) {
-    return Object.values(teams ?? {}).sort((a, b) => this.getTeamScore(b) - this.getTeamScore(a));
+
+function sortTeamsStats(teams) {
+    return [...teams].sort((a, b) => this.getTeamScoreByStatsTeam(b) - this.getTeamScoreByStatsTeam(a));
+}
+
+function sortTeamsLive(teams) {
+    return Object.values(teams ?? {}).sort((a, b) => this.getTeamScoreByLiveTeam(b) - this.getTeamScoreByLiveTeam(a));
 }
 
 function isAlive(team) {
@@ -26,8 +41,10 @@ function isAlive(team) {
 
 module.exports = {
     placementPoints,
-    getTeamScore,
+    getTeamScoreByStatsTeam,
+    getTeamScoreByLiveTeam,
     getPlacementPoints,
-    sortTeams,
+    sortTeamsLive,
+    sortTeamsStats,
     isAlive,
 }

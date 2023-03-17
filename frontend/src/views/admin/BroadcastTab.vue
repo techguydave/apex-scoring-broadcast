@@ -127,6 +127,7 @@ import SceneSettings from "../../components/broadcast-settings/SceneSettings.vue
 import ScoreboardSettings from "../../components/broadcast-settings/ScoreboardSettings.vue";
 import LiveTeamStatusSettings from "../../components/broadcast-settings/LiveTeamStatusSettings.vue";
 import LiveCharacterSelectSettings from "../../components/broadcast-settings/LiveCharacterSelectSettings.vue";
+import TickerSettings from "../../components/broadcast-settings/TickerSettings.vue";
 import IconBtn from "../../components/IconBtnFilled.vue";
 
 import _ from "lodash";
@@ -161,6 +162,16 @@ const overlayDefaults = [
             styled: true,
             dark: false,
         }
+    },
+    {
+        type: "Ticker",
+        name: "Ticker",
+        settings: {
+            styled: true,
+            dark: false,
+            smooth: true,
+            speed: 15,
+        }
     }
 ]
 
@@ -174,7 +185,8 @@ export default {
         ScoreboardSettings,
         IconBtn,
         LiveCharacterSelectSettings,
-        LiveTeamStatusSettings
+        LiveTeamStatusSettings,
+        TickerSettings,
     },
     props: [
         "organizer",
@@ -284,6 +296,8 @@ export default {
 .display-viewport ::v-deep .broadcast-page {
     border: 4px solid #333;
     background: black;
+    overflow: hidden;
+
 }
 
 ::v-deep .v-messages {

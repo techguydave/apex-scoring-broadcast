@@ -17,6 +17,8 @@ import Scoreboard from "@/views/broadcast/Scoreboard.vue"
 import LivedataTest from "../views/broadcast/LivedataTest.vue";
 import LiveTeamStatus from "../views/broadcast/LiveTeamStatus.vue";
 import LiveCharacterSelect from "../views/broadcast/LiveCharacterSelect.vue";
+import Ticker from "../views/broadcast/Ticker.vue";
+
 import { processWsData } from "@/utils/liveData";
 export default {
     components: {
@@ -24,6 +26,7 @@ export default {
         LivedataTest,
         LiveTeamStatus,
         LiveCharacterSelect,
+        Ticker,
     },
     props: ["organizer", "display"],
     data() {
