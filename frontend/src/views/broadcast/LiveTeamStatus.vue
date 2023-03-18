@@ -1,5 +1,6 @@
 <template>
-    <div class="wrap" :class="{ styled: settings.styled }">
+    <div class="wrap" :class="{ styled: settings.styled }"
+        :style="{ transform: `translate(${settings.hidePlayers ? '1632px' : '1500px'}, 300px)` }">
         <div class="team-wrap" :class="{ dark: settings.dark }">
             <div class="index ">
                 <IconSpan icon="tag" font-size="18px"></IconSpan>
@@ -10,39 +11,41 @@
             <div class="score ">
                 <IconSpan icon="skull" font-size="18px"></IconSpan>
             </div>
-            <div class="player-wrap"><span>Players</span></div>
+            <div v-if="!settings.hidePlayers" class="player-wrap"><span>Players</span></div>
             <div class="team-name"><span>Team</span></div>
         </div>
-        <div class="team-wrap" :class="{ dark: settings.dark }" :style="{ opacity: isAlive(team) ? 1 : .7 }"
-            v-for=" (team, index) in sortTeamsLive(liveData.teams).slice(0, 20)" :key="team.teamId">
-            <div class="index "><span>{{ index + 1 }} </span></div>
-            <div class="score "><span>{{ getTeamScoreByLiveTeam(team) }}</span></div>
-            <div class="score "><span>{{ team.kills }} </span></div>
+        <template v-for=" (team, index) in sortTeamsLive(liveData.teams).slice(0, 20)">
+            <div v-if="shouldShow(index)" class="team-wrap" :class="{ dark: settings.dark }"
+                :style="{ opacity: isAlive(team) ? 1 : .7 }" :key="team.teamId">
+                <div class="index "><span>{{ index + 1 }} </span></div>
+                <div class="score "><span>{{ getTeamScoreByLiveTeam(team) }}</span></div>
+                <div class="score "><span>{{ team.kills }} </span></div>
 
-            <div class="player-wrap">
-                <div v-for="player in team" :key="player.nucleasHash" class="player-status"
-                    :style="{ opacity: player.status == 'alive' ? .8 : .5 }">
-                    <div class="player-status">
-                        <img class="team-character" height="32" :src="'/legend_icons/' + player.character + '.webp'">
-                    </div>
-                    <div v-if="player.status == 'alive'" class="player-status prog-bar" v-show="player.status == 'alive'"
-                        :style="{ height: calcHeight(player.maxHealth + player.shieldMaxHealth, 2) }">
-                        <div class="hb sheild"
-                            :style="{ bottom: calcHeight(player.currentHealth), height: calcHeight(player.shieldHealth), backgroundColor: getShieldColor(player.shieldMaxHealth) }">
+                <div v-if="!settings.hidePlayers" class="player-wrap">
+                    <div v-for="player in team" :key="player.nucleasHash" class="player-status"
+                        :style="{ opacity: player.status == 'alive' ? .8 : .5 }">
+                        <div class="player-status">
+                            <img class="team-character" height="32" :src="'/legend_icons/' + player.character + '.webp'">
                         </div>
-                        <div class="hb health" :style="{ height: calcHeight(player.currentHealth) }"></div>
-                        <!-- <div class="hb sheild"
+                        <div v-if="player.status == 'alive'" class="player-status prog-bar"
+                            v-show="player.status == 'alive'"
+                            :style="{ height: calcHeight(player.maxHealth + player.shieldMaxHealth, 2) }">
+                            <div class="hb sheild"
+                                :style="{ bottom: calcHeight(player.currentHealth), height: calcHeight(player.shieldHealth), backgroundColor: getShieldColor(player.shieldMaxHealth) }">
+                            </div>
+                            <div class="hb health" :style="{ height: calcHeight(player.currentHealth) }"></div>
+                            <!-- <div class="hb sheild"
                         :style="{ height: (player.currentHealth + player.shieldHealth) / 8 + 'px', backgroundColor: getShieldColor(player.shieldMaxHealth) }"> -->
 
-                        <!-- </div> -->
+                            <!-- </div> -->
+                        </div>
+                        <div v-else class="player-status prog-bar" :style="{ opacity: 0 }"></div>
                     </div>
-                    <div v-else class="player-status prog-bar" :style="{ opacity: 0 }"></div>
                 </div>
+                <div class="team-name"><span>{{ team.name }}</span> </div>
+
             </div>
-            <div class="team-name"><span>{{ team.name }}</span> </div>
-
-        </div>
-
+        </template>
     </div>
 </template>
 
@@ -63,6 +66,17 @@ export default {
     components: {
         IconSpan,
     },
+    data() {
+        return {
+            start: this.settings.static,
+        }
+    },
+    watch: {
+        settings() {
+            if (!this.start)
+                this.start = this.settings.static
+        }
+    },
     methods: {
         getShieldColor(health) {
             switch (health) {
@@ -77,9 +91,18 @@ export default {
 
             }
         },
-
+        shouldShow(index) {
+            return (index < (this.settings.static ?? 20) || index >= this.start && index < this.start + this.settings.rotate)
+        },
         calcHeight(health, add = 0) {
             return ((health / 7.6) + add) + "px";
+        },
+        rotate() {
+            this.start += this.settings.rotate;
+
+            if (this.start >= this.liveData?.totalTeams) {
+                this.start = this.settings.static;
+            }
         },
         getTeamScoreByStatsTeam,
         getTeamScoreByLiveTeam,
@@ -87,6 +110,12 @@ export default {
         sortTeamsLive,
         sortTeamsStats,
         isAlive,
+    },
+    mounted() {
+        this.int = setInterval(() => this.rotate(), 7000);
+    },
+    destroyed() {
+        clearInterval(this.int);
     }
 }
 </script>
@@ -96,7 +125,6 @@ export default {
      text-align: right;
      display: block;
      width: 400px;
-     transform: translate(1500px, 300px);
  }
 
 
