@@ -23,8 +23,8 @@ const displayOptions = {
             "bestKills",
         ],
         player: [
-            "kills",
             "score",
+            "kills",
             "characterName",
             "damageDealt",
             "damageTaken",
