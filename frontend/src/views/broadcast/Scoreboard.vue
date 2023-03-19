@@ -73,7 +73,7 @@
         </div>
       </div>
     </div>
-</div>
+  </div>
 </template>
 
 <script>
@@ -106,7 +106,10 @@ export default {
       return _.zip(start, end).flat();
     },
     teams() {
-      return this.stats.teams
+      if (this.settings.game == "overall")
+        return this.stats.teams
+      else
+        return this.stats.games[parseInt(this.settings.game) - 1 || 0]?.teams ?? [];
     },
     scoresByMode() {
       return getStatsByMode(this.teams, this.settings.mode)
