@@ -1,5 +1,6 @@
 const { db } = require("../connectors/db");
 const _ = require("lodash");
+const settingService = require("./settings.service");
 
 function assembleStatsDocuments(games, teams, players) {
     let teamsByGame = _(teams).groupBy("gameId").value();
@@ -70,15 +71,14 @@ async function writeStats(organizer, eventId, game, data, source) {
         let gameId = undefined;
         await db.transaction(async trx => {
             console.log({ organizer, eventId, game })
-            await deleteStats(organizer, eventId, game);
+            await deleteStats(organizer.id, eventId, game);
 
             let matchId = await trx("match").where({
-                organizer, eventId
+                organizer: organizer.id, eventId
             }).first("id");
 
             if (!matchId) {
-                matchId = await trx("match").insert({ organizer, eventId }, ["id"]);
-                matchId = matchId[0];
+                matchId = await settingService.createMatch(organizer, eventId);
             }
 
             matchId = matchId.id;
@@ -88,7 +88,7 @@ async function writeStats(organizer, eventId, game, data, source) {
                 eventId,
                 game,
                 matchId,
-                organizer: organizer,
+                organizer: organizer.id,
                 match_start: data.match_start,
                 mid: data.mid,
                 map_name: data.map_name,
@@ -139,6 +139,18 @@ async function writeStats(organizer, eventId, game, data, source) {
     }
 }
 
+async function editScore(gameId, teamId, score) {
+    await db("team_game_stats").update({ score }).where({ gameId, teamId });
+}
+
+async function editKills(gameId, teamId, kills) {
+    await db("team_game_stats").update({ kills }).where({ gameId, teamId });
+}
+
+async function getGame(gameId) {
+    return db("game").first("*").where({ id: gameId });
+}
+
 async function getGameList(organizer, eventId) {
     try {
         let result = await db("game")
@@ -157,7 +169,7 @@ async function getLatest() {
         let matches = await db("match")
             .join("organizers", "organizers.id", "match.organizer")
             .orderBy("match.id", "desc")
-            .limit(8)
+            .limit(30)
             .select("*");
 
         if (matches) {
@@ -165,7 +177,7 @@ async function getLatest() {
                 let stats = await getStats(match.organizer, match.eventId, "overall");
                 res({ ...match, stats })
             })));
-            return stats;
+            return stats.filter(match => match.stats.length > 0);
         } else {
             return [];
         }
@@ -176,10 +188,14 @@ async function getLatest() {
     }
 }
 
-
-async function writeLiveData(gameId, data) {
+async function writeLiveData(gameId, data, organizer) {
+    let timestamp = data[0].timestamp;
     data = JSON.stringify(data);
-    await db("livedata").insert({ gameId, data });
+    await db("livedata").insert({ gameId, data, timestamp, organizer });
+}
+
+async function setLiveDataGame(liveId, gameId) {
+    await db("livedata").update({ gameId }).where({ id: liveId });
 }
 
 async function hasLiveData(organizer, eventId, game) {
@@ -191,11 +207,26 @@ async function hasLiveData(organizer, eventId, game) {
     }
 }
 
+async function getLiveDataById(liveDataId) {
+    let data = await db("livedata")
+        .first("*")
+        .where({ id: liveDataId });
+    return JSON.parse(data.data);
+}
+
 async function getLiveData(gameId) {
     let data = await db("livedata")
         .first("*")
         .where({ gameId });
     return JSON.parse(data.data);
+}
+
+async function getUnclaimedLiveData(organizer) {
+    let data = await db("livedata")
+        .select(["id", "timestamp"])
+        .where({ organizer })
+        .whereNull("gameId");
+    return data;
 }
 
 module.exports = {
@@ -207,4 +238,10 @@ module.exports = {
     writeLiveData,
     hasLiveData,
     getLiveData,
+    setLiveDataGame,
+    getUnclaimedLiveData,
+    getLiveDataById,
+    editScore,
+    editKills,
+    getGame,
 }

@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-      "start": "node index.js"
+    "start": "node index.js"
   },
   "author": "Double0negative",
   "license": "ISC",
@@ -18,11 +18,13 @@
     "express-fileupload": "^1.4.0",
     "express-ws": "^5.0.2",
     "ioredis": "^5.2.4",
+    "jsondiffpatch": "^0.4.1",
     "knex": "^2.3.0",
     "lodash": "^4.17.21",
     "pg": "^8.8.0"
   },
   "devDependencies": {
-    "eslint": "^8.23.0"
+    "eslint": "^8.23.0",
+    "websocket": "^1.0.34"
   }
 }

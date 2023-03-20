@@ -1,27 +1,27 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Admin from "../views/Admin";
-import Broadcast from "../views/Broadcast";
-import Index from "../views/Index";
-import Tournament from "../views/Tournament";
-import Players from "../views/Players";
-import Player from "../views/Player";
+import Admin from "../pages/AdminPage";
+import Broadcast from "../pages/BroadcastPage";
+import Index from "../pages/Index";
+import Tournament from "../pages/TournamentPage";
+import Players from "../pages/PlayersPage";
+import Player from "../pages/PlayerPage";
 
-import Standings from "../components/tournament/Standings";
-import Stats from "../components/tournament/Stats";
+import Standings from "../views/tournament/Standings";
+import Stats from "../views/tournament/Stats";
 
-import Scoreboard from "../components/tournament/standings/Scoreboard";
-import TeamStandings from "../components/tournament/standings/TeamStandings";
-import PlayerStandings from "../components/tournament/standings/PlayerStandings";
-import Feed from "../components/tournament/standings/Feed";
+import Scoreboard from "../views/tournament/standings/Scoreboard";
+import TeamStandings from "../views/tournament/standings/TeamStandings";
+import PlayerStandings from "../views/tournament/standings/PlayerStandings";
+import Feed from "../views/tournament/standings/Feed";
 
-import StatsCumulativeCharts from "../components/tournament/stats/CumulativeCharts";
-import StatsGameCharts from "../components/tournament/stats/GameCharts";
-import StatsPointRatioCharts from "../components/tournament/stats/PointRatio";
-import StatsPickRate from "../components/tournament/stats/PickRate";
+import StatsCumulativeCharts from "../views/tournament/stats/CumulativeCharts";
+import StatsGameCharts from "../views/tournament/stats/GameCharts";
+import StatsPointRatioCharts from "../views/tournament/stats/PointRatio";
+import StatsPickRate from "../views/tournament/stats/PickRate";
 
-import PlayerOverview from "../components/player/Overview";
-import PlayerMatches from "../components/player/Matches";
+import PlayerOverview from "../views/player/Overview";
+import PlayerMatches from "../views/player/Matches";
 
 Vue.use(VueRouter)
 
@@ -33,13 +33,13 @@ const routes = [
     props: true,
   },
   {
-    path: "/broadcast/:organizer/:eventId",
+    path: "/broadcast/:organizer/:display",
     name: "broadcast",
     component: Broadcast,
     props: true,
   },
   {
-    path: '/admin/:organizer?/:eventId?',
+    path: '/admin/:organizer?',
     name: 'admin',
     component: Admin,
     props: true,

@@ -5,9 +5,10 @@ config.statsUrl = process.argv[2] || config.statsUrl;
 const { verifyOrganizerHeaders, verifyAdminHeaders } = require("../middleware/auth");
 const apexService = new require("../services/apex.service")(config);
 const authService = require("../services/auth.service");
-const adminService = require("../services/admin.service");
+const settingService = require("../services/settings.service");
 const cache = require("../services/cache.service");
 const shortLinkService = require("../services/short_link.service.js");
+const wsHandlerService = require("../services/ws_handler.service.js");
 const liveService = require("../services/live.service");
 const { getOr } = require("../utils/utils");
 const playerService = require("../services/player.service");
@@ -56,9 +57,7 @@ module.exports = function router(app) {
 
         let organizer = await authService.getOrganizer(username, key);
 
-        res.send({
-            valid: organizer != undefined
-        })
+        res.send(organizer)
     })
 
     app.post("/auth/create", verifyAdminHeaders, async (req, res) => {
@@ -71,25 +70,51 @@ module.exports = function router(app) {
         res.send(organizer);
     })
 
-    app.post("/settings/broadcast/:organizer/:eventId", verifyOrganizerHeaders, (req, res) => {
-        adminService.setBroadcastSettings(req.organizer.id, req.params.organizer, req.params.eventId, req.body);
+    app.post("/settings/broadcast/:organizer", verifyOrganizerHeaders, async (req, res) => {
+        await settingService.setBroadcastSettings(req.organizer, req.body);
         res.sendStatus(200);
     })
 
-    app.get("/settings/broadcast/:organizer/:eventId", async (req, res) => {
-        let result = await adminService.getBroadcastSettings(req.params.organizer, req.params.eventId);
+    app.get("/settings/broadcast/:organizer", async (req, res) => {
+        let result = await settingService.getBroadcastSettings(req.params.organizer);
         res.send(result);
     })
 
-    app.post("/settings/public/:organizer/:eventId", verifyOrganizerHeaders, (req, res) => {
-        adminService.setPublicSettings(req.organizer.id, req.params.organizer, req.params.eventId, req.body);
+    app.post("/settings/match/:organizer/:eventId", verifyOrganizerHeaders, async (req, res) => {
+        await settingService.setMatchSettings(req.organizer, req.params.eventId, req.body);
         res.sendStatus(200);
     })
 
-    app.get("/settings/public/:organizer/:eventId", async (req, res) => {
-        let result = await adminService.getPublicSettings(req.params.organizer, req.params.eventId);
+    app.get("/settings/match/:organizer/:eventId", async (req, res) => {
+        let result = await settingService.getMatchSettings(req.params.organizer, req.params.eventId);
         res.send(result);
     })
+
+    app.get("/settings/match_list/:organizer", async (req, res) => {
+        let result = await settingService.getMatchList(req.params.organizer);
+        res.send(result);
+    })
+
+    app.post("/settings/match/:organizer/", async (req, res) => {
+        await settingService.setOrganizerMatch(req.params.organizer, req.body.match);
+        res.sendStatus(200);
+    })
+
+    app.get("/settings/match/:organizer/", async (req, res) => {
+        let result = await settingService.getOrganizerMatch(req.params.organizer);
+        res.send(result);
+    })
+
+    app.post("/settings/default_apex_client/:organizer/", async (req, res) => {
+        await settingService.setOrganizerDefaultApexClient(req.params.organizer, req.body.client);
+        res.sendStatus(200);
+    })
+
+    app.get("/settings/default_apex_client/:organizer/", async (req, res) => {
+        let result = await settingService.getOrganizerDefaultApexClient(req.params.organizer);
+        res.send(result);
+    })
+
 
     app.get("/stats/code/:statsCode", verifyOrganizerHeaders, async (req, res) => {
         let stats = await apexService.getStatsFromCode(req.params.statsCode);
@@ -98,9 +123,15 @@ module.exports = function router(app) {
         res.send(stats);
     })
 
+    app.post("/match/:eventId", verifyOrganizerHeaders, async (req, res) => {
+        let id = await settingService.createMatch(req.organizer, req.params.eventId);
+        res.send({ match: id });
+    })
+
     app.post("/stats", verifyOrganizerHeaders, async (req, res) => {
-        let { eventId, game, statsCode, startTime, placementPoints, killPoints } = req.body;
-        const liveDataFile = getOr(req.files, {})["liveData"];
+        let { eventId, game, statsCode, startTime, placementPoints, autoAttachUnclaimed, selectedUnclaimed, killPoints } = req.body;
+        const liveDataFile = req.files?.["liveData"];
+
 
         placementPoints = placementPoints.split(",").map(n => parseInt(n))
 
@@ -109,16 +140,24 @@ module.exports = function router(app) {
             respawnStats = await apexService.getMatchFromCode(statsCode, startTime);
         }
 
-        if (!respawnStats && !liveDataFile) {
+        console.log(liveDataFile, selectedUnclaimed)
+
+        if (!respawnStats && !liveDataFile && !selectedUnclaimed) {
             return res.sendStatus(404);
         }
 
         let liveDataStats = undefined;
         let liveDataJson = undefined;
 
-        if (liveDataFile) {
+        if (selectedUnclaimed && selectedUnclaimed !== "undefined") {
+            liveDataJson = await statsService.getLiveDataById(selectedUnclaimed);
+        }
+        else if (liveDataFile) {
+            liveDataJson = JSON.parse(liveDataFile.data.toString());
+        }
+
+        if (liveDataJson) {
             try {
-                liveDataJson = JSON.parse(liveDataFile.data.toString());
                 liveDataStats = liveService.processDataDump(liveDataJson);
                 liveDataStats = liveService.convertLiveDataToRespawnApi(liveDataStats).matches[0];
             } catch (err) {
@@ -146,10 +185,13 @@ module.exports = function router(app) {
 
         try {
             //console.log(JSON.stringify(gameStats))
-            let gameId = await statsService.writeStats(req.organizer.id, eventId, game, gameStats, source);
-            console.log(!!liveDataJson, gameId)
-            if (liveDataJson && gameId) {
-                await statsService.writeLiveData(gameId, liveDataJson)
+            let gameId = await statsService.writeStats(req.organizer, eventId, game, gameStats, source);
+            if (selectedUnclaimed !== "undefined") {
+                statsService.setLiveDataGame(selectedUnclaimed, gameId)
+            }
+            else if (selectedUnclaimed === "undefined" && liveDataJson && gameId) {
+                console.log("Wrating live data", gameId, req.organizer.id);
+                await statsService.writeLiveData(gameId, liveDataJson, req.organizer.id)
             }
             await deleteCache(req.organizer.username, eventId, game);
 
@@ -187,7 +229,12 @@ module.exports = function router(app) {
             res.send(data);
         } catch (err) {
             res.send({ err: "err_retriving_data", msg: "Error getting live data" });
+            console.log(err)
         }
+    })
+
+    app.get("/stats/unclaimed_livedata", verifyOrganizerHeaders, async (req, res) => {
+        res.send(await statsService.getUnclaimedLiveData(req.organizer.id));
     })
 
     app.get("/games/:organizer/:eventId", async (req, res) => {
@@ -220,7 +267,7 @@ module.exports = function router(app) {
             return `${body} -- (after ${stats.total} games)`;
         }, 300)
 
-        let settings = await adminService.getPublicSettings(organizer, eventId);
+        let settings = await settingService.getMatchSettings(organizer, eventId);
         let title = (settings && settings.title) || `${organizer} - ${eventId}`;
 
         res.send(`--- ${title} --- ${message}`);
@@ -268,6 +315,20 @@ module.exports = function router(app) {
         res.sendStatus(200);
     })
 
+    app.patch("/stats/score/", verifyOrganizerHeaders, async (req, res) => {
+        const {
+            gameId,
+            teamId,
+            score,
+        } = req.body;
+
+        await statsService.editScore(gameId, teamId, score);
+        let game = await statsService.getGame(gameId);
+        console.log(game);
+        await deleteCache(req.organizer.username, game.eventId, game.game)
+        res.sendStatus(200);
+    })
+
     app.get("/stats/latest", async (req, res) => {
         const cacheKey = "latest";
 
@@ -277,8 +338,8 @@ module.exports = function router(app) {
         }
 
         let matches = await statsService.getLatest();
-        let settings = await Promise.all(matches.map(async match => adminService.getPublicSettings(match.username, match.eventId)));
-
+        let settings = await Promise.all(matches.map(async match => settingService.getMatchSettings(match.username, match.eventId)));
+        matches = matches.slice(0, 8);
         if (matches) {
             let stats = matches.map((match, id) => {
                 return {
@@ -291,6 +352,7 @@ module.exports = function router(app) {
             });
 
             cache.put(cacheKey, stats, 300);
+
             res.send(stats);
         }
     })
@@ -334,15 +396,31 @@ module.exports = function router(app) {
         res.send(await playerService.getMatches(req.params.id, req.query.start, req.query.count));
     })
 
-    app.ws("/live/write/:organizer", (ws, req) => {
-        console.log("sdf");
-        liveService.connectWrite(ws, req.params.organizer);
+    app.ws("/live/write/:key/:client", (ws, req) => {
+        wsHandlerService.connectWrite(ws, req.params.key, req.params.client);
     })
 
+    app.ws("/live/read/:org/:client", (ws, req) => {
+        wsHandlerService.connectRead(ws, req.params.org, req.params.client);
+    })
 
-    // app.ws("/live/read/:organizer", (ws, req) => {
-    //     liveService.connectRead(ws, req.params.organizer);
-    // })
+    app.get("/live/clients/:org", (req, res) => {
+        res.send(wsHandlerService.getClients(req.params.org));
+    })
 
+    app.post("/live/clients/", verifyOrganizerHeaders, async (req, res) => {
+        const client = req.body.client.substring(0, 128);
+        let { selected_apex_client } = await settingService.getOrganizerDefaultApexClient(req.organizer.username);
+        if (!selected_apex_client) {
+            console.log("Setting Default Client")
+            await settingService.setOrganizerDefaultApexClient(req.organizer.username, client);
+        }
+        wsHandlerService.addClient(req.organizer.username, client);
+        res.sendStatus(200);
+    });
+
+    app.ws("/", (ws, req) => {
+        ws.on("message", (msg) => console.log(msg));
+    })
 
 }

@@ -16,6 +16,7 @@ module.exports = {
     "vue/multi-word-component-names": "off",
     'vue/valid-v-slot': ['error', {
       allowModifiers: true,
-    }]
+    }],
+    "vue/no-unused-components": 'warn'
   }
 }

@@ -13,12 +13,18 @@ function getApiKeyHeaders() {
     }
 }
 
+
+
 function apexService(config) {
 
-    async function checkApiKey(username, key) {
+    function getApiKey() {
+        return localStorage.getItem("organizer-key");
+    }
+
+    async function login(username, key) {
         let result = await axios.post(`${config.baseUrl}auth/organizer`, { username, key });
 
-        return result.data.valid;
+        return result.data;
     }
 
     async function getStatsFromCode(statsCode) {
@@ -36,7 +42,7 @@ function apexService(config) {
         return stats.data;
     }
 
-    async function generateStats(eventId, statsCode, game, startTime, killPoints, placementPoints, liveData) {
+    async function generateStats(eventId, statsCode, game, startTime, killPoints, placementPoints, autoAttachUnclaimed, selectedUnclaimed, liveData) {
         let form = new FormData();
 
         form.append("eventId", eventId);
@@ -46,6 +52,8 @@ function apexService(config) {
         form.append("placementPoints", placementPoints);
         if (startTime)
             form.append("startTime", startTime);
+        form.append("autoAttachUnclaimed", autoAttachUnclaimed);
+        form.append("selectedUnclaimed", selectedUnclaimed);
         form.append("liveData", liveData);
 
         try {
@@ -61,22 +69,50 @@ function apexService(config) {
         await axios.delete(config.baseUrl + "stats/" + organizer + "/" + eventId + "/" + game, { headers: getApiKeyHeaders() });
     }
 
-    async function getBroadcastSettings(organizer, eventId) {
-        let data = await axios.get(config.baseUrl + "settings/broadcast/" + organizer + "/" + eventId);
+    async function getBroadcastSettings(organizer) {
+        let data = await axios.get(config.baseUrl + "settings/broadcast/" + organizer);
         return data.data;
     }
 
-    async function setBroadcastSettings(organizer, eventId, display) {
-        await axios.post(config.baseUrl + "settings/broadcast/" + organizer + "/" + eventId, display, { headers: getApiKeyHeaders() });
+    async function setBroadcastSettings(organizer, display) {
+        await axios.post(config.baseUrl + "settings/broadcast/" + organizer, display, { headers: getApiKeyHeaders() });
     }
 
     async function getPublicSettings(organizer, eventId) {
-        let data = await axios.get(config.baseUrl + "settings/public/" + organizer + "/" + eventId);
+        let data = await axios.get(config.baseUrl + "settings/match/" + organizer + "/" + eventId);
         return data.data;
     }
 
     async function setPublicSettings(organizer, eventId, display) {
-        await axios.post(config.baseUrl + "settings/public/" + organizer + "/" + eventId, display, { headers: getApiKeyHeaders() });
+        await axios.post(config.baseUrl + "settings/match/" + organizer + "/" + eventId, display, { headers: getApiKeyHeaders() });
+    }
+
+    async function setSelectedMatch(organizer, match) {
+        await axios.post(config.baseUrl + "settings/match/" + organizer, { match }, { headers: getApiKeyHeaders() });
+    }
+
+    async function getSelectedMatch(organizer) {
+        let { data } = await axios.get(config.baseUrl + "settings/match/" + organizer, { headers: getApiKeyHeaders() });
+        return data.selected_match;
+    }
+
+    async function setOrganizerDefaultApexClient(organizer, client) {
+        await axios.post(config.baseUrl + "settings/default_apex_client/" + organizer, { client }, { headers: getApiKeyHeaders() });
+    }
+
+    async function getOrganizerDefaultApexClient(organizer) {
+        let { data } = await axios.get(config.baseUrl + "settings/default_apex_client/" + organizer, { headers: getApiKeyHeaders() });
+        return data.selected_apex_client;
+    }
+
+    async function editScore(gameId, teamId, score) {
+        let { data } = await axios.patch(`${config.baseUrl}stats/score/`, { gameId, teamId, score }, { headers: getApiKeyHeaders() });
+        return data;
+    }
+
+    async function getMatchList(organizer) {
+        let result = await axios.get(config.baseUrl + "settings/match_list/" + organizer, { headers: getApiKeyHeaders() });
+        return result.data;
     }
 
     async function getLatest() {
@@ -91,6 +127,11 @@ function apexService(config) {
 
     async function getLiveData(organizer, eventId, game) {
         let data = await axios.get(`${config.baseUrl}stats/${organizer}/${eventId}/${game}/livedata`);
+        return data.data;
+    }
+
+    async function getUnclaimedLiveData() {
+        let data = await axios.get(`${config.baseUrl}stats/unclaimed_livedata`, { headers: getApiKeyHeaders() });
         return data.data;
     }
 
@@ -109,16 +150,49 @@ function apexService(config) {
         return data.data;
     }
 
+    async function createMatch(name) {
+        let data = await axios.post(`${config.baseUrl}match/${name}`, {}, { headers: getApiKeyHeaders() });
+        return data.data;
+    }
+
+    let connections = {};
+    function getLiveDataWs(organizer, client) {
+        const name = organizer + ":" + client;
+        if (!connections[name]) {
+            connections[name] = new WebSocket(`${config.wsReadUrl}/${organizer}/${client}`);
+            connections[name].onclose = () => {
+                connections[name] = undefined
+            };
+        }
+        return connections[name];
+    }
+
+    async function getClients(organizer) {
+        let data = await axios.get(`${config.baseUrl}live/clients/${organizer}`);
+        return data.data;
+    }
+
+    async function addClient(client) {
+        let data = await axios.post(`${config.baseUrl}live/clients/`, { client }, { headers: getApiKeyHeaders() });
+        return data.data;
+    }
+
+
+
     return {
         config,
+        getApiKey,
         getStats,
         generateStats,
         getBroadcastSettings,
         setBroadcastSettings,
         getPublicSettings,
         setPublicSettings,
+        getMatchList,
+        getSelectedMatch,
+        setSelectedMatch,
         getStatsFromCode,
-        checkApiKey,
+        login,
         getGameList,
         deleteStats,
         getLatest,
@@ -127,5 +201,13 @@ function apexService(config) {
         getPlayers,
         getPlayer,
         getPlayerMatches,
+        getLiveDataWs,
+        getUnclaimedLiveData,
+        getClients,
+        setOrganizerDefaultApexClient,
+        getOrganizerDefaultApexClient,
+        addClient,
+        createMatch,
+        editScore,
     }
 }

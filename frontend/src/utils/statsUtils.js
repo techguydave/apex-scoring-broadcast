@@ -25,6 +25,7 @@ const displayOptions = {
         player: [
             "score",
             "kills",
+            "characterName",
             "damageDealt",
             "knockdowns",
             "assists",
@@ -81,7 +82,7 @@ const mapMapShort = {
 
 function sortScores(scores, sortKey) {
     if (sortKey == "score") {
-        sortKey = scores[0].position ? "position" : "score"
+        sortKey = scores[0]?.position ? "position" : "score"
     }
 
     scores = scores.sort((a, b) => {

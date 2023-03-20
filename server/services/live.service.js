@@ -1,12 +1,13 @@
 const _ = require("lodash");
 
-const defaultStruck = () => ({
+const defaultStruct = () => ({
     match_start: 0,
     state: "preinit",
     totalTeams: 0,
     teamsAlive: 0,
     serverConfig: {},
     players: {},
+    observers: {},
     feed: [],
 })
 
@@ -18,14 +19,14 @@ const STATUS = {
     ELIMINATED: "eliminated"
 }
 
-function processDataDump(chunk, data = defaultStruck()) {
+function processDataDump(chunk, data = defaultStruct()) {
     for (let line of chunk) {
-        processDataLine(line, data);
+        data = processDataLine(line, data);
     }
     return data;
 }
 
-function processDataLine(line, data) {
+function processDataLine(line, data = defaultStruct()) {
     let pid = line.player ? line.player.nucleusHash : undefined;
     let players = data.players;
 
@@ -40,6 +41,7 @@ function processDataLine(line, data) {
                 if (data.state === "PickLoadout") {
                     //determine # of starting teams
                     let count = _.uniqBy(Object.values(data.players), "teamId").length;
+                    console.log(count);
                     data.totalTeams = count;
                     data.teamsAlive = count;
                 }
@@ -54,9 +56,24 @@ function processDataLine(line, data) {
                 data.serverConfig = line;
                 break;
             case "playerConnected":
-            case "characterSelected":
                 // Dont include spectators
-                if (line.player.teamId > 1)
+                if (line.player.teamId > 1 && !players[pid]?.characterSelected) {
+                    players[pid] = {
+                        ...line.player,
+                        ...players[pid],
+                        character: undefined,
+                    }
+                } else {
+                    data.observers[pid] = {
+                        nucleusHash: pid,
+                        name: line.player.name,
+                        target: {},
+                        targetTeam: [],
+                    }
+                }
+                break;
+            case "characterSelected":
+                if (line.player.teamId > 1) {
                     players[pid] = {
                         ...line.player,
                         currentWeapon: undefined,
@@ -71,42 +88,50 @@ function processDataLine(line, data) {
                         revives: 0,
                         kills: 0,
                         status: STATUS.ALIVE,
+                        characterSelected: true,
+                        character: line.player.character.toLowerCase()
                     };
+                }
+                break;
+            case "observerSwitched":
+                let bid = line.observer.nucleusHash;
+                data.observers[bid].target = line.target;
+                data.observers[bid].targetTeam = line.targetTeam;
                 break;
             case "weaponSwitched":
-                players[pid].currentWeapon = line.newWeapon;
+                getPlayer(players, pid).currentWeapon = line.newWeapon;
                 break;
             case "playerDamaged":
+                let damage = parseInt(line.damageInflicted)
                 if (line.attacker.nucleusHash) {
                     let attacker = players[line.attacker.nucleusHash]
-                    attacker.damageDealt += line.damageInflicted;
+                    attacker.damageDealt += damage;
                 }
 
                 let previous = data.feed[data.feed.length - 1];
-                // console.log(previous, line);
 
                 if (previous && previous.type == "damage" && previous.player.nucleusHash == line.attacker.nucleusHash && previous.victim.nucleusHash == line.victim.nucleusHash && previous.weapon == line.weapon) {
-                    previous.damage += line.damageInflicted;
+                    previous.damage += damage;
                 } else {
-                    data.feed.push({ timestamp: line.timestamp, type: "damage", player: line.attacker, victim: line.victim, weapon: line.weapon, damage: line.damageInflicted });
+                    data.feed.push({ timestamp: line.timestamp, type: "damage", player: line.attacker, victim: line.victim, weapon: line.weapon, damage: damage });
                 }
 
 
                 let victim = players[line.victim.nucleusHash];
-                victim.damageTaken += line.damageInflicted;
+                victim.damageTaken += damage;
                 victim.currentHealth = line.victim.currentHealth;
                 victim.shieldHealth = line.victim.shieldHealth;
                 break;
             case "playerAbilityUsed":
                 if (line.linkedEntity.includes("Tactical")) {
-                    players[pid].tacticalsUsed += 1;
+                    getPlayer(players, pid).tacticalsUsed += 1;
                 } else if (line.linkedEntity.includes("Ultimate")) {
-                    players[pid].ultimatesUsed += 1;
+                    getPlayer(players, pid).ultimatesUsed += 1;
                 }
                 break;
             case "grenadeThrown":
                 if (!line.linkedEntity.includes("Tactical") && !line.linkedEntity.includes("Ultimate")) {
-                    players[pid].grenadesThrown += 1;
+                    getPlayer(players, pid).grenadesThrown += 1;
                 }
                 break;
             case "playerDowned":
@@ -159,14 +184,25 @@ function processDataLine(line, data) {
         }
 
         if (line.player && line.player.teamId > 1) {
-            players[pid].currentHealth = line.player.currentHealth;
-            players[pid].shieldHealth = line.player.shieldHealth;
+            getPlayer(players, pid).maxHealth = line.player.maxHealth;
+            getPlayer(players, pid).shieldMaxHealth = line.player.shieldMaxHealth;
+            getPlayer(players, pid).currentHealth = line.player.currentHealth;
+            getPlayer(players, pid).shieldHealth = line.player.shieldHealth;
         }
     } catch (err) {
-        console.log(err);
-        console.log(line);
+        // console.log(err);
+        // console.log(line);
+        // console.log(JSON.stringify(data.players));
     }
     return data;
+}
+
+function getPlayer(players, pid) {
+    let player = players[pid];
+    if (!player) {
+        console.log("UNDEF PLAYER", pid);
+    }
+    return player;
 }
 
 function convertLiveDataToRespawnApi(data) {

@@ -12,11 +12,15 @@ function generateKey() {
     return randomString;
 }
 
+async function getOrganizerByKey(key) {
+    return await db("organizers").where({ key }).select("id", "username").first();
+}
+
 async function getOrganizer(username, key) {
     if (!username || !key) {
         return false;
     }
-    let result = await db("organizers").where({ username, key }).select("id", "username");
+    let result = await db("organizers").where({ username, key }).select("id", "username", "selected_match");
     return result[0];
 }
 
@@ -34,5 +38,6 @@ async function createOrganizer(username) {
 module.exports = {
     getOrganizer,
     getOrganizerId,
-    createOrganizer
+    createOrganizer,
+    getOrganizerByKey,
 }
