@@ -37,7 +37,7 @@ export default {
             ];
         },
         playerStats() {
-            let stats = getStatsByMode(this.stats.teams, "player");
+            let stats = getStatsByMode(this.stats.teams, "player", this.stats);
             return stats;
         }
     },
