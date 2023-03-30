@@ -112,7 +112,7 @@ export default {
         return this.stats.games[parseInt(this.settings.game) - 1 || 0]?.teams ?? [];
     },
     scoresByMode() {
-      return getStatsByMode(this.teams, this.settings.mode)
+      return getStatsByMode(this.teams, this.settings.mode, this.stats)
     },
     title() {
       if (this.settings.header) {
