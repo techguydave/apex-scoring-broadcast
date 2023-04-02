@@ -1,13 +1,24 @@
 <template>
-    <div class="wrap" v-if="stats.teams" :class="{ styled: settings.styled, dark: settings.dark }"
+    <div class="wrap" :class="{ styled: settings.styled, dark: settings.dark }"
         :style="`transform: translate(${calcTrans}, 0)`">
-        <div class="team"
-            v-for="(team, index) in [...sortTeamsStats(stats.teams), ...sortTeamsStats(stats.teams).slice(0, 5)]"
-            :key="team.name + ':' + index">
-            <div class="index">{{ (index >= stats.teams.length ? index - stats.teams.length : index) + 1 }}</div>
-            <div class="score">{{ getTeamScoreByStatsTeam(team) }}</div>
-            <div class="name"><span>{{ team.name }}</span></div>
-        </div>
+        <template v-if="stats.teams">
+            <div class="team"
+                v-for="(team, index) in [...sortTeamsStats(stats.teams), ...sortTeamsStats(stats.teams).slice(0, 5)]"
+                :key="team.name + ':' + index">
+                <div class="index">{{ (index >= teamLength ? index - teamLength : index) + 1 }}</div>
+                <div class="score">{{ getTeamScoreByStatsTeam(team) }}</div>
+                <div class="name"><span>{{ team.name }}</span></div>
+            </div>
+        </template>
+        <template v-else-if="liveData.teams">
+            <div class="team"
+                v-for="(team, index) in [...sortTeamsLive(liveData.teams), ...sortTeamsLive(liveData.teams).slice(0, 5)]"
+                :key="team.name + ':' + index">
+                <div class="index">{{ (index >= teamLength ? index - teamLength : index) + 1 }}</div>
+                <div class="score">{{ getTeamScoreByLiveTeam(team) }}</div>
+                <div class="name"><span>{{ team.name }}</span></div>
+            </div>
+        </template>
     </div>
 </template>
 
@@ -40,6 +51,14 @@ export default {
             } else {
                 return `${-this.rotated * 1920}px`;
             }
+        },
+        teamLength() {
+            if (this.stats.teams) {
+                return this.stats.teams.length
+            } else if (this.liveData.teams) {
+                return Object.keys(this.liveData.teams).length
+            }
+            return 0;
         }
     },
     methods: {
@@ -51,13 +70,13 @@ export default {
         isAlive,
         rotate() {
             this.rotated++;
-            if (this.rotated >= (this.stats.teams.length / 5))
+            if (this.rotated >= (this.teamLength / 5))
                 this.rotated = 0;
         },
         rotateSmooth() {
             let diff = Date.now() - this.timer;
 
-            this.smoothed = (diff / (30 - (this.settings?.speed ?? 15))) % ((this.stats?.teams?.length / 5) * 1920);
+            this.smoothed = (diff / (30 - (this.settings?.speed ?? 15))) % ((this.teamLength / 5) * 1920);
             // if (this.smoothed >= (this.stats?.teams?.length / 5) * 1920)
             //     this.smoothed = 0;
             // this.timer = Date.now();
