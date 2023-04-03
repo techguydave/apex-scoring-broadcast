@@ -111,3 +111,5 @@ server/pg_data
 
 __*
 *.fleet/
+
+server/mock/live/send.js

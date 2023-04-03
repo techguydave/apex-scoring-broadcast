@@ -91,9 +91,11 @@
 										<v-item-group v-if="unclaimedLiveData?.length > 0" v-model="selectedUnclaimed">
 											<v-item class="live-data-item" v-for="unclaimed in unclaimedLiveData"
 												v-slot="{ toggle }" :key="unclaimed.id">
-												<div @click="toggle"> {{ getDate(unclaimed.timestamp * 1000) }} {{
-													getTime(unclaimed.timestamp * 1000) }} -
+												<div @click="toggle"> ({{ unclaimed.client }}) {{
+													getDate(unclaimed.timestamp * 1000) }} {{
+		getTime(unclaimed.timestamp * 1000) }} -
 													{{ getRelative(unclaimed.timestamp * 1000) }}
+
 												</div>
 											</v-item>
 										</v-item-group>

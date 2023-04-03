@@ -50,7 +50,7 @@ async function processUpdate(organizer, client, gameId, line) {
 
     if (line?.state == "Postmatch" && rawFeed[orgUser][client].find(feed => feed.state == "WaitingForPlayers")) {
         let data = rawFeed[orgUser][client];
-        statsService.writeLiveData(null, data, organizer.id);
+        statsService.writeLiveData(null, data, organizer.id, client);
     }
 
     let current = getLiveData(orgUser, client);
