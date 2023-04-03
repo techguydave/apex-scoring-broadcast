@@ -52,9 +52,10 @@
           <v-card-text>
             <v-text-field label="Match ID" v-model="newMatchId"></v-text-field>
             <v-btn @click="addRandom()">+ Random</v-btn><v-btn @click="addDate" class="mx-2">+ Date</v-btn>
-            <v-text-field label="Display Name (optional)" v-model="newMatchName"></v-text-field>
+            <!-- <v-text-field label="Display Name (optional)" v-model="newMatchName"></v-text-field> -->
 
-            <v-btn color="primary" block :disabled="this.newMatchId.length == 0" @click="newMatch()">Add</v-btn>
+            <v-btn color="primary" block :disabled="this.newMatchId.length == 0" class="my-3"
+              @click="newMatch()">Add</v-btn>
           </v-card-text>
         </v-card>
       </v-dialog>
@@ -139,7 +140,7 @@ export default {
       return str + (str.length > 0 ? "_" : "") + text;
     },
     async newMatch() {
-      await this.$apex.createMatch(this.newMatchId);
+      await this.$apex.createMatch(this.newMatchId, this.newMatchName);
       this.newMatchDiag = false;
       this.login();
     }
