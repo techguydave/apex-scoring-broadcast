@@ -15,10 +15,10 @@ function getLiveData(orgUser, client) {
 }
 
 async function setLiveData(orgUser, client, data) {
-    if (!data) {
+    if (!data && liveData[orgUser]?.[client]) {
 
-        delete liveData[orgUser];
-        delete rawFeed[orgUser];
+        delete liveData[orgUser][client];
+        delete rawFeed[orgUser][client];
     } else {
         if (!liveData[orgUser]) {
             liveData[orgUser] = {}
@@ -142,6 +142,7 @@ async function connectRead(ws, orgUser, client) {
 }
 
 function addClient(organizerName, client, connected = false) {
+    console.log("Adding write client ", organizerName, client, connected)
     clients[organizerName] = (clients[organizerName] ?? {})
     clients[organizerName][client] = { connected, state: "preinit" };
 }
