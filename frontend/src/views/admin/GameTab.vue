@@ -260,9 +260,12 @@ export default {
 			this.loading = false;
 		},
 		async updateStats() {
+			console.log("updating stats/")
 			this.stats = await this.$apex.getStats(this.organizer, this.eventId, "overall");
 			if (this.stats && this.stats.games)
 				this.game = this.stats.games[this.stats.games.length - 1].game + 1;
+			else
+				this.game = 1;
 		},
 		async deleteStats(game) {
 			await this.$apex.deleteStats(this.organizer, this.eventId, game);
