@@ -121,7 +121,7 @@ async function connectRead(ws, orgUser, client) {
     pubsub.subscribe(channel);
 
     let sendFull = async () => {
-        console.log("sending full");
+        console.log("sending full for ", orgUser, client);
         ws.send(JSON.stringify({ type: "ldfull", body: getLiveData(orgUser, client) }));
     };
 

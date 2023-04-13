@@ -302,7 +302,8 @@ module.exports = function router(app) {
             return `${body} -- (after ${stats.total} games)`;
         }, 300)
 
-        let settings = await matchService.getMatchSettings(organizer, eventId);
+        let match = await matchService.getMatch(organizer, eventId);
+        let settings = await matchService.getMatchSettings(match.id);
         let title = (settings && settings.title) || `${organizer} - ${eventId}`;
 
         res.send(`--- ${title} --- ${message}`);
