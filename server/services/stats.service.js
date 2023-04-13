@@ -1,13 +1,14 @@
 const { db } = require("../connectors/db");
 const _ = require("lodash");
-const settingService = require("./settings.service");
+const matchService = require("./match.service");
 
-function assembleStatsDocuments(games, teams, players) {
+function assembleStatsDocuments(games, teams, players, matchTeams) {
     let teamsByGame = _(teams).groupBy("gameId").value();
     let playersByGame = _(players).groupBy("gameId").value();
 
     games.forEach(game => {
         game.teams = teamsByGame[game.id].map(team => {
+            team.name = matchTeams.find(t => t.teamId == team.teamId)?.name ?? team.name;
             return {
                 teamId: team.teamId,
                 name: team.name,
@@ -32,7 +33,11 @@ async function getStats(organizer, eventId, game) {
             .join("players", "players.playerId", "=", "player_game_stats.playerId")
             .whereIn("gameId", games.map(game => game.id));
 
-        return assembleStatsDocuments(games, teams, players);
+        console.log(games);
+
+        let matchTeams = await matchService.getMatchTeams(games[0]?.matchId);
+
+        return assembleStatsDocuments(games, teams, players, matchTeams);
     } catch (err) {
         console.error(err);
     }
@@ -78,7 +83,7 @@ async function writeStats(organizer, eventId, game, data, source) {
             }).first("id");
 
             if (!matchId) {
-                matchId = await settingService.createMatch(organizer, eventId);
+                matchId = await matchService.createMatch(organizer, eventId);
             }
 
             matchId = matchId.id;
@@ -170,11 +175,11 @@ async function getLatest() {
             .join("organizers", "organizers.id", "match.organizer")
             .orderBy("match.id", "desc")
             .limit(30)
-            .select("*");
+            .select(["organizers.id as organizerId", "organizers.username as username", "match.id as matchId", "match.eventId as eventId"]);
 
         if (matches) {
             let stats = await Promise.all(matches.map(match => new Promise(async (res) => {
-                let stats = await getStats(match.organizer, match.eventId, "overall");
+                let stats = await getStats(match.organizerId, match.eventId, "overall");
                 res({ ...match, stats })
             })));
             return stats.filter(match => match.stats.length > 0);

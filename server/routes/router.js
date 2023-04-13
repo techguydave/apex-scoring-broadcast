@@ -5,7 +5,8 @@ config.statsUrl = process.argv[2] || config.statsUrl;
 const { verifyOrganizerHeaders, verifyAdminHeaders } = require("../middleware/auth");
 const apexService = new require("../services/apex.service")(config);
 const authService = require("../services/auth.service");
-const settingService = require("../services/settings.service");
+const matchService = require("../services/match.service");
+const broadcastService = require("../services/broadcast.service");
 const cache = require("../services/cache.service");
 const shortLinkService = require("../services/short_link.service.js");
 const wsHandlerService = require("../services/ws_handler.service.js");
@@ -29,7 +30,16 @@ module.exports = function router(app) {
         let stats = await statsService.getStats(orgId, eventId, game);
 
         if (!stats || stats.length == 0) {
-            return {};
+            let match = await matchService.getMatch(organizer, eventId);
+            if (match) {
+                let teams = await matchService.getMatchTeams(match.id);
+
+                return {
+                    teams: teams.map(t => ({ ...t, player_stats: [], overall_stats: { name: t.name } })).sort((a, b) => a.teamId - b.teamId),
+                };
+            } else {
+                return {}
+            }
         }
 
         if (game == "overall" || stacked) {
@@ -70,48 +80,73 @@ module.exports = function router(app) {
         res.send(organizer);
     })
 
+    app.get("/match/:organizer/:eventId", async (req, res) => {
+        let result = await matchService.getMatch(req.params.organizer, req.params.eventId);
+        res.send(result);
+    })
+
     app.post("/settings/broadcast/:organizer", verifyOrganizerHeaders, async (req, res) => {
-        await settingService.setBroadcastSettings(req.organizer, req.body);
+        await broadcastService.setBroadcastSettings(req.organizer, req.body);
         res.sendStatus(200);
     })
 
     app.get("/settings/broadcast/:organizer", async (req, res) => {
-        let result = await settingService.getBroadcastSettings(req.params.organizer);
+        let result = await broadcastService.getBroadcastSettings(req.params.organizer);
         res.send(result);
     })
 
-    app.post("/settings/match/:organizer/:eventId", verifyOrganizerHeaders, async (req, res) => {
-        await settingService.setMatchSettings(req.organizer, req.params.eventId, req.body);
+    app.get("/settings/match/:matchId/teams", async (req, res) => {
+        let result = await matchService.getMatchTeams(req.params.matchId);
+        res.send(result);
+    })
+
+    app.post("/settings/match/:matchId/team", verifyOrganizerHeaders, async (req, res) => {
+        const {
+            teamId,
+            name
+        } = req.body;
+
+        let match = await matchService.getMatchById(req.params.matchId);
+        await matchService.setMatchTeam(req.params.matchId, teamId, name);
+
+        deleteCache(req.organizer.username, match.eventId, "overall");
         res.sendStatus(200);
     })
 
-    app.get("/settings/match/:organizer/:eventId", async (req, res) => {
-        let result = await settingService.getMatchSettings(req.params.organizer, req.params.eventId);
+    app.post("/settings/match/:matchId", verifyOrganizerHeaders, async (req, res) => {
+        await matchService.setMatchSettings(req.params.matchId, req.body);
+        res.sendStatus(200);
+    })
+
+    app.get("/settings/match/:matchId", async (req, res) => {
+        let result = await matchService.getMatchSettings(req.params.matchId);
         res.send(result);
     })
 
     app.get("/settings/match_list/:organizer", async (req, res) => {
-        let result = await settingService.getMatchList(req.params.organizer);
+        let result = await matchService.getMatchList(req.params.organizer);
         res.send(result);
     })
 
-    app.post("/settings/match/:organizer/", async (req, res) => {
-        await settingService.setOrganizerMatch(req.params.organizer, req.body.match);
+    app.post("/organizer/match/:organizer/", async (req, res) => {
+        await matchService.setOrganizerMatch(req.params.organizer, req.body.match);
         res.sendStatus(200);
     })
 
-    app.get("/settings/match/:organizer/", async (req, res) => {
-        let result = await settingService.getOrganizerMatch(req.params.organizer);
+    app.get("/organizer/match/:organizer/", async (req, res) => {
+        let result = await matchService.getOrganizerMatch(req.params.organizer);
         res.send(result);
     })
 
+
+
     app.post("/settings/default_apex_client/:organizer/", async (req, res) => {
-        await settingService.setOrganizerDefaultApexClient(req.params.organizer, req.body.client);
+        await broadcastService.setOrganizerDefaultApexClient(req.params.organizer, req.body.client);
         res.sendStatus(200);
     })
 
     app.get("/settings/default_apex_client/:organizer/", async (req, res) => {
-        let result = await settingService.getOrganizerDefaultApexClient(req.params.organizer);
+        let result = await broadcastService.getOrganizerDefaultApexClient(req.params.organizer);
         res.send(result);
     })
 
@@ -124,7 +159,7 @@ module.exports = function router(app) {
     })
 
     app.post("/match/:eventId", verifyOrganizerHeaders, async (req, res) => {
-        let id = await settingService.createMatch(req.organizer, req.params.eventId);
+        let id = await matchService.createMatch(req.organizer, req.params.eventId);
         res.send({ match: id });
     })
 
@@ -267,7 +302,7 @@ module.exports = function router(app) {
             return `${body} -- (after ${stats.total} games)`;
         }, 300)
 
-        let settings = await settingService.getMatchSettings(organizer, eventId);
+        let settings = await matchService.getMatchSettings(organizer, eventId);
         let title = (settings && settings.title) || `${organizer} - ${eventId}`;
 
         res.send(`--- ${title} --- ${message}`);
@@ -338,7 +373,7 @@ module.exports = function router(app) {
         }
 
         let matches = await statsService.getLatest();
-        let settings = await Promise.all(matches.map(async match => settingService.getMatchSettings(match.username, match.eventId)));
+        let settings = await Promise.all(matches.map(async match => matchService.getMatchSettings(match.matchId)));
         matches = matches.slice(0, 8);
         if (matches) {
             let stats = matches.map((match, id) => {
@@ -410,10 +445,10 @@ module.exports = function router(app) {
 
     app.post("/live/clients/", verifyOrganizerHeaders, async (req, res) => {
         const client = req.body.client.substring(0, 128);
-        let { selected_apex_client } = await settingService.getOrganizerDefaultApexClient(req.organizer.username);
+        let { selected_apex_client } = await matchService.getOrganizerDefaultApexClient(req.organizer.username);
         if (!selected_apex_client) {
             console.log("Setting Default Client")
-            await settingService.setOrganizerDefaultApexClient(req.organizer.username, client);
+            await matchService.setOrganizerDefaultApexClient(req.organizer.username, client);
         }
         wsHandlerService.addClient(req.organizer.username, client);
         res.sendStatus(200);

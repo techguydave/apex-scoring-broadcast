@@ -94,6 +94,7 @@ export default {
   computed: {
     sortedScores() {
       let scores = sortScores(this.scoresByMode, this.settings.display);
+      console.log("scoires", scores);
 
       scores = scores.length < 20 ? pad_array(scores, 20, defScore) : scores;
 

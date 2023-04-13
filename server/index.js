@@ -9,7 +9,6 @@ const { db } = require("./connectors/db");
 const { redis } = require("./connectors/redis");
 const expressWs = require("express-ws");
 const fileUpload = require("express-fileupload");
-
 (async () => {
     if (!await redis.isConnected()) {
         console.error("Could not connect to redis");

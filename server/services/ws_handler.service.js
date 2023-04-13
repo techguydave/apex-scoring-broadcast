@@ -138,7 +138,7 @@ async function connectRead(ws, orgUser, client) {
         }
     });
 
-    ws.on("close", () => console.log("closed"));
+    ws.on("close", () => console.log("Closed", orgUser, client));
 }
 
 function addClient(organizerName, client, connected = false) {

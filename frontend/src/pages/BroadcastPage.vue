@@ -71,7 +71,9 @@ export default {
             if (this.displayOptions.selectedMatch?.length > 0) {
                 this.eventId = this.displayOptions.selectedMatch;
             } else {
-                this.eventId = await this.$apex.getSelectedMatch(this.organizer);
+                let selected = await this.$apex.getSelectedMatch(this.organizer);
+                console.log(selected);
+                this.eventId = selected.eventId;
             }
 
             const current = this.apexClient;

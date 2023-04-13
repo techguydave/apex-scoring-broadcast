@@ -1,3 +1,4 @@
+
 const cache = require("./cache.service");
 const { db } = require("../connectors/db");
 
@@ -50,41 +51,6 @@ async function setOrganizerDefaultApexClient(organizerName, apexClient) {
     cache.del(getCacheKey(organizerName, 0, "selected_apex_client"));
 }
 
-async function getOrganizerMatch(organizerName) {
-    return await cache.getOrSet(getCacheKey(organizerName, 0, "selected_match"), async () => {
-        return await db("organizers")
-            .where({ username: organizerName })
-            .first("selected_match")
-    }, 300);
-}
-
-async function setOrganizerMatch(organizerName, match) {
-    await db("organizers")
-        .where({ username: organizerName })
-        .update({ "selected_match": match })
-
-    cache.del(getCacheKey(organizerName, 0, "selected_match"));
-}
-
-async function getMatchList(organizerName) {
-    return await cache.getOrSet(getCacheKey(organizerName, 0, "match_list"), async () => {
-        let result = await db("match")
-            .join("organizers", "organizers.id", "match.organizer")
-            .where({ username: organizerName })
-            .orderBy("match.id", "desc")
-            .select("eventId");
-        return result.map(e => e.eventId)
-    }, 300)
-}
-
-
-async function createMatch(organizer, eventId) {
-    let id = await db("match").insert({ organizer: organizer.id, eventId }, ["id"]);
-    await setOrganizerMatch(organizer.username, eventId);
-    await cache.del(getCacheKey(organizer.username, 0, "match_list"));
-    return id[0];
-}
-
 
 async function setBroadcastSettings(organizer, settings) {
     console.log(settings);
@@ -107,38 +73,9 @@ async function getBroadcastSettings(organizerName) {
     }, 300)
     return result;
 }
-
-
-async function setMatchSettings(organizer, eventId, settings) {
-    console.log(settings);
-    await db("match_settings")
-        .insert({ organizer: organizer.id, eventId, settings: JSON.stringify(settings) })
-        .onConflict(["organizer", "eventId"])
-        .merge();
-
-    cache.del(getCacheKey(organizer.username, eventId, "match"));
-}
-
-async function getMatchSettings(organizerName, event) {
-    return await cache.getOrSet(getCacheKey(organizerName, event, "match"), async () => {
-        let result = await db("match_settings")
-            .join("organizers", "organizers.id", "match_settings.organizer")
-            .where({ "username": organizerName, eventId: event })
-            .first("settings");
-
-        return result?.settings;
-    }, 300)
-}
-
 module.exports = {
     setBroadcastSettings,
     getBroadcastSettings,
-    getMatchSettings,
-    setMatchSettings,
-    getOrganizerMatch,
-    setOrganizerMatch,
-    getMatchList,
-    createMatch,
     setOrganizerDefaultApexClient,
     getOrganizerDefaultApexClient,
 }
