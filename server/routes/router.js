@@ -446,10 +446,10 @@ module.exports = function router(app) {
 
     app.post("/live/clients/", verifyOrganizerHeaders, async (req, res) => {
         const client = req.body.client.substring(0, 128);
-        let { selected_apex_client } = await matchService.getOrganizerDefaultApexClient(req.organizer.username);
+        let { selected_apex_client } = await broadcastService.getOrganizerDefaultApexClient(req.organizer.username);
         if (!selected_apex_client) {
             console.log("Setting Default Client")
-            await matchService.setOrganizerDefaultApexClient(req.organizer.username, client);
+            await broadcastService.setOrganizerDefaultApexClient(req.organizer.username, client);
         }
         wsHandlerService.addClient(req.organizer.username, client);
         res.sendStatus(200);
