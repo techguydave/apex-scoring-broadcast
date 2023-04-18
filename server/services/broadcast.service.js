@@ -27,7 +27,15 @@ const defaultBroadcastSettings = [{
     "activeScene": "1a22079b-a358-47e4-937b-d5f01c675d49",
     "observerName": null,
     "selectedMatch": null,
-    "selectedClient": null
+    "selectedClient": null,
+    "colors": {
+        primary: "#970b0b",
+        secondary: "#261f1f",
+        background: "#000",
+        text: "#fff",
+        primaryText: "#fff",
+        secondaryText: "#fff",
+    }
 }];
 
 
@@ -68,6 +76,14 @@ async function getBroadcastSettings(organizerName) {
             .join("organizers", "organizers.id", "broadcast_settings.organizer")
             .where({ "username": organizerName })
             .first("settings");
+
+        if (result?.settings) {
+            result.settings.forEach(s => {
+                if (!s.colors) {
+                    s.colors = defaultBroadcastSettings[0].colors;
+                }
+            })
+        }
 
         return result?.settings ?? defaultBroadcastSettings;
     }, 300)

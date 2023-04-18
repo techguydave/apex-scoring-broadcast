@@ -3,9 +3,8 @@
         <div class="broadcast-page">
             <component v-for="overlay in scene.overlays" :is="overlay.type" :settings="overlay.settings" :stats="stats"
                 :liveData="liveData" :key="overlay.id" :observer="observer" :observerTeam="observerTeam"
-                :observerPlayer="observerPlayer" />
-            <div id="credit1" class="credit dark"><span class="power">Powered by
-                </span><br />overstat.gg</div>
+                :observerPlayer="observerPlayer" :display="displayOptions" />
+            <div id="credit1" class="credit dark"><img width="150" src="/img/powered_by.png"></div>
             <!-- <div id="credit2" class="credit" :class="{ dark: displayOptions.dark }">Powered by overstat.gg</div> -->
         </div>
     </div>
@@ -72,7 +71,6 @@ export default {
                 this.eventId = this.displayOptions.selectedMatch;
             } else {
                 let selected = await this.$apex.getSelectedMatch(this.organizer);
-                console.log(selected);
                 this.eventId = selected.eventId;
             }
 
@@ -93,16 +91,19 @@ export default {
             }
 
             this.stats = await this.$apex.getStats(this.organizer, this.eventId, "overall");
-        },
-        async connectWs() {
-            console.log("Connecting to ws ", this.organizer, this.apexClient);
-            this.ws = this.$apex.getLiveDataWs(this.organizer, this.apexClient);
-            processWsData(this.ws, (data) => {
-                this.$set(this, 'liveData', data);
-            });
 
-            this.ws.addEventListener("close", () => setTimeout(() => this.connectWs(), 1000));
+
         }
+    },
+    async connectWs() {
+        console.log("Connecting to ws ", this.organizer, this.apexClient);
+        this.ws = this.$apex.getLiveDataWs(this.organizer, this.apexClient);
+        processWsData(this.ws, (data) => {
+            this.$set(this, 'liveData', data);
+        });
+
+        this.ws.addEventListener("close", () => setTimeout(() => this.connectWs(), 1000));
+
     },
     async mounted() {
         await this.$nextTick();
@@ -137,19 +138,11 @@ export default {
     color: white;
     opacity: .6;
     font-family: "heebo";
-
-    .dark {
-        color: black;
-    }
-
-    .power {
-        font-weight: bold;
-    }
 }
 
 #credit1 {
-    left: 1750px;
+    left: 1700px;
     text-align: center;
-    top: 1020px;
+    top: 1028px;
 }
 </style>

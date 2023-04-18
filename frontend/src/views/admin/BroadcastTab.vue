@@ -270,12 +270,15 @@ export default {
         },
         setActive(display, scene) {
             display.activeScene = scene.id;
-        }
+        },
+        updateBroadcastSettings: _.debounce(function () {
+            this.$apex.setBroadcastSettings(this.organizer, this.settings);
+        }, 250),
     },
     watch: {
         settings: {
             handler() {
-                this.$apex.setBroadcastSettings(this.organizer, this.settings);
+                this.updateBroadcastSettings();
             },
             deep: true,
         }
