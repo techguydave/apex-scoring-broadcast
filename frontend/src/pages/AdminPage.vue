@@ -26,10 +26,11 @@
               <v-col sm="2" cols="12">
 
                 <h3>Match</h3>
-                <v-select class="ma-2" outlined :items="matchList" v-model="eventId" dense append-outer-icon="mdi-plus"
-                  hide-details @click:append-outer="newMatchId = ''; newMatchName = ''; newMatchDiag = true"></v-select>
+                <v-select class="ma-2" outlined :items="matchList" v-model="selectedEvent" dense
+                  append-outer-icon="mdi-plus" @change="updateEvent" hide-details
+                  @click:append-outer="newMatchId = ''; newMatchName = ''; newMatchDiag = true"></v-select>
                 <admin-menu-item id="GameTab" v-model="selectedTab"> Game Manager</admin-menu-item>
-                <admin-menu-item id="PublicTab" v-model="selectedTab">Settings</admin-menu-item>
+                <admin-menu-item id="SettingsTab" v-model="selectedTab">Settings</admin-menu-item>
                 <h3>Broadcast</h3>
                 <admin-menu-item id="BroadcastTab" v-model="selectedTab">Broadcast Control</admin-menu-item>
                 <h3>Observers</h3>
@@ -39,7 +40,7 @@
 
               </v-col>
               <v-col sm="10" cols="12">
-                <component :is="selectedTab" :organizer="organizer" :eventId="eventId"></component>
+                <component :is="selectedTab" :organizer="organizer" :eventId="eventId" :matchId="matchId"></component>
               </v-col>
             </v-row>
           </template>
@@ -67,7 +68,7 @@
 <script>
 import GameTab from "../views/admin/GameTab.vue"
 import BroadcastTab from "../views/admin/BroadcastTab.vue"
-import PublicTab from "../views/admin/PublicTab.vue"
+import SettingsTab from "../views/admin/SettingsTab.vue"
 import ObserverClientTab from "../views/admin/ObserverClientTab.vue"
 import NavBar from "../components/NavBar.vue"
 import AdminMenuItem from "../components/AdminMenuItem.vue"
@@ -79,7 +80,7 @@ export default {
   components: {
     BroadcastTab,
     GameTab,
-    PublicTab,
+    SettingsTab,
     ObserverClientTab,
     NavBar,
     AdminMenuItem,
@@ -91,7 +92,7 @@ export default {
       usernameForm: undefined,
       loginFailed: false,
       tabs: undefined,
-      eventId: undefined,
+      selectedEvent: undefined,
       matchList: [],
       loggedIn: false,
       organizer: undefined,
@@ -100,6 +101,14 @@ export default {
       newMatchId: "",
       newMatchName: undefined,
     };
+  },
+  computed: {
+    eventId() {
+      return this.matchList?.find(m => m.value == this.selectedEvent)?.text
+    },
+    matchId() {
+      return this.selectedEvent
+    }
   },
   methods: {
     async login() {
@@ -110,11 +119,12 @@ export default {
         localStorage.setItem("organizer-key", this.apiKeyForm);
         localStorage.setItem("organizer-username", this.usernameForm);
 
-        this.eventId = valid.selected_match;
+        this.selectedEvent = valid.selected_match;
         this.loggedIn = true;
         this.organizer = valid.username;
 
-        this.matchList = await this.$apex.getMatchList(this.organizer);
+        let matchList = await this.$apex.getMatchList(this.organizer);
+        this.matchList = matchList?.map(m => ({ value: m.id, text: m.eventId }));
       } else {
         this.loginFailed = true;
         setTimeout(() => this.loginFailed = false, 3000);
@@ -143,12 +153,14 @@ export default {
       await this.$apex.createMatch(this.newMatchId, this.newMatchName);
       this.newMatchDiag = false;
       this.login();
+    },
+    async updateEvent(i) {
+      this.$apex.setSelectedMatch(this.organizer, i);
     }
   },
   watch: {
     eventId() {
       console.log("event", this.eventId)
-      this.$apex.setSelectedMatch(this.organizer, this.eventId);
     }
   },
   async mounted() {

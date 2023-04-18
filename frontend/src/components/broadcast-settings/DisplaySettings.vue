@@ -59,8 +59,8 @@ export default {
         }
     },
     async mounted() {
-        this.matchList = await this.$apex.getMatchList(this.organizer);
-
+        let matchList = await this.$apex.getMatchList(this.organizer);
+        this.matchList = matchList?.map(m => m.eventId);
         this.clientList = Object.keys(await this.$apex.getClients(this.organizer));
     }
 }

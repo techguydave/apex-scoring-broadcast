@@ -121,7 +121,7 @@ async function connectRead(ws, orgUser, client) {
     pubsub.subscribe(channel);
 
     let sendFull = async () => {
-        console.log("sending full");
+        console.log("sending full for ", orgUser, client);
         ws.send(JSON.stringify({ type: "ldfull", body: getLiveData(orgUser, client) }));
     };
 
@@ -138,7 +138,7 @@ async function connectRead(ws, orgUser, client) {
         }
     });
 
-    ws.on("close", () => console.log("closed"));
+    ws.on("close", () => console.log("Closed", orgUser, client));
 }
 
 function addClient(organizerName, client, connected = false) {

@@ -4,8 +4,6 @@ const config = require("../config/config.json");
 const PREFIX = config.cachePrefix || "CACHE:";
 
 async function put(key, value, time) {
-    console.log("[CACHE] Put", key, time);
-
     value = JSON.stringify(value);
     if (time) {
         redis.setex(PREFIX + key, time, value);

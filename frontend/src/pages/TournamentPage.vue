@@ -37,13 +37,16 @@ export default {
     },
     data() {
         return {
-            publicSettings: {}
+            publicSettings: {},
+            match: {},
         }
     },
     methods: {
         async refreshPublicOptions() {
             if (this.eventId) {
-                let options = await this.$apex.getPublicSettings(this.organizer, this.eventId);
+                this.match = await this.$apex.getMatch(this.organizer, this.eventId);
+                console.log(this.match);
+                let options = await this.$apex.getPublicSettings(this.match.id);
                 if (options) {
                     this.publicSettings = options;
                 }
