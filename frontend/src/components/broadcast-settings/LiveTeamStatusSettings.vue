@@ -1,12 +1,12 @@
 <template>
     <div>
-        <v-checkbox label="Styled" v-model="settings.styled"></v-checkbox>
-        <v-checkbox label="Dark" v-model="settings.dark"></v-checkbox>
-        <v-checkbox label="Hide Players" v-model="settings.hidePlayers"></v-checkbox>
+        <v-row><v-col><v-checkbox label="Styled" v-model="settings.styled"></v-checkbox></v-col>
+            <v-col><v-checkbox label="Hide Players" v-model="settings.hidePlayers"></v-checkbox></v-col></v-row>
         <v-text-field label="Static Teams Count" v-model.number="settings.static" placeholder="20"
             message="Always show the top X teams"></v-text-field>
         <v-text-field label="Rotating Teams" v-model.number="settings.rotate" placeholder="0"
             message="Rotate through the remaining teams, show X amount"></v-text-field>
+        <v-btn color="primary" @click="update()">Update</v-btn>
 
     </div>
 </template>

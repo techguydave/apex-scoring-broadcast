@@ -79,12 +79,12 @@ import IconBtnFilled from '../IconBtnFilled.vue';
 const presets = {
     Custom: {},
     Overstat: {
-        primary: "#970b0b",
-        secondary: "#261f1f",
-        background: "#000",
-        text: "#fff",
-        primaryText: "#fff",
-        secondaryText: "#fff",
+        primary: "#970b0bff",
+        secondary: "#261f1fff",
+        background: "#000f",
+        text: "#ffff",
+        primaryText: "#ffff",
+        secondaryText: "#ffff",
     },
     Dawn: {
         primary: "#47DEFFFF",
@@ -95,12 +95,28 @@ const presets = {
         secondaryText: "#000000FF",
     },
     Dusk: {
-        primary: "#47DEFF",
-        secondary: "#1B3541",
-        background: "#22232A",
-        text: "#B4D5E4",
-        primaryText: "#000000",
+        primary: "#15505E",
+        secondary: "#0C191F",
+        background: "#0C0D0F",
+        text: "#DFE6E9",
+        primaryText: "#FFFFFF",
         secondaryText: "#ABC6D3",
+    },
+    Golden: {
+        primary: "#FFB505FC",
+        secondary: "#1D1B16FF",
+        background: "#000",
+        text: "#FDF7E7FF",
+        primaryText: "#000",
+        secondaryText: "#FFC844FC",
+    },
+    Pink: {
+        primary: "#FF67E5FC",
+        secondary: "#2E1B28FC",
+        background: "#080507FC",
+        text: "#FCEFF8FC",
+        primaryText: "#000000FF",
+        secondaryText: "#FFA6F0FC",
     },
     Charcoal: {
         primary: "#757575",
@@ -109,7 +125,23 @@ const presets = {
         text: "#eee",
         primaryText: "#000",
         secondaryText: "#eee",
-    }
+    },
+    "Light - Text Only": {
+        primary: "#0000",
+        secondary: "#0000",
+        background: "#0000",
+        text: "#ffff",
+        primaryText: "#ffff",
+        secondaryText: "#ffff",
+    },
+    "Dark - Text Only": {
+        primary: "#0000",
+        secondary: "#0000",
+        background: "#0000",
+        text: "#000f",
+        primaryText: "#000f",
+        secondaryText: "#000f",
+    },
 }
 
 export default {
@@ -134,6 +166,7 @@ export default {
             deep: true,
             handler() {
                 this.settingsCopy = this.value;
+                this.theme = this.value.theme;
             }
         },
         theme() {

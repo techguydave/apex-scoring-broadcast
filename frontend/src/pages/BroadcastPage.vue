@@ -93,17 +93,16 @@ export default {
             this.stats = await this.$apex.getStats(this.organizer, this.eventId, "overall");
 
 
+        },
+        async connectWs() {
+            console.log("Connecting to ws ", this.organizer, this.apexClient);
+            this.ws = this.$apex.getLiveDataWs(this.organizer, this.apexClient);
+            processWsData(this.ws, (data) => {
+                this.$set(this, 'liveData', data);
+            });
+
+            this.ws.addEventListener("close", () => setTimeout(() => this.connectWs(), 1000));
         }
-    },
-    async connectWs() {
-        console.log("Connecting to ws ", this.organizer, this.apexClient);
-        this.ws = this.$apex.getLiveDataWs(this.organizer, this.apexClient);
-        processWsData(this.ws, (data) => {
-            this.$set(this, 'liveData', data);
-        });
-
-        this.ws.addEventListener("close", () => setTimeout(() => this.connectWs(), 1000));
-
     },
     async mounted() {
         await this.$nextTick();
