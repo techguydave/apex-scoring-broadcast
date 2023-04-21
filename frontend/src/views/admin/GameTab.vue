@@ -131,9 +131,11 @@
 					</v-tabs>
 					<v-tabs-items v-model="tabs">
 						<v-tab-item>
+							<v-btn @click="csv('overall')">Export CSV</v-btn>
 							<simple-score-table :stats="stats"></simple-score-table>
 						</v-tab-item>
 						<v-tab-item v-for="(game, index) in stats.games" :key="index">
+							<v-btn @click="csv(game.game)">Export CSV</v-btn>
 							<v-btn @click="deleteStats(game.game)">Delete</v-btn>
 							<simple-score-table :stats="game" @edit="edit"></simple-score-table>
 						</v-tab-item>
@@ -237,6 +239,9 @@ export default {
 		}
 	},
 	methods: {
+		csv(game) {
+			this.$apex.exportCsv(this.organizer, this.eventId, game);
+		},
 		async addGame() {
 			this.loading = true;
 			let result = await this.$apex.generateStats(
