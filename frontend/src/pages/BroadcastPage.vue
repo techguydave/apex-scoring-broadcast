@@ -16,6 +16,7 @@ import Scoreboard from "@/views/broadcast/Scoreboard.vue"
 import LivedataTest from "../views/broadcast/LivedataTest.vue";
 import LiveTeamStatus from "../views/broadcast/LiveTeamStatus.vue";
 import LiveCharacterSelect from "../views/broadcast/LiveCharacterSelect.vue";
+import LiveDamageReport from "../views/broadcast/LiveDamageReport.vue";
 import Ticker from "../views/broadcast/Ticker.vue";
 
 import { processWsData } from "@/utils/liveData";
@@ -25,6 +26,7 @@ export default {
         LivedataTest,
         LiveTeamStatus,
         LiveCharacterSelect,
+        LiveDamageReport,
         Ticker,
     },
     props: ["organizer", "display"],
@@ -45,18 +47,20 @@ export default {
         observerPlayer() {
             return this.observerTeam?.find(p => this.observer?.target?.nucleusHash == p.nucleusHash);
         },
-        observerTeam() {
-            return this.liveData?.teams?.[this.observer?.target?.teamId]
-        },
         observer() {
             if (this.liveData.observers)
                 return Object.values(this.liveData.observers).find(o => o.name == this.observerName);
             return undefined;
-        }
+        },
+        observerTeam() {
+            console.log("obs", JSON.stringify(this.liveData?.observers))
+            console.log("target", JSON.stringify(this.observer?.target));
+            return this.liveData?.teams?.[this.observer?.target?.teamId]
+        },
     },
     watch: {
         apexClient(old, n) {
-            if (old != n) {
+            if (this.ws && old != n) {
                 this.ws.close();
             }
         }
