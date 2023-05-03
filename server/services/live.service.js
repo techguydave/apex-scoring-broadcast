@@ -5,11 +5,17 @@ const defaultStruct = () => ({
     state: "preinit",
     totalTeams: 0,
     teamsAlive: 0,
+    ring: {
+        stage: 0,
+        state: "countdown"
+    },
     serverConfig: {},
     players: {},
     observers: {},
     feed: [],
 })
+
+
 
 const STATUS = {
     ALIVE: "alive",
@@ -41,7 +47,6 @@ function processDataLine(line, data = defaultStruct()) {
                 if (data.state === "PickLoadout") {
                     //determine # of starting teams
                     let count = _.uniqBy(Object.values(data.players), "teamId").length;
-                    console.log(count);
                     data.totalTeams = count;
                     data.teamsAlive = count;
                 }
@@ -135,7 +140,7 @@ function processDataLine(line, data = defaultStruct()) {
                 }
                 break;
             case "playerDowned":
-                data.feed.push({ timestamp: line.timestamp, type: "down", player: line.attacker, victim: line.victim, weapon: line.weapon, damage: line.damageInflicted });
+                data.feed.push({ timestamp: line.timestamp, type: "down", player: line.attacker, victim: line.victim, weapon: line.weapon, damage: line.damageInflicted, ring: data.ring });
                 players[line.attacker.nucleusHash].knockdowns += 1;
                 players[line.victim.nucleusHash].status = STATUS.DOWNED;
                 break;
@@ -143,11 +148,11 @@ function processDataLine(line, data = defaultStruct()) {
                 if (players[line.victim.nucleusHash].status == STATUS.ALIVE) {
                     //work around for missing downed events, make sure we push a down to the killfeed;
                     //console.log("Deriving down for ", line.awardedTo, line.victim);
-                    data.feed.push({ timestamp: line.timestamp, type: "down", player: line.awardedTo, victim: line.victim, weapon: line.weapon, damage: 0, derived: true });
+                    data.feed.push({ timestamp: line.timestamp, type: "down", player: line.awardedTo, victim: line.victim, weapon: line.weapon, damage: 0, derived: true, ring: data.ring });
                     data.players[line.awardedTo.nucleusHash].knockdowns += 1;
                 }
 
-                data.feed.push({ timestamp: line.timestamp, type: "kill", player: line.awardedTo, victim: line.victim, weapon: line.weapon, damage: line.damageInflicted });
+                data.feed.push({ timestamp: line.timestamp, type: "kill", player: line.awardedTo, victim: line.victim, weapon: line.weapon, damage: line.damageInflicted, ring: data.ring });
                 let killer = players[line.awardedTo.nucleusHash]
                 if (killer.status != STATUS.ELIMINATED) {
                     killer.kills += 1;
@@ -181,6 +186,13 @@ function processDataLine(line, data = defaultStruct()) {
                 if (update)
                     data.teamsAlive -= 1;
                 break;
+            case "ringStartClosing":
+                data.ring.stage = line.stage;
+                data.ring.state = "closing";
+                break;
+            case "ringStartClosing":
+                data.ring.stage = line.stage + 1;
+                data.ring.state = "countdown";
         }
 
         if (line.player && line.player.teamId > 1) {
@@ -223,6 +235,7 @@ function convertLiveDataToRespawnApi(data) {
         ultimatesUsed: player.ultimatesUsed,
         tacticalsUsed: player.tacticalsUsed,
         damageTaken: player.damageTaken,
+        killFeed: data.feed.filter(f => f.type == "kill" && f.player.nucleusHash == player.nucleusHash),
     }));
 
     return {

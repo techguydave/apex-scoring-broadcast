@@ -42,7 +42,7 @@ function apexService(config) {
         return stats.data;
     }
 
-    async function generateStats(eventId, statsCode, game, startTime, killPoints, placementPoints, autoAttachUnclaimed, selectedUnclaimed, liveData) {
+    async function generateStats(eventId, statsCode, game, startTime, killPoints, placementPoints, autoAttachUnclaimed, selectedUnclaimed, liveData, ringKillPoints) {
         let form = new FormData();
 
         form.append("eventId", eventId);
@@ -55,6 +55,8 @@ function apexService(config) {
         form.append("autoAttachUnclaimed", autoAttachUnclaimed);
         form.append("selectedUnclaimed", selectedUnclaimed);
         form.append("liveData", liveData);
+        if (ringKillPoints)
+            form.append("ringKillPoints", JSON.stringify(ringKillPoints));
 
         try {
             let result = await axios.post(config.baseUrl + "stats", form, { headers: getApiKeyHeaders() })

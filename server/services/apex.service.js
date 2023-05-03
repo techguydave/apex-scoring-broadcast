@@ -111,7 +111,7 @@ module.exports = function Apex(config) {
         return overall;
     }
 
-    function generateGameReport(data, placementPoints = SCORE_ARRAY, killScore = 1) {
+    function generateGameReport(data, placementPoints = SCORE_ARRAY, killPoints = 1, ringKillPoints) {
         let teams = {};
         let playerData = data.player_results;
         playerData.forEach(player => {
@@ -130,7 +130,15 @@ module.exports = function Apex(config) {
             let team = teams[teamId];
             team.player_stats.push(player);
             SCORE_SUMS.forEach(key => team.overall_stats[key] = getOr(team.overall_stats[key], 0) + getOr(player[key], 0));
-            team.overall_stats.score += (player.kills * killScore)
+            if (ringKillPoints && player.killFeed) {
+                player.killFeed.forEach(kill => {
+                    team.overall_stats.score += parseInt(ringKillPoints["ring"+kill.ring.stage][kill.ring.state]);
+                })
+            } else {
+                team.overall_stats.score += (player.kills * killPoints)
+            }
+            delete player.killFeed;
+
         });
 
         teams = _.values(teams).map(team => {

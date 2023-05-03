@@ -33,8 +33,6 @@ async function getStats(organizer, eventId, game) {
             .join("players", "players.playerId", "=", "player_game_stats.playerId")
             .whereIn("gameId", games.map(game => game.id));
 
-        console.log(games);
-
         let matchTeams = await matchService.getMatchTeams(games[0]?.matchId);
 
         return assembleStatsDocuments(games, teams, players, matchTeams);

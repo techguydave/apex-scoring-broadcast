@@ -4,7 +4,6 @@ const { DEFAULT_PAGE_COUNT } = require("../config/const");
 const { SCORE_SUMS, getOrFn } = require("../utils/utils");
 
 async function listPlayers(start = 0, count = DEFAULT_PAGE_COUNT, search = "") {
-    console.log(search)
     let players = await db("player_names")
         .select(db.raw("string_agg(name, '\n') as names, \"playerId\" as id, count(*) OVER() AS total"))
         .groupBy("playerId")

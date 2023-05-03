@@ -26,8 +26,37 @@
 										Advanced Options
 									</v-expansion-panel-header>
 									<v-expansion-panel-content>
-										<v-text-field v-model.number="killPoints" label="Kill Points"></v-text-field>
 										<v-text-field v-model="placementPoints" label="Placement Points"></v-text-field>
+										<v-text-field v-model.number="killPoints" label="Kill Points"></v-text-field>
+										<v-checkbox v-model="useRingKillPoints" label="Use Per-Ring Kill Points (live data only)"></v-checkbox>
+										<div v-show="useRingKillPoints">
+											<v-row>
+												<v-col cols="2">
+													<v-text-field label="Ring 1 Countdown" v-model="ringKillPoints.ring0.countdown"></v-text-field>
+													<v-text-field label="Ring 1 Closing" v-model="ringKillPoints.ring0.closing"></v-text-field>
+												</v-col>
+												<v-col cols="2">
+													<v-text-field label="Ring 2 Countdown" v-model="ringKillPoints.ring1.countdown"></v-text-field>
+													<v-text-field label="Ring 2 Closing" v-model="ringKillPoints.ring1.closing"></v-text-field>
+												</v-col>
+												<v-col cols="2">
+													<v-text-field label="Ring 3 Countdown" v-model="ringKillPoints.ring2.countdown"></v-text-field>
+													<v-text-field label="Ring 3 Closing" v-model="ringKillPoints.ring2.closing"></v-text-field>
+												</v-col>
+												<v-col cols="2">
+													<v-text-field label="Ring 4 Countdown" v-model="ringKillPoints.ring3.countdown"></v-text-field>
+													<v-text-field label="Ring 4 Closing" v-model="ringKillPoints.ring3.closing"></v-text-field>
+												</v-col>
+												<v-col cols="2">
+													<v-text-field label="Ring 5 Countdown" v-model="ringKillPoints.ring4.countdown"></v-text-field>
+													<v-text-field label="Ring 5 Closing" v-model="ringKillPoints.ring4.closing"></v-text-field>
+												</v-col>
+												<v-col cols="2">
+													<v-text-field label="Ring 6 Countdown" v-model="ringKillPoints.ring5.countdown"></v-text-field>
+													<v-text-field label="Ring 6 Closing" v-model="ringKillPoints.ring5.closing"></v-text-field>
+												</v-col>
+											</v-row>
+										</div>
 									</v-expansion-panel-content>
 								</v-expansion-panel>
 							</v-expansion-panels>
@@ -217,6 +246,33 @@ export default {
 			loading: false,
 			unclaimedLiveData: [],
 			selectedUnclaimed: undefined,
+			ringKillPoints: {
+				"ring0": {
+					countdown: 1,
+					closing: 1,
+				},
+				"ring1": {
+					countdown: 1,
+					closing: 1,
+				},
+				"ring2": {
+					countdown: 1,
+					closing: 1,
+				},
+				"ring3": {
+					countdown: 1,
+					closing: 1,
+				},
+				"ring4": {
+					countdown: 1,
+					closing: 1,
+				},
+				"ring5": {
+					countdown: 1,
+					closing: 1,
+				},
+			},
+			useRingKillPoints: false,
 		}
 	},
 	computed: {
@@ -249,6 +305,7 @@ export default {
 				this.autoLivedata,
 				this.unclaimedLiveData?.[this.selectedUnclaimed]?.id,
 				this.liveData,
+				this.useRingKillPoints ? this.ringKillPoints : undefined
 			);
 			if (result.err) {
 				this.error = result;

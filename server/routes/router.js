@@ -164,9 +164,12 @@ module.exports = function router(app) {
     })
 
     app.post("/stats", verifyOrganizerHeaders, async (req, res) => {
-        let { eventId, game, statsCode, startTime, placementPoints, autoAttachUnclaimed, selectedUnclaimed, killPoints } = req.body;
+        let { eventId, game, statsCode, startTime, placementPoints, autoAttachUnclaimed, selectedUnclaimed, killPoints, ringKillPoints } = req.body;
         const liveDataFile = req.files?.["liveData"];
 
+        if (ringKillPoints) {
+            ringKillPoints = JSON.parse(ringKillPoints);
+        }
 
         placementPoints = placementPoints.split(",").map(n => parseInt(n))
 
@@ -216,7 +219,7 @@ module.exports = function router(app) {
             source = "statscode";
         }
 
-        gameStats = apexService.generateGameReport(gameStats, placementPoints, killPoints);
+        gameStats = apexService.generateGameReport(gameStats, placementPoints, killPoints, ringKillPoints);
 
         try {
             //console.log(JSON.stringify(gameStats))
@@ -225,7 +228,7 @@ module.exports = function router(app) {
                 statsService.setLiveDataGame(selectedUnclaimed, gameId)
             }
             else if (selectedUnclaimed === "undefined" && liveDataJson && gameId) {
-                console.log("Wrating live data", gameId, req.organizer.id);
+                console.log("Writing live data", gameId, req.organizer.id);
                 await statsService.writeLiveData(gameId, liveDataJson, req.organizer.id)
             }
             await deleteCache(req.organizer.username, eventId, game);
@@ -360,7 +363,6 @@ module.exports = function router(app) {
 
         await statsService.editScore(gameId, teamId, score);
         let game = await statsService.getGame(gameId);
-        console.log(game);
         await deleteCache(req.organizer.username, game.eventId, game.game)
         res.sendStatus(200);
     })
