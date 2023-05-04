@@ -190,7 +190,7 @@ function processDataLine(line, data = defaultStruct()) {
                 data.ring.stage = line.stage;
                 data.ring.state = "closing";
                 break;
-            case "ringStartClosing":
+            case "ringFinishedClosing":
                 data.ring.stage = line.stage + 1;
                 data.ring.state = "countdown";
         }
