@@ -140,7 +140,7 @@ function processDataLine(line, data = defaultStruct()) {
                 }
                 break;
             case "playerDowned":
-                data.feed.push({ timestamp: line.timestamp, type: "down", player: line.attacker, victim: line.victim, weapon: line.weapon, damage: line.damageInflicted, ring: data.ring });
+                data.feed.push({ timestamp: line.timestamp, type: "down", player: line.attacker, victim: line.victim, weapon: line.weapon, damage: line.damageInflicted, ring: { ...data.ring } });
                 players[line.attacker.nucleusHash].knockdowns += 1;
                 players[line.victim.nucleusHash].status = STATUS.DOWNED;
                 break;
@@ -148,11 +148,11 @@ function processDataLine(line, data = defaultStruct()) {
                 if (players[line.victim.nucleusHash].status == STATUS.ALIVE) {
                     //work around for missing downed events, make sure we push a down to the killfeed;
                     //console.log("Deriving down for ", line.awardedTo, line.victim);
-                    data.feed.push({ timestamp: line.timestamp, type: "down", player: line.awardedTo, victim: line.victim, weapon: line.weapon, damage: 0, derived: true, ring: data.ring });
+                    data.feed.push({ timestamp: line.timestamp, type: "down", player: line.awardedTo, victim: line.victim, weapon: line.weapon, damage: 0, derived: true, ring: { ...data.ring } });
                     data.players[line.awardedTo.nucleusHash].knockdowns += 1;
                 }
 
-                data.feed.push({ timestamp: line.timestamp, type: "kill", player: line.awardedTo, victim: line.victim, weapon: line.weapon, damage: line.damageInflicted, ring: data.ring });
+                data.feed.push({ timestamp: line.timestamp, type: "kill", player: line.awardedTo, victim: line.victim, weapon: line.weapon, damage: line.damageInflicted, ring: { ...data.ring } });
                 let killer = players[line.awardedTo.nucleusHash]
                 if (killer.status != STATUS.ELIMINATED) {
                     killer.kills += 1;
