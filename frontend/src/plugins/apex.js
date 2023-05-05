@@ -37,6 +37,13 @@ function apexService(config) {
         return stats.data;
     }
 
+    async function exportCsv(organizer, eventId, game) {
+        const link = document.createElement('a')
+        link.setAttribute('download', organizer + "+" + eventId + "+" + game + ".csv");
+        link.setAttribute('href', config.baseUrl + "stats/" + organizer + "/" + eventId + "/" + game + "/csv");
+        link.click()
+    }
+
     async function getGameList(organizer, eventId) {
         let stats = await axios.get(config.baseUrl + "games/" + organizer + "/" + eventId);
         return stats.data;
@@ -231,5 +238,6 @@ function apexService(config) {
         createMatch,
         getMatch,
         editScore,
+        exportCsv,
     }
 }

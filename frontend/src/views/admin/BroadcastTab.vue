@@ -64,7 +64,7 @@
                                         <v-expansion-panel-header>
                                             <h3>Settings</h3>
                                         </v-expansion-panel-header>
-                                        <v-expansion-panel-content>
+                                        <v-expansion-panel-content class="setting-content">
 
                                             <template v-if="selectorValue.length == 1">
                                                 <display-settings v-model="selectedOption" :eventId="eventId"
@@ -270,12 +270,15 @@ export default {
         },
         setActive(display, scene) {
             display.activeScene = scene.id;
-        }
+        },
+        updateBroadcastSettings: _.debounce(function () {
+            this.$apex.setBroadcastSettings(this.organizer, this.settings);
+        }, 250),
     },
     watch: {
         settings: {
             handler() {
-                this.$apex.setBroadcastSettings(this.organizer, this.settings);
+                this.updateBroadcastSettings();
             },
             deep: true,
         }
@@ -291,6 +294,11 @@ export default {
     transform: scale(.43);
     transform-origin: left;
     background: black;
+}
+
+.setting-content {
+    max-height: 400px;
+    overflow: auto;
 }
 
 .display-viewport ::v-deep .broadcast-page {

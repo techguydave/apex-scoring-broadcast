@@ -11,7 +11,7 @@ const cache = require("../services/cache.service");
 const shortLinkService = require("../services/short_link.service.js");
 const wsHandlerService = require("../services/ws_handler.service.js");
 const liveService = require("../services/live.service");
-const { getOr } = require("../utils/utils");
+const { statsToCsv } = require("../utils/utils");
 const playerService = require("../services/player.service");
 
 const SHORT_LINK_PREFIX = "_";
@@ -54,6 +54,8 @@ module.exports = function router(app) {
         }
         return stats;
     }
+
+
 
     app.get("/mock", (req, res) => {
         const mockStats = require("../mock/eastats3.json")
@@ -340,6 +342,23 @@ module.exports = function router(app) {
 
         res.send(stats);
     })
+
+    app.get("/stats/:organizer/:eventId/:game/csv", async (req, res) => {
+        const {
+            organizer,
+            eventId,
+            game
+        } = req.params;
+        const cacheKey = `stats:${organizer}-${eventId}-${game}`;
+
+        let stats = await cache.getOrSet(cacheKey, async () => {
+            return await getStats(organizer, eventId, game);
+        }, 300);
+
+        let csv = statsToCsv(stats, req.query.team, req.query.full);
+
+        res.attachment(`${organizer}+${eventId}+${game}.csv`).send(csv)
+    });
 
     app.delete("/stats/:organizer/:eventId/:game", verifyOrganizerHeaders, async (req, res) => {
         const {

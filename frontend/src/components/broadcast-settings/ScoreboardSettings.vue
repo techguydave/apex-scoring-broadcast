@@ -3,9 +3,7 @@
             <v-col cols="3">
                 <v-checkbox label="Styled" v-model="displayChoices.styled"></v-checkbox>
             </v-col>
-            <v-col cols="3">
-                <v-checkbox label="Light Text" v-model="displayChoices.dark"></v-checkbox>
-            </v-col>
+
             <v-col cols="3">
                 <v-checkbox label="Show Header" v-model="displayChoices.header"></v-checkbox>
             </v-col>

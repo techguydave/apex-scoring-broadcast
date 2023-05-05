@@ -62,7 +62,7 @@ import {
 
 
 export default {
-    props: ["stats", "liveData", "settings"],
+    props: ["stats", "liveData", "settings", "display"],
     components: {
         IconSpan,
     },
@@ -230,7 +230,8 @@ export default {
 
  .styled {
      .index {
-         background-color: $primary;
+         background-color: v-bind("display?.colors?.primary");
+         color: v-bind("display?.colors?.primaryText");
      }
 
      .team-wrap {}
@@ -240,17 +241,19 @@ export default {
      }
 
      .score {
-         background-color: $second-tone;
-
+         background-color: v-bind("display?.colors?.secondary");
+         color: v-bind("display?.colors?.text");
      }
 
      .player-wrap {
-         background-color: $second-tone;
+         background-color: v-bind("display?.colors?.secondary");
+         color: v-bind("display?.colors?.text");
 
      }
 
      .team-name {
-         background-color: $second-tone;
+         background-color: v-bind("display?.colors?.secondary");
+         color: v-bind("display?.colors?.text");
 
      }
  }

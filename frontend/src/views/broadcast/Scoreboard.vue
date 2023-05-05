@@ -1,10 +1,10 @@
 <template>
-  <div>
-    <div class="scoreboard-wrap" :class="{ 'scoreboard-wrap-styled': settings.styled, 'white-text': settings.dark }">
+  <div :class="{ 'styled': settings.styled }">
+    <div class="scoreboard-wrap">
       <div class="scoreboard-header-wrap">
         <div class="scoreboard-header" :class="{ 'scoreboard-header-styled': settings.styled }">
           <div v-if="settings.styled" class="scoreboard-header-backing"></div>
-          <div class="scoreboard-header-text">{{ title }}</div>
+          <div class="scoreboard-header-text">{{ title }} </div>
         </div>
       </div>
       <div class="overall-wrap" v-if="(stats && stats.teams)" :class="{ 'overall-wrap-styled': settings.styled }">
@@ -16,7 +16,8 @@
                   <div>&nbsp;#&nbsp;</div>
                 </div>
                 <div class="score-item score-name">
-                  <div>{{ settings.mode == "team" ? "Team" : "Player" }}</div>
+                  <div>{{ settings.mode == "team" ? "Team" : "Player" }}
+                  </div>
                 </div>
                 <div class="score-item score-value score-header">
                   <template v-if="settings.display2">&nbsp;{{ getDisplayName(settings.display) }}&nbsp;</template>
@@ -89,12 +90,11 @@ const defScore = {
 }
 
 export default {
-  props: ["stats", "settings"],
+  props: ["stats", "settings", "display"],
 
   computed: {
     sortedScores() {
       let scores = sortScores(this.scoresByMode, this.settings.display);
-      console.log("scoires", scores);
 
       scores = scores.length < 20 ? pad_array(scores, 20, defScore) : scores;
 
@@ -144,15 +144,55 @@ export default {
 };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .scoreboard-wrap {
   position: absolute;
   width: 1920px;
   height: 1080px;
+  color: v-bind("display?.colors?.text");
+
 }
 
-.scoreboard-wrap-styled {
-  background: black;
+.styled {
+  .scoreboard-wrap {
+    background: v-bind("display?.colors?.background");
+  }
+
+  .scoreboard-header-backing {
+    position: absolute;
+    width: 100%;
+    left: 0;
+    top: 0;
+    border-top: 80px solid;
+    border-top-color: v-bind("display?.colors?.primary");
+    border-right: 40px solid transparent;
+  }
+
+
+
+  .score-index {
+    background-color: v-bind("display?.colors?.primary");
+  }
+
+  .score-name {
+    background: v-bind("display?.colors?.secondary");
+  }
+
+  .score-value {
+    background: v-bind("display?.colors?.secondary");
+  }
+
+}
+
+.scoreboard-header-text {
+  color: v-bind("display?.colors?.primaryText");
+}
+
+
+.table-header .score-item {
+  background: transparent;
+  color: v-bind("display?.colors?.secondaryText");
+
 }
 
 .scoreboard-header-wrap {
@@ -180,15 +220,6 @@ export default {
   position: absolute;
   text-align: center;
   width: 100%;
-}
-
-.scoreboard-header-backing {
-  position: absolute;
-  width: 100%;
-  left: 0;
-  top: 0;
-  border-top: 80px solid rgb(151, 11, 11);
-  border-right: 40px solid transparent;
 }
 
 .overall-wrap {
@@ -265,9 +296,7 @@ export default {
   /* display: inline-block; */
 }
 
-.character-wrap-styled {
-  background: rgb(38, 31, 31);
-}
+
 
 .character-inline-block {
   display: inline-block;
@@ -313,6 +342,7 @@ export default {
   width: 55px;
   line-height: 65px;
   text-align: center;
+  color: v-bind("display?.colors?.primaryText");
 }
 
 .score-name {
@@ -321,17 +351,6 @@ export default {
   font-size: 25px;
 }
 
-.score-index-styled {
-  background-color: rgb(151, 11, 11);
-}
-
-.score-name-styled {
-  background: rgb(38, 31, 31);
-}
-
-.score-value-styled {
-  background: rgb(38, 31, 31);
-}
 
 .score-player-names {
   font-size: 17px;

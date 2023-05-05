@@ -35,7 +35,7 @@ import {
 const timer = 5000;
 
 export default {
-    props: ["stats", "liveData", "settings"],
+    props: ["stats", "liveData", "settings", "display"],
     data() {
         return {
             rotated: 0,
@@ -96,7 +96,7 @@ export default {
 </script>
 <style lang="scss" scoped>
 .wrap {
-    color: white;
+    color: v-bind("display?.colors?.text");
     display: flex;
     font-size: 25px;
     position: absolute;
@@ -111,7 +111,6 @@ export default {
 .index {
     width: 50px;
     text-align: center;
-    background-color: $primary;
 }
 
 .score {
@@ -132,12 +131,17 @@ export default {
 .styled {
     &.wrap {}
 
+    .index {
+        background-color: v-bind("display?.colors?.primary");
+        color: v-bind("display?.colors?.primaryText");
+    }
+
     .score {
-        background-color: $second-tone;
+        background-color: v-bind("display?.colors?.secondary");
     }
 
     .name {
-        background-color: $second-tone;
+        background-color: v-bind("display?.colors?.secondary");
     }
 }
 

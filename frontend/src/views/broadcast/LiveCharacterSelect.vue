@@ -20,7 +20,7 @@
 <script>
 import colors from "@/utils/colors";
 export default {
-    props: ["liveData", "settings"],
+    props: ["liveData", "settings", "display"],
     data() {
         return { colors };
     }
@@ -75,11 +75,13 @@ export default {
 
 .styled {
     .player {
-        background-color: $first-tone;
+        background-color: v-bind("display?.colors?.secondary");
+        color: v-bind("display?.colors?.text");
     }
 
     .header {
-        background: $primary;
+        background: v-bind("display?.colors?.primary");
+        color: v-bind("display?.colors?.primaryText")
     }
 }
 </style>

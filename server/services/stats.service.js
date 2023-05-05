@@ -1,7 +1,6 @@
 const { db } = require("../connectors/db");
 const _ = require("lodash");
 const matchService = require("./match.service");
-
 function assembleStatsDocuments(games, teams, players, matchTeams) {
     let teamsByGame = _(teams).groupBy("gameId").value();
     let playersByGame = _(players).groupBy("gameId").value();
