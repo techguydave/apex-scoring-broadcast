@@ -94,7 +94,8 @@ function processDataLine(line, data = defaultStruct()) {
                         kills: 0,
                         status: STATUS.ALIVE,
                         characterSelected: true,
-                        character: line.player.character.toLowerCase()
+                        character: line.player.character.toLowerCase(),
+                        inv: {},
                     };
                 }
                 break;
@@ -193,6 +194,22 @@ function processDataLine(line, data = defaultStruct()) {
             case "ringFinishedClosing":
                 data.ring.stage = line.stage + 1;
                 data.ring.state = "countdown";
+                break;
+            case "inventoryPickUp": {
+                let inv = getPlayer(players, pid, line).inv;
+                inv[line.item] = (inv[line.item] ?? 0) + line.quantity;
+                break;
+            }
+            case "inventoryDrop":{
+                let inv = getPlayer(players, pid, line).inv;
+                inv[line.item] = (inv[line.item] ?? 0) - line.quantity;
+                break;
+            }
+            case "inventoryUse":{
+                let inv = getPlayer(players, pid, line).inv;
+                inv[line.item] = (inv[line.item] ?? 0) + line.quantity;
+                break;
+            }
         }
 
         if (line.player && line.player.teamId > 1) {
@@ -209,10 +226,10 @@ function processDataLine(line, data = defaultStruct()) {
     return data;
 }
 
-function getPlayer(players, pid) {
+function getPlayer(players, pid, line) {
     let player = players[pid];
     if (!player) {
-        console.log("UNDEF PLAYER", pid);
+        console.log("UNDEF PLAYER", pid, line);
     }
     return player;
 }
