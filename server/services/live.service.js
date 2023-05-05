@@ -218,6 +218,7 @@ function processDataLine(line, data = defaultStruct()) {
             getPlayer(players, pid).currentHealth = line.player.currentHealth;
             getPlayer(players, pid).shieldHealth = line.player.shieldHealth;
         }
+        console.log(data.observers);
     } catch (err) {
         // console.log(err);
         // console.log(line);

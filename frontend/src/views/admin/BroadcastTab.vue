@@ -127,6 +127,7 @@ import SceneSettings from "../../components/broadcast-settings/SceneSettings.vue
 import ScoreboardSettings from "../../components/broadcast-settings/ScoreboardSettings.vue";
 import LiveTeamStatusSettings from "../../components/broadcast-settings/LiveTeamStatusSettings.vue";
 import LiveCharacterSelectSettings from "../../components/broadcast-settings/LiveCharacterSelectSettings.vue";
+import LiveDamageReportSettings from "../../components/broadcast-settings/LiveDamageReportSettings.vue";
 import TickerSettings from "../../components/broadcast-settings/TickerSettings.vue";
 import IconBtn from "../../components/IconBtnFilled.vue";
 
@@ -164,6 +165,16 @@ const overlayDefaults = [
         }
     },
     {
+        type: "LiveDamageReport",
+        name: "(Live+Spectator) Damage Report",
+        settings: {
+            styled: true,
+            dark: false,
+            smooth: true,
+            speed: 15,
+        }
+    },
+    {
         type: "Ticker",
         name: "Ticker",
         settings: {
@@ -186,6 +197,7 @@ export default {
         IconBtn,
         LiveCharacterSelectSettings,
         LiveTeamStatusSettings,
+        LiveDamageReportSettings,
         TickerSettings,
     },
     props: [
