@@ -90,10 +90,10 @@ export default {
 
     &.pos1 {
         bottom: 120px;
-        right: 400px;
+        right: 403px;
     }
      &.pos2 {
-        bottom: 43px;
+        bottom: 48px;
         right: 625px;
     }
 }

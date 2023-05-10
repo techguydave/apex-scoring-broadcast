@@ -67,8 +67,8 @@ export default {
 <style scoped lang="scss">
 .wrap {
     position: absolute;
-    left: 50px;
-    bottom: 285px;
+    left: 43px;
+    bottom: 310px;
 }
 
 .team-wrap {
