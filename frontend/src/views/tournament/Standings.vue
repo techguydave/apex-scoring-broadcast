@@ -89,11 +89,11 @@ export default {
         getSourceDesc(source) {
             switch (source) {
                 case "livedata":
-                    return "<center>DataSource: Livedata. <br> LiveData is experimental and may not be as accurate as statscode. <br>Public customs can use LiveData for scoring even without a statscode.<br>Extra data is avail with LiveData, including a kill feed.  ";
+                    return "<center>DataSource: Livedata  ";
                 case "statscode":
-                    return "<center>DataSource: StatsCode <br> StatsCode uses respawns api to get post-game data. <br>Statscode data is fully accurate, but may be missing some extra data provided by LiveData";
+                    return "<center>DataSource: StatsCode ";
                 case "statscode+livedata":
-                    return "<center>DataSource: StatsCode + LiveData <br> Uses statscode to get accurate data, and livedata to add additional data such as kill feed";
+                    return "<center>DataSource: StatsCode + LiveData";
             }
         }
     },

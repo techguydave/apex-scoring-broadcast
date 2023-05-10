@@ -68,7 +68,8 @@ const mapMap = {
     "mp_rr_desertlands_mu3": "Worlds Edge (Season 10)",
     "mp_rr_desertlands_mu4": "Worlds Edge (Season 16)",
     "mp_rr_olympus_mu2": "Olympus (Season 12)",
-    "mp_rr_divided_moon": "Broken Moon (Season 15)"
+    "mp_rr_divided_moon": "Broken Moon (Season 15)",
+    "mp_rr_desertlands_hu": "Worlds Edge (Season 17)",
 }
 
 const mapMapShort = {
