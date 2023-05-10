@@ -78,7 +78,8 @@ const mapMapShort = {
     "mp_rr_desertlands_mu3": "Worlds Edge",
     "mp_rr_desertlands_mu4": "Worlds Edge",
     "mp_rr_olympus_mu2": "Olympus",
-    "mp_rr_divided_moon": "Broken Moon"
+    "mp_rr_divided_moon": "Broken Moon",
+    "mp_rr_desertlands_hu": "Worlds Edge",
 }
 
 function sortScores(scores, sortKey) {
