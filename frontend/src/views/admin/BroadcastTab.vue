@@ -128,6 +128,8 @@ import ScoreboardSettings from "../../components/broadcast-settings/ScoreboardSe
 import LiveTeamStatusSettings from "../../components/broadcast-settings/LiveTeamStatusSettings.vue";
 import LiveCharacterSelectSettings from "../../components/broadcast-settings/LiveCharacterSelectSettings.vue";
 import LiveDamageReportSettings from "../../components/broadcast-settings/LiveDamageReportSettings.vue";
+import LivePlayerInventorySettings from "../../components/broadcast-settings/LivePlayerInventorySettings.vue";
+import LiveTeamNameSettings from "../../components/broadcast-settings/LiveTeamNameSettings.vue";
 import TickerSettings from "../../components/broadcast-settings/TickerSettings.vue";
 import IconBtn from "../../components/IconBtnFilled.vue";
 
@@ -149,6 +151,16 @@ const overlayDefaults = [
         }
     },
     {
+        type: "Ticker",
+        name: "Ticker",
+        settings: {
+            styled: true,
+            dark: false,
+            smooth: true,
+            speed: 15,
+        }
+    },
+    {
         type: "LiveTeamStatus",
         name: "(Live) Team Scoreboard",
         settings: {
@@ -164,24 +176,25 @@ const overlayDefaults = [
             dark: false,
         }
     },
+    // {
+    //     type: "LiveDamageReport",
+    //     name: "(Spectator) Damage Report",
+    //     settings: {
+    //         styled: true,
+    //     }
+    // },
     {
-        type: "LiveDamageReport",
-        name: "(Live+Spectator) Damage Report",
+        type: "LivePlayerInventory",
+        name: "(Spectator) Player Inventory",
         settings: {
             styled: true,
-            dark: false,
-            smooth: true,
-            speed: 15,
         }
     },
     {
-        type: "Ticker",
-        name: "Ticker",
+        type: "LiveTeamName",
+        name: "(Spectator) Team Name",
         settings: {
             styled: true,
-            dark: false,
-            smooth: true,
-            speed: 15,
         }
     }
 ]
@@ -198,6 +211,8 @@ export default {
         LiveCharacterSelectSettings,
         LiveTeamStatusSettings,
         LiveDamageReportSettings,
+        LivePlayerInventorySettings,
+        LiveTeamNameSettings,
         TickerSettings,
     },
     props: [

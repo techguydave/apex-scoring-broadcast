@@ -1,7 +1,7 @@
 const _ = require("lodash");
 function patchData(data, patch) {
     patch.players.forEach(p => !p ? console.log(p) : data.players[p.nucleusHash] = p);
-    patch.players.forEach(o => !o ? console.log(o) : data.players[o.nucleusHash] = o);
+    patch.observers.forEach(o => !o ? console.log(o) : data.observers[o.nucleusHash] = o);
 
     data.feed.push(...patch.feed);
 

@@ -17,6 +17,8 @@ import LivedataTest from "../views/broadcast/LivedataTest.vue";
 import LiveTeamStatus from "../views/broadcast/LiveTeamStatus.vue";
 import LiveCharacterSelect from "../views/broadcast/LiveCharacterSelect.vue";
 import LiveDamageReport from "../views/broadcast/LiveDamageReport.vue";
+import LivePlayerInventory from "../views/broadcast/LivePlayerInventory.vue";
+import LiveTeamName from "../views/broadcast/LiveTeamName.vue";
 import Ticker from "../views/broadcast/Ticker.vue";
 
 import { processWsData } from "@/utils/liveData";
@@ -27,6 +29,8 @@ export default {
         LiveTeamStatus,
         LiveCharacterSelect,
         LiveDamageReport,
+        LivePlayerInventory,
+        LiveTeamName,
         Ticker,
     },
     props: ["organizer", "display"],
@@ -48,13 +52,11 @@ export default {
             return this.observerTeam?.find(p => this.observer?.target?.nucleusHash == p.nucleusHash);
         },
         observer() {
-            if (this.liveData.observers)
+            if (this.liveData.observers) 
                 return Object.values(this.liveData.observers).find(o => o.name == this.observerName);
             return undefined;
         },
         observerTeam() {
-            console.log("obs", JSON.stringify(this.liveData?.observers))
-            console.log("target", JSON.stringify(this.observer?.target));
             return this.liveData?.teams?.[this.observer?.target?.teamId]
         },
     },
@@ -63,7 +65,7 @@ export default {
             if (this.ws && old != n) {
                 this.ws.close();
             }
-        }
+        },
     },
     methods: {
         async updateScores() {

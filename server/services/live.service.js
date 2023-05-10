@@ -95,7 +95,10 @@ function processDataLine(line, data = defaultStruct()) {
                         status: STATUS.ALIVE,
                         characterSelected: true,
                         character: line.player.character.toLowerCase(),
-                        inv: {},
+                        inv: {
+                            "Syringe": 2,
+                            "Shield Cell": 2
+                        },
                     };
                 }
                 break;
@@ -207,7 +210,7 @@ function processDataLine(line, data = defaultStruct()) {
             }
             case "inventoryUse":{
                 let inv = getPlayer(players, pid, line).inv;
-                inv[line.item] = (inv[line.item] ?? 0) + line.quantity;
+                inv[line.item] = (inv[line.item] ?? 0) - line.quantity;
                 break;
             }
         }
@@ -218,7 +221,6 @@ function processDataLine(line, data = defaultStruct()) {
             getPlayer(players, pid).currentHealth = line.player.currentHealth;
             getPlayer(players, pid).shieldHealth = line.player.shieldHealth;
         }
-        console.log(data.observers);
     } catch (err) {
         // console.log(err);
         // console.log(line);
