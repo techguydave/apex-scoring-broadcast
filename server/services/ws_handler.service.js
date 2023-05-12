@@ -30,7 +30,7 @@ async function setLiveData(orgUser, client, data) {
 function diffLine(left, right, line) {
     let feed = right.feed.splice(left.feed.length, right.feed.length);
     let players = Object.keys(line).map(key => line[key].nucleusHash).filter(val => !!val && right.players[val]).map(player => right.players[player]);
-    let observers = Object.keys(line).map(key => line[key].nucleusHash).filter(val => !!val && right.observers[val]).map(player => right.players[player]);
+    let observers = Object.keys(line).map(key => line[key].nucleusHash).filter(val => !!val && right.observers[val]).map(player => right.observers[player]);
     let keyDiff = {};
 
     Object.keys(right).filter(key => !left[key] || (!(right[key] instanceof Object) && right[key] == left[key])).forEach(k => keyDiff[k] = right[k]);

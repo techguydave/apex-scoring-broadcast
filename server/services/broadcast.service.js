@@ -61,7 +61,6 @@ async function setOrganizerDefaultApexClient(organizerName, apexClient) {
 
 
 async function setBroadcastSettings(organizer, settings) {
-    console.log(settings);
     await db("broadcast_settings")
         .insert({ organizer: organizer.id, settings: JSON.stringify(settings) })
         .onConflict(["organizer"])
