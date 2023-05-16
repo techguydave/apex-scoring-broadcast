@@ -193,7 +193,11 @@ module.exports = function router(app) {
             liveDataJson = await statsService.getLiveDataById(selectedUnclaimed);
         }
         else if (liveDataFile) {
-            liveDataJson = JSON.parse(liveDataFile.data.toString());
+            try {
+                liveDataJson = JSON.parse(liveDataFile.data.toString());
+            } catch (err) {
+                return res.status(500).send({ err: "live_data_parse", msg: "The uploaded file is not valid." })
+            }
         }
 
         if (liveDataJson) {

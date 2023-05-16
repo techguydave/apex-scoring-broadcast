@@ -13,6 +13,8 @@
                                 :to="{ name: 'tournament.standings', params: $props }">Standings</router-link>
                             <router-link class="nav-link"
                                 :to="{ name: 'tournament.stats', params: $props }">Stats</router-link>
+                            <router-link class="nav-link"
+                                :to="{ name: 'tournament.drops', params: $props }">Drops</router-link>
                         </div>
                     </div>
                     <div class="content-wrap">
