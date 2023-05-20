@@ -6,6 +6,7 @@ const { verifyOrganizerHeaders, verifyAdminHeaders } = require("../middleware/au
 const apexService = new require("../services/apex.service")(config);
 const authService = require("../services/auth.service");
 const matchService = require("../services/match.service");
+const dropService = require("../services/drops.service");
 const broadcastService = require("../services/broadcast.service");
 const cache = require("../services/cache.service");
 const shortLinkService = require("../services/short_link.service.js");
@@ -455,6 +456,50 @@ module.exports = function router(app) {
 
     app.get("/player/:id/matches", async (req, res) => {
         res.send(await playerService.getMatches(req.params.id, req.query.start, req.query.count));
+    })
+
+    app.post("/drop", async (req, res) => {
+        const {
+            matchId, 
+            teamName, 
+            token, 
+            map,
+            pass, 
+            color,
+            drop
+        } = req.body;
+
+        console.log(req.body);
+
+        let result = await dropService.setDrop(matchId, pass, map, token, teamName, color, drop);
+        if (result.err) {
+            res.status(400).send(result);
+        } else {
+            res.send(result);
+        }
+    })
+
+    app.delete("/drop", async (req, res) => {
+        const {
+            matchId,
+            teamName,
+            token,
+            map,
+            drop,
+        } = req.body;
+
+        let result = await dropService.deleteDrop(matchId, map, token, teamName, drop);
+        res.send(result);
+    })
+
+    app.get("/drops/:matchId/:map", async (req, res) => {
+        const {
+            matchId,
+            map,
+        } = req.params;
+
+        let result = await dropService.getMatchDrops(matchId, map);
+        res.send(result);
     })
 
     app.ws("/live/write/:key/:client", (ws, req) => {

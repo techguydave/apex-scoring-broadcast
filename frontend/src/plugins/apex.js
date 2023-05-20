@@ -172,14 +172,30 @@ function apexService(config) {
     }
 
     async function createMatch(name) {
-        let data = await axios.post(`${config.baseUrl}match/${name}`, {}, { headers: getApiKeyHeaders() });
-        return data.data;
+        let {data} = await axios.post(`${config.baseUrl}match/${name}`, {}, { headers: getApiKeyHeaders() });
+        return data;
     }
 
     async function getMatch(organizerName, eventId) {
         let { data } = await axios.get(`${config.baseUrl}match/${organizerName}/${eventId}`);
         return data;
     }
+
+    async function setDrop(matchId, teamName, map, pass, token, color, drop) {
+        let { data } = await axios.post(`${config.baseUrl}drop`, { matchId, teamName, token, map, pass, color, drop });
+        return data;
+    }
+
+    async function deleteDrop(matchId, teamName, map, pass, token, drop) {
+        let { data } = await axios.post(`${config.baseUrl}drop`, { matchId, teamName, token, map, pass, drop });
+        return data;
+    }
+
+    async function getDrops(matchId, map) {
+        let { data } = await axios.get(`${ config.baseUrl }drops/${matchId}/${map}`);
+        return data;
+    }
+
 
     let connections = {};
     function getLiveDataWs(organizer, client) {
@@ -239,5 +255,8 @@ function apexService(config) {
         getMatch,
         editScore,
         exportCsv,
+        setDrop,
+        getDrops,
+        deleteDrop,
     }
 }
