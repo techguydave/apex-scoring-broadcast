@@ -67,34 +67,69 @@
             <v-tab-item>
                 <v-card>
                     <v-card-text>
-                        <template >
-                            <v-btn color="primary" @click="enableDropsDiag = true">Setup</v-btn>
+
+                        <template>
+                            <v-row>
+                                <v-col cols="12" sm="4">
+                                    <v-card>
+                                        <v-card-title>Configure Maps</v-card-title>
+                                        <v-card-text>
+                                            <v-btn color="primary" @click="enableDropsDiag = true">Configure</v-btn>
+                                        </v-card-text>
+                                    </v-card>
+                                    </v-col>
+                                    <v-col cols="12" sm="8">
+                                    <v-card v-if="publicData.drops">
+                                        <v-card-title>
+                                            Direct Link
+                                        </v-card-title>
+                                        <v-card-text>
+                                            <v-text-field v-if="publicData.drops" :value="publicUrlDrops" read-only solo
+                                                label="direct link"></v-text-field>
+                                        </v-card-text>
+                                    </v-card>
+                                </v-col>
+                            </v-row>
                         </template>
-                        <template v-if="publicData.drops">
-                            <v-tabs v-model="dropTab">
-                                <v-tab v-for="id in publicData.drops.maps" :key="id">{{ getMapNameShort(id) }}</v-tab>
-                            </v-tabs>
-                            <v-tabs-items v-model="dropTab">
-                                <v-tab-item>
-                                    <DropMap :map="id" :matchId="matchId" mode="admin"></DropMap>
-                                </v-tab-item>
-                            </v-tabs-items>
+
+                        <template >
+                            <v-card>
+                                <v-card-title>
+                                    Map & Team Managment
+                                </v-card-title>
+                                <v-card-text v-if="publicData.drops">
+                                    <v-tabs v-model="dropTab">
+                                        <v-tab v-for="id in publicData.drops.maps" :key="id">{{ getMapNameShort(id)
+                                        }}</v-tab>
+                                    </v-tabs>
+                                    <v-tabs-items v-model="dropTab">
+                                        <v-tab-item v-for="id in publicData.drops.maps" :key="id">
+                                            <DropMap class="drop-map" :map="id" :matchId="matchId" mode="admin"></DropMap>
+                                        </v-tab-item>
+                                    </v-tabs-items>
+                                </v-card-text>
+                                <v-card-text v-else>
+                                    <i>Click configure to enable drop selection for this match</i>
+                                </v-card-text>
+                            </v-card>
                         </template>
                     </v-card-text>
                 </v-card>
-                 <v-dialog v-model="enableDropsDiag" max-width="600px">
+                <v-dialog v-model="enableDropsDiag" max-width="600px">
                     <v-card>
-                      <v-toolbar color="primary" class="toolbar" flat>Enable Drop Spots<v-spacer></v-spacer><icon-btn-filled icon="close"
-                          @click="enableDropsDiag = false"></icon-btn-filled></v-toolbar>
-                          <v-card-title>Setup Drops</v-card-title>
-                      <v-card-text>
-                        <v-checkbox v-for="(id, name) in maps" :label="getMapName(id)" :key="name" v-model="selectedMaps[name]"  dense></v-checkbox>
-                        <v-text-field v-model="pass" type="password"></v-text-field>
-                        <v-btn color="primary" block class="my-3"
-                          @click="enableDrops">Enable</v-btn>
-                      </v-card-text>
+                        <v-toolbar color="primary" class="toolbar" flat>Enable Drop
+                            Spots<v-spacer></v-spacer><icon-btn-filled icon="close"
+                                @click="enableDropsDiag = false"></icon-btn-filled></v-toolbar>
+                        <v-card-title>Choose Maps</v-card-title>
+                        <v-card-text>
+                            <v-checkbox v-for="(id, name) in maps" :label="getMapName(id)" :key="name"
+                                v-model="selectedMaps[name]" dense></v-checkbox>
+                            <!-- <v-checkbox v-model="enabled" label="Drop Selection Enabled"></v-checkbox> -->
+                            <v-text-field v-model="pass" label="Password"></v-text-field>
+                            <v-btn :disabled="!pass" color="primary" block class="my-3" @click="enableDrops">Submit</v-btn>
+                        </v-card-text>
                     </v-card>
-                  </v-dialog>
+                </v-dialog>
             </v-tab-item>
         </v-tabs-items>
 
@@ -127,6 +162,7 @@ export default {
         return {
             publicData: {},
             publicUrl: undefined,
+            publicUrlDrops: undefined,
             command: "!now",
             add: "edit",
             tab: undefined,
@@ -135,12 +171,16 @@ export default {
             selectedMaps: {},
             dropTab: undefined,
             pass: "",
+            enabled: true,
             maps,
         }
     },
     computed: {
         publicFullUrl() {
             return window.location.origin + this.$router.resolve({ name: 'tournament.standings', params: { eventId: this.eventId, organizer: this.organizer, game: "overall" } }).href;
+        },
+        publicFullUrlDrops() {
+            return window.location.origin + this.$router.resolve({ name: 'tournament.drops', params: { eventId: this.eventId, organizer: this.organizer } }).href;
         },
         summaryUrl() {
             return encodeURI(`${this.$apex.config.fullUrl}stats/${this.organizer}/${this.eventId}/summary`);
@@ -176,9 +216,17 @@ export default {
                 teams = teams?.sort((a, b) => a.teamId - b.teamId);
 
                 this.teams = _.merge(teams, overall);
+                this.publicData = {};
                 if (options) {
                     this.publicData = options;
                 }
+
+                this.pass = this.publicData.drops?.pass;
+                this.selectedMaps = {};
+                Object.keys(this.publicData.drops?.maps ?? {}).forEach(key => this.selectedMaps[key] = true);
+
+                // this.publicUrlDrops = (await this.getShortLink(this.publicFullUrlDrops)) || this.publicFullUrlDrops;
+                this.publicUrlDrops =  this.publicFullUrlDrops;
             }
         },
         async enableDrops() {
@@ -187,12 +235,13 @@ export default {
             this.publicData.drops = {
                 pass: this.pass,
                 maps: enabledMaps,
+                enabled: this.enabled,
             }
             await this.setPublicSettings();
             this.enableDropsDiag = false;
         },
-        async getShortLink() {
-            let { hash } = await this.$apex.getShortLink(this.publicFullUrl);
+        async getShortLink(link) {
+            let { hash } = await this.$apex.getShortLink(link);
             return `${window.location.origin}/${hash}`;
         },
         async add20Teams() {
@@ -216,7 +265,7 @@ export default {
     async mounted() {
         this.publicUrl = this.publicFullUrl;
         await this.refreshPublicOptions();
-        this.publicUrl = (await this.getShortLink()) || this.publicFullUrl;
+        this.publicUrl = (await this.getShortLink(this.publicFullUrl)) || this.publicFullUrl;
     }
 }
 </script>
@@ -246,7 +295,12 @@ export default {
 
 
 .toolbar.v-sheet.v-toolbar {
-  background-color: $primary !important;
+    background-color: $primary !important;
 }
 
+.drop-map {
+    width: 80%;
+    max-width: 1000px;
+    margin: auto;
+}
 </style>

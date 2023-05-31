@@ -186,13 +186,18 @@ function apexService(config) {
         return data;
     }
 
-    async function deleteDrop(matchId, teamName, map, pass, token, drop) {
-        let { data } = await axios.post(`${config.baseUrl}drop`, { matchId, teamName, token, map, pass, drop });
+    async function deleteDrop(matchId, map, token, drop) {
+        let { data } = await axios.delete(`${config.baseUrl}drop/${matchId}/${map}/${token}${drop ? '/' + drop : '' }`);
         return data;
     }
 
-    async function getDrops(matchId, map) {
-        let { data } = await axios.get(`${ config.baseUrl }drops/${matchId}/${map}`);
+    async function deleteDropAdmin(matchId, map, teamName) {
+        let { data } = await axios.delete(`${config.baseUrl}drop_delete_admin/${matchId}/${map}${teamName ? '/' + teamName : ''}`, { headers: getApiKeyHeaders() });
+        return data;
+    }
+
+    async function getDrops(matchId, map, token) {
+        let { data } = await axios.get(`${ config.baseUrl }drops/${matchId}/${map}${token ? '/' + token : ''}`);
         return data;
     }
 
@@ -258,5 +263,6 @@ function apexService(config) {
         setDrop,
         getDrops,
         deleteDrop,
+        deleteDropAdmin
     }
 }

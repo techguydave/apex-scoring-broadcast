@@ -479,29 +479,40 @@ module.exports = function router(app) {
         }
     })
 
-    app.delete("/drop", async (req, res) => {
+    app.delete("/drop/:matchId/:map/:token/:drop?", async (req, res) => {
         const {
             matchId,
-            teamName,
             token,
             map,
             drop,
-        } = req.body;
+        } = req.params;
 
-        let result = await dropService.deleteDrop(matchId, map, token, teamName, drop);
+        let result = await dropService.deleteDrop(matchId, map, token, drop);
         res.send(result);
     })
 
-    app.get("/drops/:matchId/:map", async (req, res) => {
+    app.delete("/drop_delete_admin/:matchId/:map/:teamName?", verifyOrganizerHeaders, async (req, res) => {
         const {
             matchId,
             map,
+            drop,
         } = req.params;
 
-        let result = await dropService.getMatchDrops(matchId, map);
+        let result = await dropService.deleteDropsAdmin(matchId, map, drop);
         res.send(result);
     })
 
+    app.get("/drops/:matchId/:map/:token?", async (req, res) => {
+        const {
+            matchId,
+            map,
+            token,
+        } = req.params;
+
+        let result = token? await dropService.getMatchDropsByToken(matchId, map, token) : await dropService.getMatchDrops(matchId, map);
+        res.send(result);
+    })
+  
     app.ws("/live/write/:key/:client", (ws, req) => {
         wsHandlerService.connectWrite(ws, req.params.key, req.params.client);
     })

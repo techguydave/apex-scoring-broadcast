@@ -12,16 +12,18 @@
             <v-btn @click="drawLink = undefined">Done Link</v-btn>
             <v-btn @click="add">ADD</v-btn>
         </div>
-
+        
         <div class="actions text-center" v-if="mode == 'claim'">
-            <v-btn v-if="!claiming" color="primary" class="mt-2" @click="claimDropDiag = true">Claim Drop Spot</v-btn>
+            <v-btn v-if="!claiming && !selfDrops?.length" color="primary" class="mt-2" @click="claimDropDiag = true">Claim Drop Spot</v-btn>
+            <v-btn v-if="selfDrops?.length > 0" color="secondary" class="mt-2" @click="clearDrops">Clear Drop</v-btn>
             <v-btn v-if="claiming" color="primary" :disabled="claiming.length == 0" class="mt-2"
                 @click="finishClaim">Done</v-btn>
             <v-btn v-if="claiming" color="secondary" class="mt-2" @click="claiming = undefined;refreshClaims()">Cancel</v-btn>
             <!-- <v-btn class="ma-2">Export</v-btn> -->
         </div>
           <div class="actions text-center" v-if="mode == 'admin'">
-                <v-btn color="primary" class="ma-2" @click="resetTeam">Clear Team</v-btn>
+                <v-btn v-if="selectedTeam"  color="primary" class="ma-2" @click="resetTeam">Clear Team ({{ selectedTeam }})</v-btn>
+                <v-btn v-else :disabled="true" color="primary" class="ma-2" @click="resetTeam">Click Team Name to clear</v-btn>
                 <v-btn class="ma-2" @click="resetMap">Clear All</v-btn>
             </div>
 
@@ -46,6 +48,7 @@
                         stroke: #0009;
                         stroke-width: 4px;
                         paint-order: stroke;
+                        cursor: pointer;
                     }
                     
                     .link {
@@ -95,13 +98,16 @@
                                 text-anchor="middle" class="poi-name" :class="{ 'primary-poi': l.primary }">{{
                                     l.name }}</text>
                             <text v-for="(t, k) in l.teams" :x="l.namePos.x" :y="l.namePos.y + (35 * (k + 1)) + 5"
-                                text-anchor="middle" class="team-name" :key="t">{{ t }}</text>
+                                text-anchor="middle" class="team-name" :key="t" @click="selectedTeam = t">{{ t }}</text>
                         </g>
                     </svg>
                 </template>
             </svg>
+            <div class="refresh">
+                <icon-btn-filled icon="refresh" @click="refreshClaims()"></icon-btn-filled>
+            </div>
         </div>
-
+        {{ teamColor }}
         <v-dialog v-model="claimDropDiag" max-width="600px">
             <v-card>
                 <v-toolbar color="primary" class="toolbar" flat>Claim Drop Spot<v-spacer></v-spacer><icon-btn-filled
@@ -119,6 +125,7 @@
                         mode="rgba"
                         show-swatches
                         swatches-max-height="100"
+                        :swatches="swatches"
                         v-model="teamColor"
                     ></v-color-picker>
 
@@ -127,6 +134,21 @@
                 </v-card-text>
             </v-card>
         </v-dialog>
+        <v-snackbar
+          v-model="wrongPassSnack" color="red"
+        >
+          Wrong Password
+          <template v-slot:action="{ attrs }">
+            <v-btn
+              color="primary"
+              text
+              v-bind="attrs"
+              @click="wrongPassSnack = false"
+            >
+              Close
+            </v-btn>
+          </template>
+        </v-snackbar>
     </div>
 </template>
 
@@ -135,23 +157,29 @@ import maps from "@/utils/MapLocs";
 import IconBtnFilled from "@/components/IconBtnFilled";
 import PolyBool from "polybooljs";
 import _ from "lodash";
+import colors from "@/utils/colors"
 
 export default {
-    props: ["matchId", "map", "mode", "adminKey"],
+    props: ["matchId", "map", "mode"],
     data() {
         return {
             claimDropDiag: false,
             pass: "",
+            selectedTeam: undefined,
             setNameLoc: false,
             setTeamLoc: false,
             teamName: "",
-            teamColor: undefined,
+            teamColor: _.sample(Object.values(colors)),
             drawLink: undefined,
             active: 0,
             locations: undefined,
             claiming: undefined,
             claimed: [],
             console,
+            wrongPassSnack: false,
+            selfDrops: undefined,
+            enabled: false,
+            swatches: [Object.values(colors).slice(0, 5), Object.values(colors).slice(5, 10), Object.values(colors).slice(10, 15), Object.values(colors).slice(15, 20)]
         }
     },
     components: {
@@ -160,17 +188,14 @@ export default {
     computed: {
         claimedPoints() {
             let claimed = this.claiming ? this.claimed.concat([this.claiming]) : this.claimed;
-            console.log(JSON.stringify(claimed));
             let map = claimed.map(team => team.map(poi => ({ regions: [poi.points], inverted: false, colors: poi.colors }))
                 .concat(team.flatMap(poi => poi.links?.flatMap(l => team.find(c => c.name == l.link) ? { regions: [l.points], inverted: false } : undefined)))
                 .filter(o => o));
 
             let result = map.map(m => m.reduce((val, cur) => val && cur ? { ...PolyBool.union(val, cur), colors: _.uniq(cur.colors ? cur.colors.concat(val.colors) : val.colors ?? ["#bb3333"])} : cur, m[0]))
-            console.log(JSON.stringify(result));
             return result
         },
         claimingPoints() {
-            console.log(JSON.stringify(this.claiming));
             let result = this.claiming?.map(poi => ({ regions: [poi.points], inverted: false }));
 
             if(result?.length > 1)
@@ -180,6 +205,9 @@ export default {
     },
     watch: {
         map() {
+            this.refreshClaims();
+        },
+        matchId() {
             this.refreshClaims();
         }
     },
@@ -220,6 +248,16 @@ export default {
                 return true;
             }
         },
+        async resetTeam() {
+            await this.$apex.deleteDropAdmin(this.matchId, this.map, this.selectedTeam);
+            this.selectedTeam = undefined;
+            this.refreshClaims();
+        },
+        async resetMap() {
+            await this.$apex.deleteDropAdmin(this.matchId, this.map);
+            this.selectedTeam = undefined;
+            this.refreshClaims();
+        },
         doLink(link) {
             let poi = this.locations[this.active];
             if (this.linking) {
@@ -240,19 +278,33 @@ export default {
             if (!poi.teams)
                 poi.teams = [];
             poi.teams.push(this.teamName)
-            this.claiming.push({ ...poi, colors: [this.teamColor.hex] });
+            this.claiming.push({ ...poi, colors: [this.teamColor] });
+        },
+        async clearDrops() {
+            let token = localStorage.getItem("claim-token");
+
+            await this.$apex.deleteDrop(this.matchId, this.map, token);
+            this.refreshClaims();
         },
         async finishClaim() {
             let token = localStorage.getItem("claim-token");
             
             for (let claim of this.claiming) {
-                let result = await this.$apex.setDrop(this.matchId, this.teamName, this.map, this.pass, token, this.teamColor?.hex, claim.name);
-                token = result.token;
+                try {
+                    let result = await this.$apex.setDrop(this.matchId, this.teamName, this.map, this.pass, token, this.teamColor, claim.name);
+                    token = result.token;
+                } catch (err) {
+                    console.log(err);
+                    if (err.response.data.err == "INVALID_PASSWORD") {
+                        this.wrongPassSnack = true;
+                    }
+                }
             }
                 
             localStorage.setItem("claim-token", token);
             this.claiming = undefined;
             this.refreshClaims();
+            localStorage.setItem("claim-teamName", this.teamName);
 
         },
         add() {
@@ -271,6 +323,9 @@ export default {
             let claimed = await this.$apex.getDrops(this.matchId, this.map);
             console.log(JSON.stringify(claimed));
 
+            let token = localStorage.getItem("claim-token")
+            this.selfDrops = await this.$apex.getDrops(this.matchId, this.map, token);
+
             Object.values(claimed).forEach(team => {
                 let loc = team.map(claim => {
                     let loc = this.locations.find(c => c.name == claim.drop);
@@ -287,7 +342,14 @@ export default {
         }
     },
     async mounted() {
-        this.refreshClaims();
+
+        await this.refreshClaims();
+        this.int = setInterval(() => this.refreshClaims(), 5 * 60 * 1000);
+
+        this.teamName = localStorage.getItem("claim-teamName") || "";
+    },
+    destroyed() {
+        clearInterval(this.int);
     }
 };
 </script>
@@ -299,5 +361,14 @@ export default {
 
 .edit-line {
     display: flex;
+}
+
+.map-wrap {
+    position: relative;
+}
+.refresh {
+    position: absolute;
+    top: 0;
+    right: 0;
 }
 </style>
