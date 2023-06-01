@@ -543,9 +543,7 @@
           [1266, 1192]
         ]
       }
-    ],
-    "teams": ["Running Late"],
-    "colors": ["#B01C50"]
+    ]
   },
   {
     "name": "Lagoon",
@@ -574,10 +572,7 @@
       [1277, 1221],
       [1314, 1232],
       [1330, 1235]
-    ],
-    "links": [],
-    "teams": ["Running Late"],
-    "colors": ["#B01C50"]
+    ]
   },
   {
     "name": "Jurassic",
@@ -640,9 +635,7 @@
           [1151, 1144]
         ]
       }
-    ],
-    "teams": ["Running Late"],
-    "colors": ["#B01C50"]
+    ]
   },
   {
     "name": "Stormcatcher",
