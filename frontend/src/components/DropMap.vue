@@ -8,6 +8,8 @@
                 <v-btn @click="active = i; setNameLoc = true">Set Name Pos</v-btn>
                 <v-btn @click="active = i; l.points = []">Draw</v-btn>
                 <v-btn @click="active = i; linking = true">Link</v-btn>
+                <v-btn @click="l.links = []">Clear Links</v-btn>
+                <v-btn @click="remove(i)">X</v-btn>
             </div>
             <v-btn @click="drawLink = undefined">Done Link</v-btn>
             <v-btn @click="add">ADD</v-btn>
@@ -50,7 +52,10 @@
                         paint-order: stroke;
                         cursor: pointer;
                     }
-                    
+                    .poly {
+                        stroke: #ff000bff;
+                        fill: #ff000b77;
+                    }
                     .link {
                         stroke: #0b970bff;
                         fill: #0b970b77;
@@ -86,7 +91,7 @@
                                 <rect v-for="(color, i) in points?.colors" :x="i * 4" y="0" width="4" height="10" :style="`fill: ${color}77`" :key="i" />
                             </pattern>
                             <polygon :fill="'url(#stripe' + i + ')'" :points="points?.regions[0]?.map(p => p?.join(',')).join(' ')" stroke-width="4"
-                                class="poly" :stroke="points?.colors[0]"></polygon>
+                                 :stroke="points?.colors[0]"></polygon>
                         </svg>
                        
                        
@@ -258,12 +263,13 @@ export default {
             this.selectedTeam = undefined;
             this.refreshClaims();
         },
-        doLink(link) {
+        async doLink(link) {
             let poi = this.locations[this.active];
             if (this.linking) {
                 if (!poi.links) {
                     this.$set(poi, "links", [])
                 }
+                await this.$nextTick();
                 this.drawLink = {
                     link: link.name,
                     points: []
@@ -309,11 +315,14 @@ export default {
         },
         add() {
             this.locations.push({
-                name: " ",
+                name: "",
                 namePos: undefined,
                 primary: true,
                 points: [],
             })
+        },
+        remove(id) {
+            this.locations.splice(id, 1);
         },
         async refreshClaims() {
             this.locations = _.cloneDeep(maps[this.map])
