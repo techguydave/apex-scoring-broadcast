@@ -113,7 +113,6 @@
                 <icon-btn-filled icon="refresh" @click="refreshClaims()"></icon-btn-filled>
             </div>
         </div>
-        <a id="link">Download</a>
         <v-dialog v-model="claimDropDiag" max-width="600px">
             <v-card>
                 <v-toolbar color="primary" class="toolbar" flat>Claim Drop Spot<v-spacer></v-spacer><icon-btn-filled
@@ -134,7 +133,6 @@
                         :swatches="swatches"
                         v-model="teamColor"
                     ></v-color-picker>
-
                     <v-btn color="primary" block :disabled="teamName.length == 0 || pass.length == 0" class="my-3"
                         @click="claiming = []; claimDropDiag = false">Claim</v-btn>
                 </v-card-text>

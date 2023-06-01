@@ -495,10 +495,10 @@ module.exports = function router(app) {
         const {
             matchId,
             map,
-            drop,
+            teamName,
         } = req.params;
 
-        let result = await dropService.deleteDropsAdmin(matchId, map, drop);
+        let result = await dropService.deleteDropsAdmin(matchId, map, teamName);
         res.send(result);
     })
 
