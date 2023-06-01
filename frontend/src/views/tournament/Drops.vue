@@ -11,7 +11,7 @@
                 :to="{ name: 'tournament.drops', params: { ...$props, map: 'worlds-edge' } }">Worlds Edge</router-link>
         </div>
 
-        <DropMap class="ma-6" :map="selectedMap" :matchId="match.id" mode="dev"></DropMap>
+        <DropMap class="ma-6" :map="selectedMap" :matchId="match.id" mode="claim"></DropMap>
 
     </div>
 </template>
