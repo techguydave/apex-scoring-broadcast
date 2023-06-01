@@ -30,16 +30,18 @@
             </div>
 
         <div class="map-wrap mt-4">
-            <svg viewBox="0 0 2048 2048" width="100%" xmlns="http://www.w3.org/2000/svg" ref="svg" @click="handleClick">
+            <svg viewBox="0 0 2048 2048" width="100%" xmlns:xlink="http://www.w3.org/1999/xlink" ref="svg" id="svg" @click="handleClick">
                 <image width="2048" height="2048" :href="`/maps/${map}.webp`" />
                 <svg:style type="text/css">
                     .poi-name {
                         font-size: 30px;
                         fill: white;
-                        stroke: black;
-                        stroke-width: 8px;
-                        paint-order: stroke;
                         cursor: pointer;
+                    }
+                    .poi-outline {
+                        stroke: black;
+                        stroke-width: 4px;
+                        paint-order: stroke;
                     }
                     .primary-poi {
                         font-size: 38px;    
@@ -48,8 +50,6 @@
                         font-size: 25px;
                         fill: white;
                         stroke: #0009;
-                        stroke-width: 4px;
-                        paint-order: stroke;
                         cursor: pointer;
                     }
                     .poly {
@@ -84,35 +84,36 @@
 
                 </template>
                 <template v-else-if="mode == 'claim' || mode == 'admin'">
-                    <svg>
-                        <svg v-for="(points, i) in claimedPoints" :key="i">
-
-                            <pattern :id="'stripe' + i" :width="points?.colors?.length * 4" height="10" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
-                                <rect v-for="(color, i) in points?.colors" :x="i * 4" y="0" width="4" height="10" :style="`fill: ${color}77`" :key="i" />
-                            </pattern>
-                            <polygon :fill="'url(#stripe' + i + ')'" :points="points?.regions[0]?.map(p => p?.join(',')).join(' ')" stroke-width="4"
-                                 :stroke="points?.colors[0]"></polygon>
-                        </svg>
-                       
-                       
-                        <g v-for="l in locations" :key="l.name">
-                            <polygon v-if="claiming && shouldShowName(l)" @click="claim(l)" 
-                                :points="l.points.map(p => p.join(',')).join(' ')" stroke-width="4" class="poly dotted"
-                                stroke-dasharray="4 1 2" ></polygon>
-                            <text @click="claim(l)" v-if="shouldShowName(l)" :x="l.namePos.x" :y="l.namePos.y"
-                                text-anchor="middle" class="poi-name" :class="{ 'primary-poi': l.primary }">{{
-                                    l.name }}</text>
-                            <text v-for="(t, k) in l.teams" :x="l.namePos.x" :y="l.namePos.y + (35 * (k + 1)) + 5"
-                                text-anchor="middle" class="team-name" :key="t" @click="selectedTeam = t">{{ t }}</text>
-                        </g>
-                    </svg>
+                   
+                    <g v-for="(points, i) in claimedPoints" :key="i">
+                        <pattern :id="'stripe' + i" :width="(points?.colors?.length ?? 1) * 4" height="10" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+                            <rect v-for="(color, i) in points?.colors" :x="i * 4" y="0" width="4" height="10" :style="`fill: ${color}77`" :key="i" />
+                        </pattern>
+                        <polygon :fill="'url(#stripe' + i + ')'" v-if="points?.regions[0]" :points="points?.regions[0]?.map(p => p?.join(',')).join(' ')" stroke-width="4"
+                                :stroke="points?.colors[0]"></polygon>
+                    </g>
+                    
+                    <g v-for="l in locations" :key="l.name">
+                        <polygon v-if="claiming && shouldShowName(l)" @click="claim(l)" 
+                            :points="l.points.map(p => p.join(',')).join(' ')" stroke-width="4" class="poly dotted"
+                            stroke-dasharray="4 1 2" ></polygon>
+                        <text @click="claim(l)" v-if="shouldShowName(l)" :x="l.namePos.x" :y="l.namePos.y"
+                            text-anchor="middle" class="poi-name" :class="{ 'primary-poi': l.primary, 'poi-outline': !downloading }">{{
+                                l.name }}</text>
+                        <text v-for="(t, k) in l.teams" :x="l.namePos.x" :y="l.namePos.y + (35 * (k + 1)) + 5"
+                            text-anchor="middle" class="team-name" :class="{ 'poi-outline': !downloading }" :key="t" @click="selectedTeam = t">{{ t }}</text>
+                    </g>
+                    
                 </template>
             </svg>
+            <div class="export">
+                <icon-btn-filled icon="download" @click="svgImg()"></icon-btn-filled>
+            </div>
             <div class="refresh">
                 <icon-btn-filled icon="refresh" @click="refreshClaims()"></icon-btn-filled>
             </div>
         </div>
-        {{ teamColor }}
+        <a id="link">Download</a>
         <v-dialog v-model="claimDropDiag" max-width="600px">
             <v-card>
                 <v-toolbar color="primary" class="toolbar" flat>Claim Drop Spot<v-spacer></v-spacer><icon-btn-filled
@@ -163,9 +164,23 @@ import IconBtnFilled from "@/components/IconBtnFilled";
 import PolyBool from "polybooljs";
 import _ from "lodash";
 import colors from "@/utils/colors"
+import {
+    Canvg,
+    presets
+} from 'canvg'
+const preset = presets.offscreen()
+
+const downloadURI = (uri, name) => {
+    let link = document.createElement("a");
+    link.download = name;
+    link.href = uri;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
 
 export default {
-    props: ["matchId", "map", "mode"],
+    props: ["matchId", "map", "mode", "organizer", "eventId"],
     data() {
         return {
             claimDropDiag: false,
@@ -184,6 +199,7 @@ export default {
             wrongPassSnack: false,
             selfDrops: undefined,
             enabled: false,
+            downloading: false,
             swatches: [Object.values(colors).slice(0, 5), Object.values(colors).slice(5, 10), Object.values(colors).slice(10, 15), Object.values(colors).slice(15, 20)]
         }
     },
@@ -192,7 +208,8 @@ export default {
     },
     computed: {
         claimedPoints() {
-            let claimed = this.claiming ? this.claimed.concat([this.claiming]) : this.claimed;
+            // console.log(this.claiming)
+            let claimed = this.claimed.concat([this.claiming ?? []] );
             let map = claimed.map(team => team.map(poi => ({ regions: [poi.points], inverted: false, colors: poi.colors }))
                 .concat(team.flatMap(poi => poi.links?.flatMap(l => team.find(c => c.name == l.link) ? { regions: [l.points], inverted: false } : undefined)))
                 .filter(o => o));
@@ -207,6 +224,7 @@ export default {
                 result = result?.reduce((val, cur) => PolyBool.union(val, cur), result[0]);
             return result
         },
+        
     },
     watch: {
         map() {
@@ -218,7 +236,7 @@ export default {
     },
     methods: {
         setJson(value) {
-            console.log(value.target.value);
+            // console.log(value.target.value);
             this.locations = JSON.parse(value.target.value);
         },
         handleClick(e) {
@@ -279,7 +297,7 @@ export default {
                     points: []
                 }
                 poi.links.push(this.drawLink)
-                console.log("dolink", link, poi, this.drawLink)
+                // console.log("dolink", link, poi, this.drawLink)
             }
         },
         claim(poi) {
@@ -287,8 +305,16 @@ export default {
                 return;
             if (!poi.teams)
                 poi.teams = [];
-            poi.teams.push(this.teamName)
-            this.claiming.push({ ...poi, colors: [this.teamColor] });
+
+
+            if (poi.teams.includes(this.teamName)) {
+                _.pull(poi.teams, this.teamName);
+                this.claiming = this.claiming.filter(p => p.name != poi.name);
+            } else {
+                poi.teams.push(this.teamName)
+                this.claiming.push({ ...poi, colors: [this.teamColor] });
+            }
+            // console.log(JSON.stringify(poi.teams), poi.name, JSON.stringify(this.claiming));
         },
         async clearDrops() {
             let token = localStorage.getItem("claim-token");
@@ -334,7 +360,7 @@ export default {
             this.claimed = [];
 
             let claimed = await this.$apex.getDrops(this.matchId, this.map);
-            console.log(JSON.stringify(claimed));
+            // console.log(JSON.stringify(claimed));
 
             let token = localStorage.getItem("claim-token")
             this.selfDrops = await this.$apex.getDrops(this.matchId, this.map, token);
@@ -352,7 +378,25 @@ export default {
                 });
                 this.claimed.push(loc);
             })
+        },
+        async svgImg() {
+            this.downloading = true;
+            await this.$nextTick();
+            const svg = this.$refs.svg;
+            var svg_xml = (new XMLSerializer()).serializeToString(svg);
+            const width = 2048, height = 2048;
+            const canvas = new OffscreenCanvas(width, height)
+            const ctx = canvas.getContext('2d')
+            const v = await Canvg.from(ctx, svg_xml, preset)
+
+            await v.render()
+            const blob = await canvas.convertToBlob()
+            const pngUrl = URL.createObjectURL(blob)
+
+            downloadURI(pngUrl, `${this.matchId}_${this.map}_drops.png`)
+            this.downloading = false;
         }
+        
     },
     async mounted() {
 
@@ -383,5 +427,11 @@ export default {
     position: absolute;
     top: 0;
     right: 0;
+}
+
+.export {
+    position: absolute;
+    top: 0;
+    right: 30px;
 }
 </style>

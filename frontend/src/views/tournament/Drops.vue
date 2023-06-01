@@ -3,7 +3,6 @@
         <i>Drop spots have not been enabled for this tournament</i>
     </div>
     <div v-else class="overall-wrapper">
-
         <div class="subnav">
             <router-link v-if="this.settings.drops.maps['storm-point']" class="subnav-link"
                 :to="{ name: 'tournament.drops', params: { ...$props, map: 'storm-point' } }">Storm Point</router-link>
