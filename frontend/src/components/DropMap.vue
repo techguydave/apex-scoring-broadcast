@@ -61,7 +61,8 @@
                         fill: #0b970b77;
                     }
                     .dotted {
-                    fill: none;
+                        fill: #00000000;
+                        cursor: pointer;
                     }
                 </svg:style>
                 <template v-if="mode == 'dev'">
