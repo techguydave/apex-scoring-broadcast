@@ -1,7 +1,7 @@
 <template>
     <div>
         <div v-if="mode == 'dev'">
-            <textarea :value="JSON.stringify(locations)" style="color: white" cols="100"></textarea>
+            <textarea :value="JSON.stringify(locations)" @input="setJson" style="color: white" cols="100"></textarea>
             <div class="edit-line" v-for="(l, i) in locations" :key="i">
                 <v-text-field v-model="l.name" label="name"></v-text-field>
                 <v-checkbox v-model="l.primary" label="primary"></v-checkbox>
@@ -217,6 +217,10 @@ export default {
         }
     },
     methods: {
+        setJson(value) {
+            console.log(value.target.value);
+            this.locations = JSON.parse(value.target.value);
+        },
         handleClick(e) {
             if (this.mode != 'dev')
                 return;
