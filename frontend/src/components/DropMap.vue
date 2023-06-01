@@ -357,7 +357,7 @@ export default {
     async mounted() {
 
         await this.refreshClaims();
-        this.int = setInterval(() => this.refreshClaims(), 5 * 60 * 1000);
+        // this.int = setInterval(() => this.refreshClaims(), 5 * 60 * 1000);
 
         this.teamName = localStorage.getItem("claim-teamName") || "";
     },

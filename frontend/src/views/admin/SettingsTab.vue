@@ -225,8 +225,7 @@ export default {
                 this.selectedMaps = {};
                 Object.keys(this.publicData.drops?.maps ?? {}).forEach(key => this.selectedMaps[key] = true);
 
-                // this.publicUrlDrops = (await this.getShortLink(this.publicFullUrlDrops)) || this.publicFullUrlDrops;
-                this.publicUrlDrops =  this.publicFullUrlDrops;
+                this.publicUrlDrops = (await this.getShortLink(this.publicFullUrlDrops)) || this.publicFullUrlDrops;
             }
         },
         async enableDrops() {
