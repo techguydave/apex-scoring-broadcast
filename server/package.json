@@ -21,7 +21,8 @@
     "jsondiffpatch": "^0.4.1",
     "knex": "^2.3.0",
     "lodash": "^4.17.21",
-    "pg": "^8.8.0"
+    "pg": "^8.8.0",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "eslint": "^8.23.0",

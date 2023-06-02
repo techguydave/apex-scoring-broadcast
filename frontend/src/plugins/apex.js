@@ -172,14 +172,35 @@ function apexService(config) {
     }
 
     async function createMatch(name) {
-        let data = await axios.post(`${config.baseUrl}match/${name}`, {}, { headers: getApiKeyHeaders() });
-        return data.data;
+        let {data} = await axios.post(`${config.baseUrl}match/${name}`, {}, { headers: getApiKeyHeaders() });
+        return data;
     }
 
     async function getMatch(organizerName, eventId) {
         let { data } = await axios.get(`${config.baseUrl}match/${organizerName}/${eventId}`);
         return data;
     }
+
+    async function setDrop(matchId, teamName, map, pass, token, color, drop) {
+        let { data } = await axios.post(`${config.baseUrl}drop`, { matchId, teamName, token, map, pass, color, drop });
+        return data;
+    }
+
+    async function deleteDrop(matchId, map, token, drop) {
+        let { data } = await axios.delete(`${config.baseUrl}drop/${matchId}/${map}/${token}${drop ? '/' + drop : '' }`);
+        return data;
+    }
+
+    async function deleteDropAdmin(matchId, map, teamName) {
+        let { data } = await axios.delete(`${config.baseUrl}drop_delete_admin/${matchId}/${map}${teamName ? '/' + teamName : ''}`, { headers: getApiKeyHeaders() });
+        return data;
+    }
+
+    async function getDrops(matchId, map, token) {
+        let { data } = await axios.get(`${ config.baseUrl }drops/${matchId}/${map}${token ? '/' + token : ''}`);
+        return data;
+    }
+
 
     let connections = {};
     function getLiveDataWs(organizer, client) {
@@ -239,5 +260,9 @@ function apexService(config) {
         getMatch,
         editScore,
         exportCsv,
+        setDrop,
+        getDrops,
+        deleteDrop,
+        deleteDropAdmin
     }
 }

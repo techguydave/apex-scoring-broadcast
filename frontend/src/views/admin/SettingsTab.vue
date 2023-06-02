@@ -1,43 +1,56 @@
 <template>
     <v-container>
 
-        <v-row>
-            <v-col sm="12" lg="6">
-                <v-card class="ma-2">
-                    <v-card-title>Settings</v-card-title>
-                    <v-card-text>
-                        <v-text-field v-model="publicData.title" label="Title"></v-text-field>
-                    </v-card-text>
-                    <v-card-actions>
-                        <v-btn @click="setPublicSettings" color="primary">Submit</v-btn>
-                    </v-card-actions>
-                </v-card>
-                <v-card class="ma-2">
-                    <v-card-title>Public Link</v-card-title>
-                    <v-card-text>
-                        <v-form><v-text-field solo :value="publicUrl" readonly></v-text-field></v-form>
-                    </v-card-text>
-                </v-card>
-                <v-card class="ma-2">
-                    <v-card-title>Twitch Chat Intergration</v-card-title>
-                    <v-card-text>
-                        <v-text-field v-model="command" label="Command"></v-text-field>
-                        <v-radio-group v-model="add">
-                            <v-radio key="add" value="add" :label="`Add new command ${command}`"></v-radio>
-                            <v-radio key="edit" value="edit" :label="`Update existing command ${command}`"></v-radio>
-                            <v-radio key="raw" value="raw" :label="`Raw command (Add via website)`"></v-radio>
-                        </v-radio-group>
+        <v-tabs v-model="tab">
+            <v-tab>General</v-tab>
+            <v-tab>Teams</v-tab>
+            <v-tab>Drop Spots</v-tab>
+        </v-tabs>
+        <v-tabs-items v-model="tab">
+            <v-tab-item>
+                <v-row>
+                    <v-col sm="12" lg="6">
+                        <v-card class="ma-2">
+                            <v-card-title>Settings</v-card-title>
+                            <v-card-text>
+                                <v-text-field v-model="publicData.title" label="Public Title"></v-text-field>
+                            </v-card-text>
+                            <v-card-actions>
+                                <v-btn @click="setPublicSettings" color="primary">Update</v-btn>
+                            </v-card-actions>
+                        </v-card>
+                        <v-card class="ma-2">
+                            <v-card-title>Public Link</v-card-title>
+                            <v-card-text>
+                                <v-form><v-text-field solo :value="publicUrl" readonly></v-text-field></v-form>
+                            </v-card-text>
+                        </v-card>
+                    </v-col>
+                    <v-col sm="12" lg="6">
 
-                        <template v-if="add != 'raw'">
-                            <v-text-field readonly label="Nightbot" :value="nightbotCommand"></v-text-field>
-                            <v-text-field readonly label="Stream Elements" :value="SECommand"></v-text-field>
-                        </template>
-                        <v-text-field v-else readonly label="Command" :value="rawCommand"></v-text-field>
-                    </v-card-text>
+                        <v-card class="ma-2">
+                            <v-card-title>Twitch Chat Intergration</v-card-title>
+                            <v-card-text>
+                                <v-text-field v-model="command" label="Command"></v-text-field>
+                                <v-radio-group v-model="add">
+                                    <v-radio key="add" value="add" :label="`Add new command ${command}`"></v-radio>
+                                    <v-radio key="edit" value="edit"
+                                        :label="`Update existing command ${command}`"></v-radio>
+                                    <v-radio key="raw" value="raw" :label="`Raw command (Add via website)`"></v-radio>
+                                </v-radio-group>
 
-                </v-card>
-            </v-col>
-            <v-col sm="12" lg="6">
+                                <template v-if="add != 'raw'">
+                                    <v-text-field readonly label="Nightbot" :value="nightbotCommand"></v-text-field>
+                                    <v-text-field readonly label="Stream Elements" :value="SECommand"></v-text-field>
+                                </template>
+                                <v-text-field v-else readonly label="Command" :value="rawCommand"></v-text-field>
+                            </v-card-text>
+
+                        </v-card>
+                    </v-col>
+                </v-row>
+            </v-tab-item>
+            <v-tab-item>
                 <v-card>
                     <v-card-title>Team Managment</v-card-title>
                     <v-card-text>
@@ -50,29 +63,124 @@
                         <v-btn @click="add20Teams" color="seconday">Add 20 Teams</v-btn>
                     </v-card-text>
                 </v-card>
-            </v-col>
-        </v-row>
+            </v-tab-item>
+            <v-tab-item>
+                <v-card>
+                    <v-card-text>
+
+                        <template>
+                            <v-row>
+                                <v-col cols="12" sm="4">
+                                    <v-card>
+                                        <v-card-title>Configure Maps</v-card-title>
+                                        <v-card-text>
+                                            <v-btn color="primary" @click="enableDropsDiag = true">Configure</v-btn>
+                                        </v-card-text>
+                                    </v-card>
+                                    </v-col>
+                                    <v-col cols="12" sm="8">
+                                    <v-card v-if="publicData.drops">
+                                        <v-card-title>
+                                            Direct Link
+                                        </v-card-title>
+                                        <v-card-text>
+                                            <v-text-field v-if="publicData.drops" :value="publicUrlDrops" read-only solo
+                                                label="direct link"></v-text-field>
+                                        </v-card-text>
+                                    </v-card>
+                                </v-col>
+                            </v-row>
+                        </template>
+
+                        <template >
+                            <v-card>
+                                <v-card-title>
+                                    Map & Team Managment
+                                </v-card-title>
+                                <v-card-text v-if="publicData.drops">
+                                    <v-tabs v-model="dropTab">
+                                        <v-tab v-for="id in publicData.drops.maps" :key="id">{{ getMapNameShort(id)
+                                        }}</v-tab>
+                                    </v-tabs>
+                                    <v-tabs-items v-model="dropTab">
+                                        <v-tab-item v-for="id in publicData.drops.maps" :key="id">
+                                            <DropMap class="drop-map" :map="id" :matchId="matchId" mode="admin"></DropMap>
+                                        </v-tab-item>
+                                    </v-tabs-items>
+                                </v-card-text>
+                                <v-card-text v-else>
+                                    <i>Click configure to enable drop selection for this match</i>
+                                </v-card-text>
+                            </v-card>
+                        </template>
+                    </v-card-text>
+                </v-card>
+                <v-dialog v-model="enableDropsDiag" max-width="600px">
+                    <v-card>
+                        <v-toolbar color="primary" class="toolbar" flat>Enable Drop
+                            Spots<v-spacer></v-spacer><icon-btn-filled icon="close"
+                                @click="enableDropsDiag = false"></icon-btn-filled></v-toolbar>
+                        <v-card-title>Choose Maps</v-card-title>
+                        <v-card-text>
+                            <v-checkbox v-for="(id, name) in maps" :label="getMapName(id)" :key="name"
+                                v-model="selectedMaps[name]" dense></v-checkbox>
+                            <!-- <v-checkbox v-model="enabled" label="Drop Selection Enabled"></v-checkbox> -->
+                            <v-text-field v-model="pass" label="Password"></v-text-field>
+                            <v-btn :disabled="!pass" color="primary" block class="my-3" @click="enableDrops">Submit</v-btn>
+                        </v-card-text>
+                    </v-card>
+                </v-dialog>
+            </v-tab-item>
+        </v-tabs-items>
+
+
 
     </v-container>
 </template>
 
 <script>
 import _ from "lodash";
+import { getMapName, getMapNameShort } from "@/utils/statsUtils";
+import IconBtnFilled from "@/components/IconBtnFilled";
+import DropMap from "../../components/DropMap.vue";
+
+const maps = {
+    "worlds-edge": "mp_rr_desertlands_hu",
+    "storm-point": "mp_rr_tropic_island_mu1",
+    // "olympus": "mp_rr_olympus_mu2",
+    // "broken-moon": "mp_rr_divided_moon",
+    // "kings-canyon": "mp_rr_canyonlands_hu",
+}
 
 export default {
     props: ["eventId", "organizer", "matchId"],
+    components: {
+        IconBtnFilled,
+        DropMap,
+    },
     data() {
         return {
             publicData: {},
             publicUrl: undefined,
+            publicUrlDrops: undefined,
             command: "!now",
             add: "edit",
+            tab: undefined,
             teams: [],
+            enableDropsDiag: false,
+            selectedMaps: {},
+            dropTab: undefined,
+            pass: "",
+            enabled: true,
+            maps,
         }
     },
     computed: {
         publicFullUrl() {
             return window.location.origin + this.$router.resolve({ name: 'tournament.standings', params: { eventId: this.eventId, organizer: this.organizer, game: "overall" } }).href;
+        },
+        publicFullUrlDrops() {
+            return window.location.origin + this.$router.resolve({ name: 'tournament.drops', params: { eventId: this.eventId, organizer: this.organizer } }).href;
         },
         summaryUrl() {
             return encodeURI(`${this.$apex.config.fullUrl}stats/${this.organizer}/${this.eventId}/summary`);
@@ -93,6 +201,8 @@ export default {
         }
     },
     methods: {
+        getMapName,
+        getMapNameShort,
         setPublicSettings() {
             this.$apex.setPublicSettings(this.matchId, this.publicData);
         },
@@ -106,13 +216,31 @@ export default {
                 teams = teams?.sort((a, b) => a.teamId - b.teamId);
 
                 this.teams = _.merge(teams, overall);
+                this.publicData = {};
                 if (options) {
                     this.publicData = options;
                 }
+
+                this.pass = this.publicData.drops?.pass;
+                this.selectedMaps = {};
+                Object.keys(this.publicData.drops?.maps ?? {}).forEach(key => this.selectedMaps[key] = true);
+
+                this.publicUrlDrops = (await this.getShortLink(this.publicFullUrlDrops)) || this.publicFullUrlDrops;
             }
         },
-        async getShortLink() {
-            let { hash } = await this.$apex.getShortLink(this.publicFullUrl);
+        async enableDrops() {
+            let enabledMaps = {};
+            Object.keys(this.selectedMaps).filter(key => this.selectedMaps[key]).forEach(key => enabledMaps[key] = maps[key]);
+            this.publicData.drops = {
+                pass: this.pass,
+                maps: enabledMaps,
+                enabled: this.enabled,
+            }
+            await this.setPublicSettings();
+            this.enableDropsDiag = false;
+        },
+        async getShortLink(link) {
+            let { hash } = await this.$apex.getShortLink(link);
             return `${window.location.origin}/${hash}`;
         },
         async add20Teams() {
@@ -136,7 +264,7 @@ export default {
     async mounted() {
         this.publicUrl = this.publicFullUrl;
         await this.refreshPublicOptions();
-        this.publicUrl = (await this.getShortLink()) || this.publicFullUrl;
+        this.publicUrl = (await this.getShortLink(this.publicFullUrl)) || this.publicFullUrl;
     }
 }
 </script>
@@ -162,5 +290,16 @@ export default {
     height: 40px;
     flex: 1;
     padding: 5px;
+}
+
+
+.toolbar.v-sheet.v-toolbar {
+    background-color: $primary !important;
+}
+
+.drop-map {
+    width: 80%;
+    max-width: 1000px;
+    margin: auto;
 }
 </style>

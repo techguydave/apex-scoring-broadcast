@@ -9,6 +9,7 @@ import Player from "../pages/PlayerPage";
 
 import Standings from "../views/tournament/Standings";
 import Stats from "../views/tournament/Stats";
+import Drops from "../views/tournament/Drops";
 
 import Scoreboard from "../views/tournament/standings/Scoreboard";
 import TeamStandings from "../views/tournament/standings/TeamStandings";
@@ -143,6 +144,12 @@ const routes = [
             props: true,
           }
         ]
+      },
+      {
+        path: "drops/:map?",
+        name: "tournament.drops",
+        component: Drops,
+        props: true,
       }
     ]
   },

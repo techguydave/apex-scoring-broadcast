@@ -13,10 +13,12 @@
                                 :to="{ name: 'tournament.standings', params: $props }">Standings</router-link>
                             <router-link class="nav-link"
                                 :to="{ name: 'tournament.stats', params: $props }">Stats</router-link>
+                            <router-link class="nav-link"
+                                :to="{ name: 'tournament.drops', params: $props }">Drops <sup>(beta)</sup></router-link>
                         </div>
                     </div>
                     <div class="content-wrap">
-                        <router-view />
+                        <router-view :match="match" :settings="publicSettings"/>
                     </div>
                 </div>
 
@@ -45,7 +47,6 @@ export default {
         async refreshPublicOptions() {
             if (this.eventId) {
                 this.match = await this.$apex.getMatch(this.organizer, this.eventId);
-                console.log(this.match);
                 let options = await this.$apex.getPublicSettings(this.match.id);
                 if (options) {
                     this.publicSettings = options;

@@ -6,6 +6,7 @@ const { verifyOrganizerHeaders, verifyAdminHeaders } = require("../middleware/au
 const apexService = new require("../services/apex.service")(config);
 const authService = require("../services/auth.service");
 const matchService = require("../services/match.service");
+const dropService = require("../services/drops.service");
 const broadcastService = require("../services/broadcast.service");
 const cache = require("../services/cache.service");
 const shortLinkService = require("../services/short_link.service.js");
@@ -193,7 +194,11 @@ module.exports = function router(app) {
             liveDataJson = await statsService.getLiveDataById(selectedUnclaimed);
         }
         else if (liveDataFile) {
-            liveDataJson = JSON.parse(liveDataFile.data.toString());
+            try {
+                liveDataJson = JSON.parse(liveDataFile.data.toString());
+            } catch (err) {
+                return res.status(500).send({ err: "live_data_parse", msg: "The uploaded file is not valid." })
+            }
         }
 
         if (liveDataJson) {
@@ -453,6 +458,61 @@ module.exports = function router(app) {
         res.send(await playerService.getMatches(req.params.id, req.query.start, req.query.count));
     })
 
+    app.post("/drop", async (req, res) => {
+        const {
+            matchId, 
+            teamName, 
+            token, 
+            map,
+            pass, 
+            color,
+            drop
+        } = req.body;
+
+        console.log(req.body);
+
+        let result = await dropService.setDrop(matchId, pass, map, token, teamName, color, drop);
+        if (result.err) {
+            res.status(400).send(result);
+        } else {
+            res.send(result);
+        }
+    })
+
+    app.delete("/drop/:matchId/:map/:token/:drop?", async (req, res) => {
+        const {
+            matchId,
+            token,
+            map,
+            drop,
+        } = req.params;
+
+        let result = await dropService.deleteDrop(matchId, map, token, drop);
+        res.send(result);
+    })
+
+    app.delete("/drop_delete_admin/:matchId/:map/:teamName?", verifyOrganizerHeaders, async (req, res) => {
+        const {
+            matchId,
+            map,
+            teamName,
+        } = req.params;
+
+        let result = await dropService.deleteDropsAdmin(matchId, map, teamName);
+        res.send(result);
+    })
+
+    app.get("/drops/:matchId/:map/:token?", async (req, res) => {
+        const {
+            matchId,
+            map,
+            token,
+        } = req.params;
+
+        let result = token? await dropService.getMatchDropsByToken(matchId, map, token) : await dropService.getMatchDrops(matchId, map);
+        res.send(result);
+    })
+  
     app.ws("/live/write/:key/:client", (ws, req) => {
         wsHandlerService.connectWrite(ws, req.params.key, req.params.client);
     })

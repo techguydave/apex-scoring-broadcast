@@ -82,6 +82,8 @@ const mapMapShort = {
     "mp_rr_desertlands_hu": "Worlds Edge",
 }
 
+
+
 function sortScores(scores, sortKey) {
     if (sortKey == "score") {
         sortKey = scores[0]?.position ? "position" : "score"

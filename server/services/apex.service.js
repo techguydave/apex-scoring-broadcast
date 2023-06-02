@@ -132,8 +132,10 @@ module.exports = function Apex(config) {
             SCORE_SUMS.forEach(key => team.overall_stats[key] = getOr(team.overall_stats[key], 0) + getOr(player[key], 0));
             if (ringKillPoints && player.killFeed) {
                 player.killFeed.forEach(kill => {
+                    console.log("Scoring", player.name, kill.ring)
+                    console.log(parseInt(ringKillPoints["ring" + kill.ring.stage][kill.ring.state]))
+
                     team.overall_stats.score += parseInt(ringKillPoints["ring" + kill.ring.stage][kill.ring.state]);
-                    console.log("Scoring", player.name, kill.ring, parseInt(ringKillPoints["ring" + kill.ring.stage][kill.ring.state]))
                 })
             } else {
                 team.overall_stats.score += (player.kills * killPoints)
