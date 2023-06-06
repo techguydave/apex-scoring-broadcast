@@ -31,7 +31,7 @@ async function deleteDrop(matchId, map, token, drop) {
 }
 
 async function deleteDropsAdmin(matchId, map, teamName) {
-    console.log("deleting admin", matchId, map, teamName);
+    console.log("deleting admin", matchId, map, "'" + teamName + "'");
     if (teamName) {
         await db("drops").update({ "deletedAt": db.fn.now(6) }).where({ matchId, map, teamName });
     } else {

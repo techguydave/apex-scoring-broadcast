@@ -192,7 +192,7 @@ function apexService(config) {
     }
 
     async function deleteDropAdmin(matchId, map, teamName) {
-        let { data } = await axios.delete(`${config.baseUrl}drop_delete_admin/${matchId}/${map}${teamName ? '/' + teamName : ''}`, { headers: getApiKeyHeaders() });
+        let { data } = await axios.delete(`${config.baseUrl}drop_delete_admin/${matchId}/${map}${teamName ? '/' + encodeURIComponent(teamName) : ''}`, { headers: getApiKeyHeaders() });
         return data;
     }
 
