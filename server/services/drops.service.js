@@ -13,7 +13,7 @@ async function setDrop(matchId, pass, map, token, teamName, color, drop) {
         return { err: "INVALID_PASSWORD" };
     }
 
-    if (!token) {
+    if (!token || token === "null") {
         token = uuid();
     }
      
