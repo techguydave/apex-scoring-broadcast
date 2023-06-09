@@ -227,6 +227,7 @@ export default {
     },
     watch: {
         map() {
+            this.claiming = undefined;
             this.refreshClaims();
         },
         matchId() {
@@ -367,6 +368,7 @@ export default {
             Object.values(claimed).forEach(team => {
                 let loc = team.map(claim => {
                     let loc = this.locations.find(c => c.name == claim.drop);
+                    console.log(JSON.stringify(claim))
                     if (!loc.teams)
                         loc.teams = [];
                     loc.teams.push(claim.teamName)
