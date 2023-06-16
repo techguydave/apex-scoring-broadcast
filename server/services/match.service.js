@@ -33,7 +33,6 @@ async function getMatchList(organizerName) {
     }, 300)
 }
 
-
 async function createMatch(organizer, eventId) {
     let id = await db("match").insert({ organizer: organizer.id, eventId }, ["id"]);
     await setOrganizerMatch(organizer.username, id[0].id);
@@ -91,7 +90,30 @@ async function getMatch(organizerName, eventId) {
 }
 
 async function getMatchById(id) {
-    return await await db("match").where({ id }).first();
+    return await db("match").where({ id }).first();
+}
+
+async function setMatchPolling(matchId, pollStart, pollEnd, statsCodes) {
+    await db("match_settings")
+        .insert({ matchId, pollStart, pollEnd, pollCurrent: pollStart, statsCodes })
+        .onConflict(["matchId"])
+        .merge();
+    await cache.del(getCacheKey(matchId, "match_polling"));
+}
+
+async function updateMatchPolling(matchId, pollCurrent) {
+    await db("match_settings")
+        .where({ matchId })
+        .update({ pollCurrent })
+    await cache.del(getCacheKey(matchId, "match_polling"));
+}
+
+async function getMatchPolling(matchId) {
+    return await cache.getOrSet(getCacheKey(matchId, "match_polling"), async () => {
+        return await db("match_settings")
+            .where({ matchId })
+            .first(["pollStart", "pollEnd", "pollCurrent", "statsCodes"]);
+    }, 300);
 }
 
 module.exports = {
@@ -105,4 +127,7 @@ module.exports = {
     getMatchTeams,
     getMatch,
     getMatchById,
+    setMatchPolling,
+    updateMatchPolling,
+    getMatchPolling,
 }

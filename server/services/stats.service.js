@@ -231,6 +231,15 @@ async function getUnclaimedLiveData(organizer) {
     return data;
 }
 
+async function getLatestedGame(matchId) {
+    let game = await db("game")
+        .where({ matchId })
+        .orderBy("game", "desc")
+        .first();
+    
+    return game ?? { game: 0 };
+}
+
 module.exports = {
     writeStats,
     getStats,
@@ -246,4 +255,5 @@ module.exports = {
     editScore,
     editKills,
     getGame,
+    getLatestedGame,
 }

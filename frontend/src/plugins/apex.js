@@ -49,21 +49,18 @@ function apexService(config) {
         return stats.data;
     }
 
-    async function generateStats(eventId, statsCode, game, startTime, killPoints, placementPoints, autoAttachUnclaimed, selectedUnclaimed, liveData, ringKillPoints) {
+    async function generateStats(eventId, statsCode, game, startTime, selectedUnclaimed, liveData) {
         let form = new FormData();
 
         form.append("eventId", eventId);
         form.append("statsCode", statsCode);
         form.append("game", game);
-        form.append("killPoints", killPoints);
-        form.append("placementPoints", placementPoints);
         if (startTime)
             form.append("startTime", startTime);
-        form.append("autoAttachUnclaimed", autoAttachUnclaimed);
-        form.append("selectedUnclaimed", selectedUnclaimed);
-        form.append("liveData", liveData);
-        if (ringKillPoints)
-            form.append("ringKillPoints", JSON.stringify(ringKillPoints));
+        if(selectedUnclaimed)
+            form.append("selectedUnclaimed", selectedUnclaimed);
+        if(liveData)
+            form.append("liveData", liveData);
 
         try {
             let result = await axios.post(config.baseUrl + "stats", form, { headers: getApiKeyHeaders() })
@@ -102,6 +99,16 @@ function apexService(config) {
 
     async function getSelectedMatch(organizer) {
         let { data } = await axios.get(config.baseUrl + "organizer/match/" + organizer, { headers: getApiKeyHeaders() });
+        return data;
+    }
+
+    async function setMatchPolling(matchId, pollStart, pollEnd, statsCodes) {
+        let { data } = await axios.post(config.baseUrl + "settings/auto_poll", { matchId, pollStart, pollEnd, statsCodes }, { headers: getApiKeyHeaders() })
+        return data;
+    }
+
+    async function getMatchPolling(matchId) {
+        let { data } = await axios.get(config.baseUrl + "settings/auto_poll/" + matchId, { headers: getApiKeyHeaders() } )
         return data;
     }
 
@@ -238,6 +245,8 @@ function apexService(config) {
         getMatchList,
         getSelectedMatch,
         setSelectedMatch,
+        setMatchPolling,
+        getMatchPolling,
         getMatchTeams,
         setMatchTeam,
         getStatsFromCode,

@@ -18,7 +18,7 @@
                     <div class="game-select-wrap">
                         <div :class="{ 'selected-game': 'overall' == game }" class="game-select game py-4"
                             @click="setGame('overall')"> Overall</div>
-                        <div v-for="g in gameList" :class="{ 'selected-game': g.game == game }" class="game-select pa-2"
+                        <div v-for="g in stats.games" :class="{ 'selected-game': g.game == game }" class="game-select pa-2"
                             @click="setGame(g.game)" :key="g.id">
 
                             <div class="data-source">
@@ -39,7 +39,7 @@
                     </div>
                 </v-col>
                 <v-col cols="12" sm="10">
-                    <router-view :stats="stats"></router-view>
+                    <router-view :stats="game == 'overall' ? stats : stats.games?.find(g => g.game == game)"></router-view>
                 </v-col>
             </v-row>
         </div>
@@ -55,20 +55,15 @@ export default {
     data() {
         return {
             stats: [],
-            gameList: []
         }
     },
     methods: {
         getMapNameShort,
         async updateStats() {
-            this.gameList = await this.$apex.getGameList(this.organizer, this.eventId);
-            this.stats = await this.$apex.getStats(this.organizer, this.eventId, this.game);
+            this.stats = await this.$apex.getStats(this.organizer, this.eventId, "overall");
         },
         setGame(game) {
             this.$router.replace({ params: { game, organizer: this.organizer, eventId: this.eventId } });
-        },
-        buildGameList(count) {
-            return new Array(count + 1).fill({}).map((i, index) => index == 0 ? "overall" : index);
         },
         getDate(timestamp) {
             return Intl.DateTimeFormat(navigator.language, { month: 'short', day: 'numeric', year: "numeric" }).format(new Date(timestamp))

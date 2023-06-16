@@ -76,7 +76,7 @@
 										used by
 										default, or use the game selector to select a previous game. </v-card-subtitle>
 									<v-card-text>
-										<v-text-field v-model="statsCode" label="Apex Stats Code"></v-text-field>
+										<v-text-field :disabled="isAutoPolling" v-model="statsCode" label="Apex Stats Code"></v-text-field>
 										<v-expansion-panels>
 											<v-expansion-panel>
 												<v-expansion-panel-header>
@@ -102,6 +102,9 @@
 										<!-- <v-checkbox v-model="autoLivedata" label="Automatically Attach Live Data">
 										</v-checkbox> -->
 									</v-card-text>
+									<v-card-actions>
+										<v-btn block :disabled="!statsCode" :outlined="!isAutoPolling" color="primary" @click="toggleAutoPoll">{{ !isAutoPolling ? "Start Auto Scoring" : "Cancel Auto Scoring" }}</v-btn>
+									</v-card-actions>
 								</v-card>
 							</v-tab-item>
 
@@ -121,8 +124,7 @@
 											<v-item class="live-data-item" v-for="unclaimed in unclaimedLiveData"
 												v-slot="{ toggle }" :key="unclaimed.id">
 												<div @click="toggle"> ({{ unclaimed.client }}) {{
-													getDate(unclaimed.timestamp * 1000) }} {{
-		getTime(unclaimed.timestamp * 1000) }} -
+													getDate(unclaimed.timestamp * 1000) }} {{getTime(unclaimed.timestamp * 1000) }} -
 													{{ getRelative(unclaimed.timestamp * 1000) }}
 
 												</div>
@@ -144,9 +146,8 @@
 
 				<v-card-actions>
 					<v-btn :loading="loading" color="primary" block
-						:disabled="loading || !statsCode && !liveData && selectedUnclaimed === undefined"
-						@click="addGame">Add
-						Game</v-btn>
+						:disabled="isAutoPolling || loading || !statsCode && !liveData && selectedUnclaimed === undefined"
+						@click="addGame">Add Game</v-btn>
 				</v-card-actions>
 			</v-card>
 		</v-col>
@@ -173,6 +174,15 @@
 			</v-card>
 
 		</v-col>
+		<v-snackbar color="green" v-model="showPollingStart">
+				Auto Scoring {{ eventId }} for the next 6 hours.
+
+				<template v-slot:action="{ attrs }">
+					<v-btn color="black" text v-bind="attrs" @click="showError = false">
+						Close
+					</v-btn>
+				</template>
+			</v-snackbar>
 		<v-snackbar color="red" v-model="showError">
 			{{ error.msg }}
 
@@ -212,7 +222,33 @@
 import SimpleScoreTable from '@/components/SimpleScoreTable.vue';
 import GameSelect from '@/components/GameSelect.vue';
 import Day from "dayjs";
-
+const DEFAULT_RING_KP = {
+	"ring0": {
+		countdown: 1,
+		closing: 1,
+	},
+	"ring1": {
+		countdown: 1,
+		closing: 1,
+	},
+	"ring2": {
+		countdown: 1,
+		closing: 1,
+	},
+	"ring3": {
+		countdown: 1,
+		closing: 1,
+	},
+	"ring4": {
+		countdown: 1,
+		closing: 1,
+	},
+	"ring5": {
+		countdown: 1,
+		closing: 1,
+	},
+};
+const DEFAULT_PLACEMENT = "12, 9, 7, 5, 4, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0";
 let relativeTime = require("dayjs/plugin/relativeTime");
 Day.extend(relativeTime);
 
@@ -224,6 +260,7 @@ export default {
 	props: [
 		"eventId",
 		"organizer",
+		"matchId",
 	],
 	data() {
 		return {
@@ -236,8 +273,8 @@ export default {
 			selectedGame: 0,
 			showError: false,
 			showGameSelect: false,
-			placementPoints: "12, 9, 7, 5, 4, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0",
-			killPoints: 1,
+			placementPoints: undefined,
+			killPoints: undefined,
 			stats: {
 				teams: []
 			},
@@ -248,41 +285,21 @@ export default {
 			loading: false,
 			unclaimedLiveData: [],
 			selectedUnclaimed: undefined,
-			ringKillPoints: {
-				"ring0": {
-					countdown: 1,
-					closing: 1,
-				},
-				"ring1": {
-					countdown: 1,
-					closing: 1,
-				},
-				"ring2": {
-					countdown: 1,
-					closing: 1,
-				},
-				"ring3": {
-					countdown: 1,
-					closing: 1,
-				},
-				"ring4": {
-					countdown: 1,
-					closing: 1,
-				},
-				"ring5": {
-					countdown: 1,
-					closing: 1,
-				},
-			},
+			ringKillPoints: DEFAULT_RING_KP,
 			useRingKillPoints: false,
+			settings: undefined,
+			autoPollSettings: undefined,
+			loaded: false,
+			showPollingStart: false,
 		}
 	},
 	computed: {
 		trimmedStatsCode() {
-			if (this.statsCode) {
-				return this.statsCode.trim();
-			}
-			return undefined;
+			return this.statsCode?.trim();
+		},
+		isAutoPolling() {
+			let now = Date.now();
+			return this.autoPollSettings?.pollStart && this.autoPollSettings.pollStart < now && this.autoPollSettings.pollEnd > now;
 		}
 	},
 	watch: {
@@ -290,8 +307,25 @@ export default {
 			this.games = await this.$apex.getStatsFromCode(this.statsCode);
 			this.selectedGame = undefined;
 		},
-		eventId() {
-			this.updateStats();
+		async eventId() {
+			this.loaded = false;
+			await this.updateStats();
+			await this.fetchSettings();
+		},
+		ringKillPoints: {
+			deep: true,
+			handler() {
+				this.pushSettings();
+			}
+		},
+		placementPoints() {
+			this.pushSettings();
+		},
+		killPoints() {
+			this.pushSettings();
+		},
+		useRingKillPoints() {
+			this.pushSettings();
 		}
 	},
 	methods: {
@@ -305,12 +339,8 @@ export default {
 				this.trimmedStatsCode,
 				this.game,
 				this.selectedGame,
-				this.killPoints,
-				this.placementPoints,
-				this.autoLivedata,
 				this.unclaimedLiveData?.[this.selectedUnclaimed]?.id,
 				this.liveData,
-				this.useRingKillPoints ? this.ringKillPoints : undefined
 			);
 			if (result.err) {
 				this.error = result;
@@ -321,8 +351,17 @@ export default {
 			}
 			this.loading = false;
 		},
+		async toggleAutoPoll() {
+			if (this.isAutoPolling) {
+				await this.$apex.setMatchPolling(this.matchId, 0, 0, this.statsCode);
+			} else {
+				const now = Date.now();
+				await this.$apex.setMatchPolling(this.matchId, now, now + (6 * 60 * 60 * 1000), this.statsCode);
+				this.showPollingStart = true;
+			}
+			await this.fetchSettings();
+		},
 		async updateStats() {
-			console.log("updating stats/")
 			this.stats = await this.$apex.getStats(this.organizer, this.eventId, "overall");
 			if (this.stats && this.stats.games)
 				this.game = this.stats.games[this.stats.games.length - 1].game + 1;
@@ -348,14 +387,38 @@ export default {
 		async edit({ gameId, teamId, score }) {
 			await this.$apex.editScore(gameId, teamId, score);
 			await this.updateStats();
+		},
+		async pushSettings() {
+			if (!this.loaded) return;
+			this.settings.scoring = {
+				placementPoints: this.placementPoints?.split(",").map(i => parseInt(i)) || DEFAULT_PLACEMENT,
+				killPoints: this.killPoints ?? 1,
+				ringKillPoints: this.ringKillPoints || DEFAULT_RING_KP,
+				useRingKillPoints: this.useRingKillPoints,
+			}
+			await this.$apex.setPublicSettings(this.matchId, this.settings);
+		},
+		async fetchSettings() {
+			this.settings = await this.$apex.getPublicSettings(this.matchId);
+			this.placementPoints = this.settings.scoring?.placementPoints.join(", ") ?? DEFAULT_PLACEMENT; 
+			this.killPoints = this.settings.scoring?.killPoints ?? 1;
+			this.ringKillPoints = this.settings.scoring?.ringKillPoints || DEFAULT_RING_KP;
+			this.useRingKillPoints = this.settings.scoring?.useRingKillPoints || false;
+
+			this.autoPollSettings = await this.$apex.getMatchPolling(this.matchId);
+			this.statsCode = this.autoPollSettings.statsCodes;
+
+			await this.$nextTick();
+			this.loaded = true;
 		}
 	},
-	mounted() {
-		console.log("Getting Stats")
+	async mounted() {
 		this.updateStats();
 
 		this.getUnclaimedLiveData();
-		this.inter = setInterval(() => this.getUnclaimedLiveData(), 2000);
+		this.inter = setInterval(() => this.getUnclaimedLiveData(), 5000);
+		this.inter2 = setInterval(() => this.updateStats(), 1000 * 60 * 2);
+		await this.fetchSettings();
 	},
 	destroyed() {
 		clearInterval(this.inter);

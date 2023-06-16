@@ -24,7 +24,7 @@ async function setDrop(matchId, pass, map, token, teamName, color, drop) {
 async function deleteDrop(matchId, map, token, drop) {
     console.log("deleting normal", matchId, map, token, drop, drop == undefined, drop === "undefined")
     if (drop) {
-        let d = db("drops").update({ "deletedAt": db.fn.now(6) }).where({ matchId, map, token, drop });
+        await db("drops").update({ "deletedAt": db.fn.now(6) }).where({ matchId, map, token, drop });
     } else {
         await db("drops").update({ "deletedAt": db.fn.now(6) }).where({ matchId, map, token });
     }

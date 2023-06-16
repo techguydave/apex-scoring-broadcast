@@ -26,40 +26,109 @@ module.exports = function router(app) {
         await cache.del(`stats:${username}-${eventId}-${game}-livedata-parsed`);
     }
 
-    async function getStats(organizer, eventId, game, stacked = false) {
-        let orgId = await authService.getOrganizerId(organizer)
-        let stats = await statsService.getStats(orgId, eventId, game);
+    async function checkAutoPoll(organizer, eventId) {
+        let cacheKey = `match_polling_skip_${organizer.username}_${eventId}`;
+        let lastPoll = await cache.get(cacheKey);
+        let now = Date.now();
 
-        if (!stats || stats.length == 0) {
-            let match = await matchService.getMatch(organizer, eventId);
-            if (match) {
-                let teams = await matchService.getMatchTeams(match.id);
+        console.log("lastPoll", organizer, eventId, lastPoll);
 
-                return {
-                    teams: teams.map(t => ({ ...t, player_stats: [], overall_stats: { name: t.name } })).sort((a, b) => a.teamId - b.teamId),
-                };
+        if (!lastPoll) {
+            const match = await matchService.getMatch(organizer.username, eventId);
+            if (!match) return;
+            console.log("Checking for new games on ", organizer.username, eventId, match.id)
+
+            const pollingSettings = await matchService.getMatchPolling(match.id);
+            console.log(pollingSettings, now);
+
+            if (pollingSettings?.pollStart && pollingSettings.pollStart < now && pollingSettings.pollEnd > now) {
+                let stats = await apexService.getStatsFromCode(pollingSettings.statsCodes);
+                let newStats = stats.filter(stat => !pollingSettings.pollCurrent || console.log(organizer, eventId, pollingSettings.pollCurrent, stat.match_start * 1000, pollingSettings.pollCurrent < (stat.match_start * 1000) ) || pollingSettings.pollCurrent < (stat.match_start * 1000));
+                let latestGame = await statsService.getLatestedGame(match.id);
+
+                console.log("Found new games", newStats.map(s => s.match_start));
+
+                for (let stat of newStats) {
+                    await processStats(organizer, eventId, ++latestGame.game, stat);
+                }
+                if(newStats.length > 0)
+                    await matchService.updateMatchPolling(match.id, now);
+
+            }
+            await cache.put(cacheKey, now, 60);
+        }
+    }
+
+    async function getStats(organizerName, eventId, game, stacked = false) {
+        const cacheKey = `stats:${organizerName}-${eventId}-${game}`;
+        let orgId = await authService.getOrganizerId(organizerName)
+
+        await checkAutoPoll({ username: organizerName, id: orgId}, eventId);
+
+        let stats = await cache.getOrSet(cacheKey, async () => {
+            let stats = await statsService.getStats(orgId, eventId, game);
+
+            if (!stats || stats.length == 0) {
+                let match = await matchService.getMatch(organizerName, eventId);
+                if (match) {
+                    let teams = await matchService.getMatchTeams(match.id);
+
+                    return {
+                        teams: teams.map(t => ({ ...t, player_stats: [], overall_stats: { name: t.name } })).sort((a, b) => a.teamId - b.teamId),
+                    };
+                } else {
+                    return {}
+                }
+            }
+
+            if (game == "overall" || stacked) {
+                stats = {
+                    total: stats.length,
+                    games: stats,
+                    teams: apexService.generateOverallStats(stats),
+                    stacked: stacked ? stats.map((_, index) => apexService.generateOverallStats(stats.slice(0, index + 1))) : undefined
+                }
             } else {
-                return {}
+                stats = stats[0];
             }
-        }
-
-        if (game == "overall" || stacked) {
-            stats = {
-                total: stats.length,
-                games: stats,
-                teams: apexService.generateOverallStats(stats),
-                stacked: stacked ? stats.map((_, index) => apexService.generateOverallStats(stats.slice(0, index + 1))) : undefined
-            }
-        } else {
-            stats = stats[0];
-        }
+            return stats;
+        });
         return stats;
     }
 
+    async function processStats(organizer, eventId, game, statsData, liveData) {
+        const { id: matchId } = await matchService.getMatch(organizer.username, eventId);
+        const matchSettings = await matchService.getMatchSettings(matchId);
+
+        const placementPoints = matchSettings?.scoring?.placementPoints;
+        const killPoints = matchSettings?.scoring?.killPoints;
+        const ringKillPoints = matchSettings?.scoring?.ringKillPoints;
+
+
+        let gameStats, source;
+        if (statsData && liveData) {
+            gameStats = apexService.mergeStats(statsData, liveData);
+            source = "statscode+livedata";
+        }
+        else if (liveData) {
+            gameStats = liveData;
+            source = "livedata";
+        }
+        else {
+            gameStats = statsData;
+            source = "statscode";
+        }
+
+        gameStats = apexService.generateGameReport(gameStats, placementPoints, killPoints, ringKillPoints);
+        let gameId = await statsService.writeStats(organizer, eventId, game, gameStats, source);
+        await deleteCache(organizer.username, eventId, game);
+
+        return { gameId, ...gameStats };
+    }
 
 
     app.get("/mock", (req, res) => {
-        const mockStats = require("../mock/eastats3.json")
+        const mockStats = require("../mock/eastats5.json")
         res.json(mockStats)
     })
 
@@ -141,8 +210,6 @@ module.exports = function router(app) {
         res.send(result);
     })
 
-
-
     app.post("/settings/default_apex_client/:organizer/", async (req, res) => {
         await broadcastService.setOrganizerDefaultApexClient(req.params.organizer, req.body.client);
         res.sendStatus(200);
@@ -153,6 +220,31 @@ module.exports = function router(app) {
         res.send(result);
     })
 
+    app.post("/settings/auto_poll/", verifyOrganizerHeaders, async (req, res) => {
+        const {
+            matchId,
+            pollStart,
+            pollEnd,
+            statsCodes
+        } = req.body;
+
+        try {
+            await matchService.setMatchPolling(matchId, pollStart, pollEnd, statsCodes);
+            res.sendStatus(200);
+        } catch (err) {
+            console.log(err);
+            res.send(err);
+        }
+    })
+
+    app.get("/settings/auto_poll/:matchId",verifyOrganizerHeaders,  async (req, res) => {
+        const {
+            matchId
+        } = req.params;
+
+        let result = await matchService.getMatchPolling(matchId);
+        res.send(result);
+    })
 
     app.get("/stats/code/:statsCode", verifyOrganizerHeaders, async (req, res) => {
         let stats = await apexService.getStatsFromCode(req.params.statsCode);
@@ -167,24 +259,16 @@ module.exports = function router(app) {
     })
 
     app.post("/stats", verifyOrganizerHeaders, async (req, res) => {
-        let { eventId, game, statsCode, startTime, placementPoints, autoAttachUnclaimed, selectedUnclaimed, killPoints, ringKillPoints } = req.body;
+        let { eventId, game, statsCode, startTime, selectedUnclaimed } = req.body;
         const liveDataFile = req.files?.["liveData"];
-
-        if (ringKillPoints) {
-            ringKillPoints = JSON.parse(ringKillPoints);
-        }
-
-        placementPoints = placementPoints.split(",").map(n => parseInt(n))
 
         let respawnStats = undefined;
         if (statsCode && statsCode.length > 0 && statsCode !== "undefined") {
             respawnStats = await apexService.getMatchFromCode(statsCode, startTime);
         }
 
-        console.log(liveDataFile, selectedUnclaimed)
-
         if (!respawnStats && !liveDataFile && !selectedUnclaimed) {
-            return res.sendStatus(404);
+            return res.status(400).send({ err:"no_data", msg: "No data was sent to server, cannot process request" });
         }
 
         let liveDataStats = undefined;
@@ -211,26 +295,10 @@ module.exports = function router(app) {
             }
         }
 
-        let gameStats = undefined;
-        let source = "";
-        if (liveDataStats && respawnStats) {
-            gameStats = apexService.mergeStats(respawnStats, liveDataStats);
-            source = "statscode+livedata";
-        }
-        else if (liveDataStats) {
-            gameStats = liveDataStats;
-            source = "livedata";
-        }
-        else {
-            gameStats = respawnStats;
-            source = "statscode";
-        }
-
-        gameStats = apexService.generateGameReport(gameStats, placementPoints, killPoints, ringKillPoints);
-
         try {
             //console.log(JSON.stringify(gameStats))
-            let gameId = await statsService.writeStats(req.organizer, eventId, game, gameStats, source);
+            let gameStats = await processStats(req.organizer, eventId, game, respawnStats, liveDataStats);
+            let gameId = gameStats.gameId;
             if (selectedUnclaimed !== "undefined") {
                 statsService.setLiveDataGame(selectedUnclaimed, gameId)
             }
@@ -238,7 +306,6 @@ module.exports = function router(app) {
                 console.log("Writing live data", gameId, req.organizer.id);
                 await statsService.writeLiveData(gameId, liveDataJson, req.organizer.id)
             }
-            await deleteCache(req.organizer.username, eventId, game);
 
             return res.status(200).send(gameStats);
         } catch (err) {
@@ -287,7 +354,6 @@ module.exports = function router(app) {
             organizer,
             eventId,
         } = req.params;
-
         let orgId = await authService.getOrganizerId(organizer)
 
         let result = await statsService.getGameList(orgId, eventId);
@@ -300,17 +366,13 @@ module.exports = function router(app) {
             organizer,
             eventId,
         } = req.params;
-        const cacheKey = `stats:${organizer}-${eventId}-summary`;
-
-        let message = await cache.getOrSet(cacheKey, async () => {
-            let stats = await getStats(organizer, eventId, "overall");
-            let body = "";
-            if (stats.teams) {
-                let message = stats.teams.map(team => `${team.name} ${team.overall_stats.score}`)
-                body = message.join(", ");
-            }
-            return `${body} -- (after ${stats.total} games)`;
-        }, 300)
+        let stats = await getStats(organizer, eventId, "overall");
+        let body = "";
+        if (stats.teams) {
+            let message = stats.teams.map(team => `${team.name} ${team.overall_stats.score}`)
+            body = message.join(", ");
+        }
+        let message =  `${body} -- (after ${stats.total} games)`;
 
         let match = await matchService.getMatch(organizer, eventId);
         let settings = await matchService.getMatchSettings(match.id);
@@ -324,11 +386,7 @@ module.exports = function router(app) {
             organizer,
             eventId,
         } = req.params;
-        const cacheKey = `stats:${organizer}-${eventId}-stacked`;
-
-        let stats = await cache.getOrSet(cacheKey, async () => {
-            return await getStats(organizer, eventId, "overall", true);
-        }, 300)
+        let stats = await getStats(organizer, eventId, "overall", true);
 
         res.send(stats);
     })
@@ -339,12 +397,8 @@ module.exports = function router(app) {
             eventId,
             game
         } = req.params;
-        const cacheKey = `stats:${organizer}-${eventId}-${game}`;
-
-        let stats = await cache.getOrSet(cacheKey, async () => {
-            return await getStats(organizer, eventId, game);
-        }, 300)
-
+        let stats = await getStats(organizer, eventId, game);
+        
         res.send(stats);
     })
 
@@ -354,12 +408,7 @@ module.exports = function router(app) {
             eventId,
             game
         } = req.params;
-        const cacheKey = `stats:${organizer}-${eventId}-${game}`;
-
-        let stats = await cache.getOrSet(cacheKey, async () => {
-            return await getStats(organizer, eventId, game);
-        }, 300);
-
+        let stats = await getStats(organizer, eventId, game);
         let csv = statsToCsv(stats, req.query.team, req.query.full);
 
         res.attachment(`${organizer}+${eventId}+${game}.csv`).send(csv)
