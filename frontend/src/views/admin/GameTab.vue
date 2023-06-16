@@ -83,7 +83,7 @@
 													Game Selector
 												</v-expansion-panel-header>
 												<v-expansion-panel-content>
-													<div v-if="games" class="game-select">
+													<div v-if="games && games[0]" class="game-select">
 														<h3>Most Recent</h3>
 														<game-select @click="selectedGame = games[0].match_start"
 															:selected="selectedGame == games[0].match_start"
