@@ -14,6 +14,7 @@ const wsHandlerService = require("../services/ws_handler.service.js");
 const liveService = require("../services/live.service");
 const { statsToCsv } = require("../utils/utils");
 const playerService = require("../services/player.service");
+const { redis } = require("../connectors/redis");
 
 const SHORT_LINK_PREFIX = "_";
 module.exports = function router(app) {
@@ -28,12 +29,13 @@ module.exports = function router(app) {
 
     async function checkAutoPoll(organizer, eventId) {
         let cacheKey = `match_polling_skip_${organizer.username}_${eventId}`;
-        let lastPoll = await cache.get(cacheKey);
         let now = Date.now();
+
+        let lastPoll = await redis.set(cacheKey, now, "EX", 90, "NX");
 
         console.log("lastPoll", organizer, eventId, lastPoll);
 
-        if (!lastPoll) {
+        if (lastPoll === "OK") {
             const match = await matchService.getMatch(organizer.username, eventId);
             if (!match) return;
             console.log("Checking for new games on ", organizer.username, eventId, match.id)
@@ -55,7 +57,6 @@ module.exports = function router(app) {
                     await matchService.updateMatchPolling(match.id, now);
 
             }
-            await cache.put(cacheKey, now, 60);
         }
     }
 
