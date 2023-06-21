@@ -37,11 +37,62 @@ function apexService(config) {
         return stats.data;
     }
 
-    async function exportCsv(organizer, eventId, game) {
-        const link = document.createElement('a')
+    async function exportCsv(organizer, eventId, game, type, cols, stats) {
+        let data = {header:[], rows:[]};
+        data.header = cols.map(col => col.label);
+
+        // get stats for either a specific game or overall teams
+        const statsData = game !== "overall" ? stats.games.find(g => g.game === game).teams : stats.teams;
+
+        if(statsData.length){
+            if(type === "team") {
+                data.rows = statsData.map(team => {
+                    let overallStats = {};
+                    cols.forEach(col => {
+                        if(Object.prototype.hasOwnProperty.call(team.overall_stats, col.key))
+                            overallStats[col.key] = team.overall_stats[col.key];
+                        else
+                            overallStats[col.key] = "-";
+                    })
+                    return overallStats;
+                })
+            }else if (type === "player") {
+                statsData.forEach(team => {
+                    team.player_stats.forEach(player => {
+                        let playerStats = {};
+                        cols.forEach(col => {
+                            if(col.key === "characterName" && game === "overall") {
+                                playerStats.characterName = player.characters.join(", ");
+                            }else if(Object.prototype.hasOwnProperty.call(player, col.key) && player[col.key] != null) {
+                                playerStats[col.key] = player[col.key];
+                            }else
+                                playerStats[col.key] = "-";
+                        })
+                        data.rows.push(playerStats);
+                    })
+                })
+            }
+        }
+
+        // print header as a string
+        let dataString = JSON.stringify(data.header).replace(/\[|\]/g, "");
+        data.rows.forEach(row => {
+            dataString += "\n";
+            Object.keys(row).forEach((key, i) => {
+                if(i === 0)
+                    dataString += `"${row[key]}"`;
+                else
+                    dataString += `,"${row[key]}"`;
+            })
+        })
+        const dataBlob = new Blob([dataString]);
+
+        const url = URL.createObjectURL(dataBlob);
+        
+        const link = document.createElement('a');
         link.setAttribute('download', organizer + "+" + eventId + "+" + game + ".csv");
-        link.setAttribute('href', config.baseUrl + "stats/" + organizer + "/" + eventId + "/" + game + "/csv");
-        link.click()
+        link.setAttribute('href', url);
+        link.click();
     }
 
     async function getGameList(organizer, eventId) {

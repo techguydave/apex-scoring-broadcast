@@ -11,6 +11,37 @@
 		</template>
 
 		<v-col v-else sm="12" lg="6">
+			<v-dialog v-model="showCSVDialog" max-width="600px">
+				<v-card>
+					<v-toolbar color="primary" class="toolbar" flat>
+						Export CSV Options<v-spacer/><icon-btn-filled icon="close" @click="showCSVDialog = false"></icon-btn-filled>
+					</v-toolbar>
+					<v-card-text>
+						<v-radio-group v-model="optionTeamOrPlayer" inline>
+							<v-radio label="Export Teams" value="team"></v-radio>
+							<v-radio label="Export Players" value="player"></v-radio>
+						</v-radio-group>
+						
+						<div v-if="optionTeamOrPlayer">
+							<h3 class="mb-3">Select Data Columns</h3>
+							<v-btn class="mr-3" @click="setAllCsvOptionFields(optionTeamOrPlayer)">Select All</v-btn>
+							<v-btn @click="csvCols = {}">Select None</v-btn>
+							<v-divider class="mt-3"/>
+						</div>
+
+						<div v-if="optionTeamOrPlayer === 'team'">
+							<v-checkbox v-for="teamCol in teamKeys" :key="teamCol.key" :label="teamCol.label" v-model="csvCols[teamCol.key]" hide-details dense></v-checkbox>
+						</div>
+
+						<div v-else-if="optionTeamOrPlayer === 'player'">
+							<v-checkbox v-for="playerCol in playerKeys" :key="playerCol.key" :label="playerCol.label" v-model="csvCols[playerCol.key]" hide-details dense></v-checkbox>
+						</div>
+					</v-card-text>
+					<v-card-actions>
+						<v-btn color="primary" :disabled="!Object.keys(csvCols).length" @click="csv">Export Data</v-btn>
+					</v-card-actions>
+				</v-card>
+			</v-dialog>
 			<v-card>
 				<v-card-text>
 					<v-card class="ma-1 grey darken-4">
@@ -161,11 +192,11 @@
 					</v-tabs>
 					<v-tabs-items v-model="tabs">
 						<v-tab-item>
-							<v-btn @click="csv('overall')">Export CSV</v-btn>
+							<v-btn @click="openCSVDialog('overall')">Export CSV</v-btn>
 							<simple-score-table :stats="stats"></simple-score-table>
 						</v-tab-item>
 						<v-tab-item v-for="(game, index) in stats.games" :key="index">
-							<v-btn @click="csv(game.game)">Export CSV</v-btn>
+							<v-btn @click="openCSVDialog(game.game)">Export CSV</v-btn>
 							<v-btn @click="deleteStats(game.game)">Delete</v-btn>
 							<simple-score-table :stats="game" @edit="edit"></simple-score-table>
 						</v-tab-item>
@@ -222,6 +253,9 @@
 import SimpleScoreTable from '@/components/SimpleScoreTable.vue';
 import GameSelect from '@/components/GameSelect.vue';
 import Day from "dayjs";
+import IconBtnFilled from "@/components/IconBtnFilled";
+import { displayOptions, getDisplayName } from '../../utils/statsUtils';
+
 const DEFAULT_RING_KP = {
 	"ring0": {
 		countdown: 1,
@@ -255,7 +289,8 @@ Day.extend(relativeTime);
 export default {
 	components: {
 		GameSelect,
-		SimpleScoreTable
+		SimpleScoreTable,
+		IconBtnFilled
 	},
 	props: [
 		"eventId",
@@ -264,6 +299,10 @@ export default {
 	],
 	data() {
 		return {
+			showCSVDialog: false,
+			optionTeamOrPlayer: "",
+			csvCols: {},
+			csvGame: 0,
 			tabs: undefined,
 			tabs2: undefined,
 			game: 1,
@@ -300,6 +339,18 @@ export default {
 		isAutoPolling() {
 			let now = Date.now();
 			return this.autoPollSettings?.pollStart && this.autoPollSettings.pollStart < now && this.autoPollSettings.pollEnd > now;
+		},
+		teamKeys() {
+			const teamKeys = displayOptions.display.team.map(key => {
+				return {key, label: getDisplayName(key)}
+			})
+			return [{key:"name", label:"Team Name"}, ...teamKeys]
+		},
+		playerKeys() {
+			const playerKeys = displayOptions.display.player.filter(key => key !== "score").map(key => {
+				return {key, label: getDisplayName(key)}
+			})
+			return [{key:"name", label:"Player Name"}, ...playerKeys]
 		}
 	},
 	watch: {
@@ -326,11 +377,59 @@ export default {
 		},
 		useRingKillPoints() {
 			this.pushSettings();
+		},
+		showCSVDialog() {
+			if(this.showCSVDialog) {
+				this.optionTeamOrPlayer = "team"
+			}
+		},
+		optionTeamOrPlayer(newVal) {
+			if(newVal === "team")
+				this.csvCols = {
+					name: true,
+					score: true,
+					kills:true
+				}
+			else
+				this.csvCols = {
+					name:true,
+					kills:true
+				}
 		}
 	},
 	methods: {
-		csv(game) {
-			this.$apex.exportCsv(this.organizer, this.eventId, game);
+		csv() {
+			let selectedKeys = []
+			
+			if(this.optionTeamOrPlayer === "team")
+				selectedKeys = this.teamKeys.filter(key => Object.keys(this.csvCols).filter(csvKey => csvKey).includes(key.key))
+			else if(this.optionTeamOrPlayer === "player")
+				selectedKeys = this.playerKeys.filter(key => Object.keys(this.csvCols).filter(csvKey => csvKey).includes(key.key))
+
+			this.showCSVDialog = false
+
+			this.$apex.exportCsv(
+				this.organizer,
+				this.eventId,
+				this.csvGame,
+				this.optionTeamOrPlayer,
+				selectedKeys,
+				this.stats);
+		},
+		openCSVDialog(game) {
+			this.showCSVDialog = true
+			this.csvGame = game
+		},
+		setAllCsvOptionFields(option) {
+			if(option === "team") {
+				this.teamKeys.forEach(key => {
+					this.$set(this.csvCols, key.key, true)
+				})
+			}else if(option === "player"){
+				this.playerKeys.forEach(key => {
+					this.$set(this.csvCols, key.key, true)
+				})
+			}
 		},
 		async addGame() {
 			this.loading = true;

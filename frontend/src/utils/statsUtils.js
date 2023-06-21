@@ -35,7 +35,6 @@ const displayOptions = {
             "shots",
             "respawnsGiven",
             "revivesGiven",
-            "characterName",
             "damageTaken",
             "grenadesThrown",
             "tacticalsUsed",
