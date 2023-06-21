@@ -29,12 +29,14 @@
 							<v-divider class="mt-3"/>
 						</div>
 
-						<div v-if="optionTeamOrPlayer === 'team'">
-							<v-checkbox v-for="teamCol in teamKeys" :key="teamCol.key" :label="teamCol.label" v-model="csvCols[teamCol.key]" hide-details dense></v-checkbox>
-						</div>
+						<div class="scroll-keys">
+							<div v-if="optionTeamOrPlayer === 'team'">
+								<v-checkbox v-for="teamCol in teamKeys" :key="teamCol.key" :label="teamCol.label" v-model="csvCols[teamCol.key]" hide-details dense></v-checkbox>
+							</div>
 
-						<div v-else-if="optionTeamOrPlayer === 'player'">
-							<v-checkbox v-for="playerCol in playerKeys" :key="playerCol.key" :label="playerCol.label" v-model="csvCols[playerCol.key]" hide-details dense></v-checkbox>
+							<div v-else-if="optionTeamOrPlayer === 'player'">
+								<v-checkbox v-for="playerCol in playerKeys" :key="playerCol.key" :label="playerCol.label" v-model="csvCols[playerCol.key]" hide-details dense></v-checkbox>
+							</div>
 						</div>
 					</v-card-text>
 					<v-card-actions>
@@ -528,6 +530,11 @@ export default {
 <style scoped lang="scss">
 .game-select {
 	max-height: 500px;
+	overflow: auto;
+}
+
+.scroll-keys {
+	max-height: 350px;
 	overflow: auto;
 }
 
