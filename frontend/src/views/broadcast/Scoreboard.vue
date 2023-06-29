@@ -10,7 +10,7 @@
       <div class="overall-wrap" v-if="(stats && stats.teams)" :class="{ 'overall-wrap-styled': settings.styled }">
         <div class="table-wrap">
           <div class="row-wrap">
-            <div class="column" v-for="index in 2" :key="index">
+            <div class="column" v-for="index in settings?.single ? 1 : 2" :key="index">
               <div class="score-wrap table-header">
                 <div class="score-item score-index">
                   <div>&nbsp;#&nbsp;</div>
@@ -27,49 +27,51 @@
                 </div>
               </div>
             </div>
-            <div class="column" v-for="score in sortedScores" :key="score.name" sm="6">
-              <div class="score-wrap">
-                <div class="score-item score-index" :class="{ 'score-index-styled': settings.styled }"> {{ score.index }}
-                </div>
-                <div v-if="settings.mode == 'team'" class="score-item score-name"
-                  :class="{ 'score-name-styled': settings.styled }">
-                  <div class="team-name-character-wrapper"
-                    :class="{ 'team-name-wrapper-override': score.name.length > 14 }">
-                    <div class="team-name" :class="{ 'team-name-override': score.name.length > 14 }"> {{ score.name }}
-                    </div>
-                    <template v-if="settings.showCharacters">
-                      <div class="character-wrap score-item" :class="{ 'character-wrap-styled': settings.styled }"
-                        v-if="settings.mode == 'team'">
-                        <img class="team-character" v-for="character in getCharacters(score.teamId)" :key="character"
-                          height="26" :src="'/legend_icons/' + character + '.webp'">
+            <component :is="settings.animate ? 'transition-group' : 'dev'" name="score-transition">
+              <div class="column" :class="'transition-' + (score.index - offset)" v-for="(score, index) in sortedScores" :i="score.name + index + settings.display" :key="score.name + settings.display + settings.game" sm="6">
+                <div v-if="!score.fill" class="score-wrap">
+                  <div class="score-item score-index" :class="{ 'score-index-styled': settings.styled }"> {{ score.index }}
+                  </div>
+                  <div v-if="settings.mode == 'team'" class="score-item score-name"
+                    :class="{ 'score-name-styled': settings.styled }">
+                    <div class="team-name-character-wrapper"
+                      :class="{ 'team-name-wrapper-override': score.name.length > 14 }">
+                      <div class="team-name" :class="{ 'team-name-override': score.name.length > 14 }"> {{ score.name }}
                       </div>
-                    </template>
+                      <template v-if="settings.showCharacters">
+                        <div class="character-wrap score-item" :class="{ 'character-wrap-styled': settings.styled }"
+                          v-if="settings.mode == 'team'">
+                          <img class="team-character" v-for="character in getCharacters(score.teamId)" :key="character"
+                            height="26" :src="'/legend_icons/' + character + '.webp'">
+                        </div>
+                      </template>
+                    </div>
+                    <div class="score-player-names" v-if="settings.mode == 'team'">
+                      <span v-for="player in getPlayers(score.teamId)" :key="player.name">
+                        {{ cleanPlayerName(score.name, player.name) }} &nbsp;</span>
+                    </div>
                   </div>
-                  <div class="score-player-names" v-if="settings.mode == 'team'">
-                    <span v-for="player in getPlayers(score.teamId)" :key="player.name">
-                      {{ cleanPlayerName(score.name, player.name) }} &nbsp;</span>
+                  <div v-else class="score-item score-name score-player-name padding-zero"
+                    :class="{ 'score-name-styled': settings.styled }">
+                    <span v-if="settings.mode == 'player' && settings.showCharacters"
+                      class="character-wrap-player score-item" :class="{ 'character-wrap-styled': settings.styled }">
+                      <img v-for="character in score.characters || [score.characterName]" :key="character" height="70"
+                        :src="'/legend_icons/' + character + '.webp'">
+                    </span>
+                    <span class="fix-player-name" :style="{ 'top': settings.showCharacters ? '-25px' : '5px' }">{{
+                      settings.mode ==
+                      'player' ?
+                      score.name : cleanPlayerName(score.teamName, score.playerName) }}</span>
                   </div>
-                </div>
-                <div v-else class="score-item score-name score-player-name padding-zero"
-                  :class="{ 'score-name-styled': settings.styled }">
-                  <span v-if="settings.mode == 'player' && settings.showCharacters"
-                    class="character-wrap-player score-item" :class="{ 'character-wrap-styled': settings.styled }">
-                    <img v-for="character in score.characters || [score.characterName]" :key="character" height="70"
-                      :src="'/legend_icons/' + character + '.webp'">
-                  </span>
-                  <span class="fix-player-name" :style="{ 'top': settings.showCharacters ? '-25px' : '5px' }">{{
-                    settings.mode ==
-                    'player' ?
-                    score.name : cleanPlayerName(score.teamName, score.playerName) }}</span>
-                </div>
-                <div class="score-item score-value" :class="{ 'score-value-styled': settings.styled }">
-                  <template v-if="settings.display2">&nbsp;{{ score[settings.display] }}&nbsp;</template>
-                </div>
-                <div class="score-item score-value" :class="{ 'score-value-styled': settings.styled }">
-                  &nbsp;{{ score[settings.display2 || settings.display] }}&nbsp;
+                  <div class="score-item score-value" :class="{ 'score-value-styled': settings.styled }">
+                    <template v-if="settings.display2">&nbsp;{{ score[settings.display] }}&nbsp;</template>
+                  </div>
+                  <div class="score-item score-value" :class="{ 'score-value-styled': settings.styled }">
+                    &nbsp;{{ score[settings.display2 || settings.display] }}&nbsp;
+                  </div>
                 </div>
               </div>
-            </div>
+            </component>
           </div>
         </div>
       </div>
@@ -86,7 +88,8 @@ const pad_array = function (arr, len, fill) {
 };
 
 const defScore = {
-  name: ""
+  name: "",
+  fill: true,
 }
 
 export default {
@@ -102,9 +105,18 @@ export default {
         if (score.name || score.name) score.index = index + 1;
       });
 
-      let start = scores.slice(0, 10);
-      let end = scores.slice(10, 20);
-      return _.zip(start, end).flat();
+
+      if (!this.settings.single) {
+        let start = scores.slice(this.offset, this.offset + 10);
+        let end = scores.slice(this.offset + 10, this.offset + 20);
+        return _.zip(start, end).flat();
+      }
+      else {
+        return scores.slice(this.offset, this.offset + 10);
+      }
+    },
+    offset() {
+      return (parseInt(this.settings.page ?? 1) - 1) * (this.settings?.single ? 10 : 20);
     },
     teams() {
       if (this.settings.game == "overall")
@@ -139,7 +151,7 @@ export default {
     },
     getCharacters(team) {
       return getCharactersByTeam(this.teams, team);
-    }
+    },
   },
 };
 </script>
@@ -166,6 +178,7 @@ export default {
     border-top: 80px solid;
     border-top-color: v-bind("display?.colors?.primary");
     border-right: 40px solid transparent;
+    border-left: v-bind("settings.single ? '40px solid transparent' : 'none'");
   }
 
 
@@ -207,13 +220,14 @@ export default {
 }
 
 .scoreboard-header {
-  width: 40%;
+  width: v-bind("settings.single ? '50%' : '40%'");;
   /* margin: auto; */
   font-family: "Heebo", sans-serif;
   font-size: 50px;
   line-height: 80px;
   text-align: center;
   position: relative;
+  margin: v-bind("settings.single ? 'auto' : 0");
 }
 
 .scoreboard-header-text {
@@ -247,7 +261,34 @@ export default {
 
 .column {
   display: inline-block;
-  width: 50%;
+  width: v-bind("settings.single ? '100%' : '50%'");
+}
+
+
+@for $i from 1 through 20 {
+  .transition-#{$i}.score-transition-enter-active {
+      transition-delay: #{2.2 + ($i * .06)}s;
+  }
+
+  .transition-#{$i} {
+    transition: opacity .5s, transform .5s ease-in-out, height #{2.2 - ($i * .1)}s; //use height ani as a hack to keep boxes alive till animation is fully done
+  }
+
+  .transition-#{$i}.score-transition-leave-active {
+      transition-delay: #{($i * .06)}s;
+  }
+}
+
+.score-transition-leave-to {
+  height: 70px;
+   opacity: 0;
+   transform: translateX(-200px);
+}
+
+
+.score-transition-enter{
+    opacity: 0;
+    transform: translateX(200px);
 }
 
 .score-item.character-wrap {

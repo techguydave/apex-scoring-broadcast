@@ -105,7 +105,6 @@ function getStatsByMode(teams, mode, overall) {
     if (mode == "team") {
         return teams.map(team => ({ teamId: team.teamId, ...team.overall_stats }));
     } else {
-        console.log("teams", JSON.stringify(teams));
         let result = _(teams)
             .map(team => [...team.player_stats.map(p => ({ ...p, score: overall?.games ? _.sum(overall.games.map(g => g?.teams?.find(t => t.player_stats.find(pl => pl.playerId == p.playerId))?.overall_stats?.score ?? 0)) : team.overall_stats.score }))])
             .flatten()
@@ -127,9 +126,6 @@ function getStatsByMode(teams, mode, overall) {
             }, {}))
             .flatten()
             .value();
-
-
-        console.log(result);
 
         return result;
     }
