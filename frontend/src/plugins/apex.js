@@ -33,7 +33,7 @@ function apexService(config) {
     }
 
     async function getStats(organizer, eventId, game) {
-        let stats = await axios.get(config.baseUrl + "stats/" + organizer + "/" + eventId + "/" + game);
+        let stats = await axios.get(config.baseUrl + "stats/" + organizer + "/" + encodeURIComponent(eventId) + "/" + game);
         return stats.data;
     }
 
@@ -96,7 +96,7 @@ function apexService(config) {
     }
 
     async function getGameList(organizer, eventId) {
-        let stats = await axios.get(config.baseUrl + "games/" + organizer + "/" + eventId);
+        let stats = await axios.get(config.baseUrl + "games/" + organizer + "/" + encodeURIComponent(eventId));
         return stats.data;
     }
 
@@ -123,7 +123,7 @@ function apexService(config) {
     }
 
     async function deleteStats(organizer, eventId, game) {
-        await axios.delete(config.baseUrl + "stats/" + organizer + "/" + eventId + "/" + game, { headers: getApiKeyHeaders() });
+        await axios.delete(config.baseUrl + "stats/" + organizer + "/" + encodeURIComponent(eventId) + "/" + game, { headers: getApiKeyHeaders() });
     }
 
     async function getBroadcastSettings(organizer) {
@@ -205,7 +205,7 @@ function apexService(config) {
     }
 
     async function getLiveData(organizer, eventId, game) {
-        let data = await axios.get(`${config.baseUrl}stats/${organizer}/${eventId}/${game}/livedata`);
+        let data = await axios.get(`${config.baseUrl}stats/${organizer}/${encodeURIComponent(eventId)}/${game}/livedata`);
         return data.data;
     }
 
@@ -230,12 +230,12 @@ function apexService(config) {
     }
 
     async function createMatch(name) {
-        let {data} = await axios.post(`${config.baseUrl}match/${name}`, {}, { headers: getApiKeyHeaders() });
+        let { data } = await axios.post(`${config.baseUrl}match/${encodeURIComponent(name)}`, {}, { headers: getApiKeyHeaders() });
         return data;
     }
 
     async function getMatch(organizerName, eventId) {
-        let { data } = await axios.get(`${config.baseUrl}match/${organizerName}/${eventId}`);
+        let { data } = await axios.get(`${config.baseUrl}match/${organizerName}/${encodeURIComponent(eventId)}`);
         return data;
     }
 
