@@ -140,7 +140,7 @@ export default {
     },
     addDate() {
       let date = new Date();
-      this.newMatchId = this.append(this.newMatchId, `${date.getMonth() + 1}/${date.getDay() + 1}/${date.getFullYear()}`)
+      this.newMatchId = this.append(this.newMatchId, `${date.getMonth() + 1}-${date.getDay() + 1}-${date.getFullYear()}`)
     },
     addTime() {
       let date = new Date();
@@ -153,7 +153,7 @@ export default {
       return str + (str.length > 0 ? " " : "") + text;
     },
     async newMatch() {
-      await this.$apex.createMatch(this.newMatchId, this.newMatchName);
+      await this.$apex.createMatch(this.newMatchId.replace("/", "-"), this.newMatchName);
       this.newMatchDiag = false;
       this.login();
     },
