@@ -100,6 +100,7 @@ body {
 .team-name {
     padding-left: 10px;
     flex: 1;
+    overflow: hidden;
 }
 
 .view-more {
