@@ -153,7 +153,7 @@ export default {
       return str + (str.length > 0 ? " " : "") + text;
     },
     async newMatch() {
-      await this.$apex.createMatch(this.newMatchId.replace("/", "-"), this.newMatchName);
+      await this.$apex.createMatch(this.newMatchId.replaceAll("/", "-"), this.newMatchName);
       this.newMatchDiag = false;
       this.login();
     },
