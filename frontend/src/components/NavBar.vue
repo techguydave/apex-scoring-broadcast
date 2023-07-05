@@ -1,7 +1,7 @@
 <template>
     <header class="main-nav elevation-0">
         <div class="toolbar-link-container">
-            <router-link class="toolbar-link" :to="{ name: 'index', params: $props }">Overstat.gg</router-link>
+            <router-link class="toolbar-link" :to="{ name: 'index', params: $props }"><img height="25" src="/img/overstat_logo.png"></router-link>
             <router-link class="toolbar-link" :to="{ name: 'players', params: $props }">Players</router-link>
         </div>
         <div class="toolbar-right-container">

@@ -1,11 +1,19 @@
 <template>
     <div>
-        <v-row class="header-row" no-gutters>
-            <v-col sm="6"></v-col>
-            <v-col sm="2" class="score">Score </v-col>
-            <v-col sm="2" class="score">{{ stats.games ? 'Best Placement' : "Placement" }} </v-col>
-            <v-col sm="2" class="score">Kills</v-col>
-        </v-row>
+        <div class="actions"></div>
+        
+        <div>
+            <v-row class="header-row" no-gutters>
+                <v-col sm="6"></v-col>
+                <v-col sm="2" class="score">Score </v-col>
+                <v-col sm="2" class="score">{{ stats.games ? 'Best Placement' : "Placement" }} </v-col>
+                <v-col sm="2" class="score">Kills</v-col>
+                <v-btn icon class="float-icon expand-all" @click="toggleExpand"><v-icon>{{
+                    expandedAll
+                    ? 'mdi-menu-up' : 'mdi-menu-down'
+                }}</v-icon></v-btn>
+            </v-row>
+        </div>
         <div class="entry-wrapper" v-for="(team, index) in stats.teams" :key="team.id">
             <div class="entry-index">
                 <div class="entry-index-text">{{ index + 1 }}</div>
@@ -31,35 +39,35 @@
 
                     </div>
                     <div v-if="expanded[team.name]" class="entry-players entry-sub">
-                        <v-row no-gutters>
-                            <v-col class="entry-player" v-for="player in team.player_stats" :key="player.id">
-                                <template v-if="player.characters"><img class="team-character"
-                                        v-for="character in player.characters" :key="character" height="18"
-                                        :src="'/legend_icons/' + character + '.webp'"></template>
-                                <img v-else class="team-character" height="20"
-                                    :src="'/legend_icons/' + player.characterName + '.webp'">
-                                &nbsp;<PlayerLink :player="player">{{ player.name }} ({{
-                                    player.kills
-                                }})</PlayerLink>
-                            </v-col>
-                        </v-row>
+                       <table class="expanded-table">
+                                <thead>
+                                    <tr>
+                                        <td>&nbsp;</td>
+                                        <td v-for="key in statsKeys" :key="key" class="text-capitalize">{{ key != 'characterName' ? getDisplayName(key) : ""}}</td>
+                                    </tr>
+                                </thead>
+                                <tr v-for="player in team.player_stats" :key="player.id" class="text-right pr-5 text-capitalize">
+                                    <td class="expanded-player-name"><PlayerLink :player="player">{{ player.name }}</PlayerLink></td>
+                                    <td v-for="key in statsKeys" :key="key">
+                                        <template v-if="key == 'characterName'">
+                                             <template v-if="player.characters"><img class="team-character"
+                                            v-for="character in player.characters" :key="character" height="25"
+                                            :src="'/legend_icons/' + character + '.webp'"></template>
+                                            <img v-else class="team-character" height="25"
+                                                :src="'/legend_icons/' + player.characterName + '.webp'">
+                                        </template>
+                                        <template v-else>
+                                            {{ player[key] }}
+                                        </template>
+                                    </td>
+                                </tr>
+                                <tr class="text-right pr-5 text-capitalize">
+                                    <td class="expanded-player-name">{{ team.name }}</td>
+                                    <td v-for="key in statsKeys" :key="key" >{{ team.overall_stats[key] }}</td>
+                                </tr>
+                            </table>
                     </div>
-                    <!-- <div class="entry-expanded entry-sub">
-                        <v-row>
-                            <v-col>
-                                <div>&nbsp;</div>
-                                <div v-for="key in statsToShow" :key="key" class="text-right pr-5 text-capitalize">{{getDisplayName(key)}}</div>
-                            </v-col>
-                            <v-col v-for="player in team.player_stats" :key="player.id">
-                                <div  class="table-header">{{player.name}}</div>
-                                <div v-for="key in statsToShow" :key="key">{{player[key]}}&nbsp;</div>
-                            </v-col>
-                            <v-col>
-                                <div>Team</div>
-                                <div v-for="key in statsToShow" :key="key">{{team.overall_stats[key]}}&nbsp;</div>
-                            </v-col>
-                        </v-row>
-                    </div>-->
+
                 </div>
             </div>
         </div>
@@ -77,19 +85,39 @@ export default {
     data() {
         return {
             statsToShow: displayOptions.display.player,
-            expanded: {}
+            expanded: {},
+            expandedAll: false,
+            statsKeys: [
+                "characterName",
+                "kills",
+                "damageDealt", 
+                "knockdowns",
+                "headshots",
+                "assists",
+                "shots",
+                "hits",
+                "respawnsGiven",
+                "revivesGiven",
+            ]
         }
     },
     methods: {
         getDisplayName,
         updateExpanded(index) {
             this.$set(this.expanded, index, !this.expanded[index]);
+        },
+        toggleExpand() {
+            this.expandedAll = !this.expandedAll;
+            this.stats.teams.forEach(team => this.updateExpanded(team.name))
         }
     }
 }
 </script>
 
 <style scoped lang="scss">
+.actions {
+    text-align: right;
+}
 .entry-wrapper {
     display: flex;
     color: white;
@@ -98,7 +126,9 @@ export default {
     border-radius: 6px;
     overflow: hidden;
 }
-
+.expand-all {
+    margin-top: -16px;
+}
 .entry-index {
     width: 40px;
     font-size: 1.2em;
@@ -107,6 +137,34 @@ export default {
     background: #{$primary};
     color: $primary-invert;
     display: flex;
+}
+
+.expanded-table {
+    margin: auto;
+    border-collapse: collapse;
+
+    td {
+        padding: 3px 7px;
+        // border: 1px solid black;
+        margin:  0;
+        vertical-align: middle;
+    }
+
+    img {
+        margin-top: 2px;
+    }
+
+    tr:nth-child(even) {
+        background: $first-tone;
+    }
+
+    thead {
+        text-align: right;
+    }
+
+    .expanded-player-name {
+        width: 150px;
+    }
 }
 
 .entry-index-text {
@@ -126,6 +184,7 @@ export default {
     text-align: center;
     margin-top: -16px;
     padding-bottom: 2px;
+    position: relative;
 }
 
 .entry-main {
@@ -178,4 +237,5 @@ export default {
     padding: 2px;
     padding-bottom: 5px;
 }
+
 </style>
