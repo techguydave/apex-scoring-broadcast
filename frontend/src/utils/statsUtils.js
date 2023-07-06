@@ -56,9 +56,20 @@ const statDisplayMapping = {
     "respawnsGiven": "Respawns",
     "characterName": "Legend",
     "knockdowns": "Downs",
-    "grenadesThrown": "Grenades*",
-    "tacticalsUsed": "Tacts*",
-    "ultimatesUsed": "Ults*",
+    "grenadesThrown": "Grenades",
+    "tacticalsUsed": "Tacts",
+    "ultimatesUsed": "Ults",
+}
+
+const statsDisplayMappingShort = {
+    "damageDealt": "DMG",
+    "damageTaken": "DMG Tkn",
+    "revivesGiven": "Rvs",
+    "respawnsGiven": "Rspns",
+    "characterName": "Lgnd",
+    "grenadesThrown": "Grnds",
+    "headshots": "HS",
+    "knockdowns": "Dwns",
 }
 
 const mapMap = {
@@ -145,6 +156,10 @@ function getDisplayName(name) {
     return statDisplayMapping[name] || name;
 }
 
+function getDisplayNameShort(name) {
+    return statsDisplayMappingShort[name] ?? statDisplayMapping[name] ?? name;
+}
+
 function getMapName(mapid) {
     return mapMap[mapid] || mapid;
 }
@@ -158,6 +173,7 @@ module.exports = {
     invertedStats,
     statDisplayMapping,
     displayOptions,
+    getDisplayNameShort,
     sortScores,
     getDisplayName,
     getStatsByMode,

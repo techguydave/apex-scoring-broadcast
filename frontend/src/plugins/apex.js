@@ -200,7 +200,7 @@ function apexService(config) {
     }
 
     async function getShortLink(url) {
-        let data = await axios.get(config.baseUrl + "short_link?url=" + url);
+        let data = await axios.get(config.baseUrl + "short_link?url=" + encodeURIComponent(url));
         return data.data;
     }
 
