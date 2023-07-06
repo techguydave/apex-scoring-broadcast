@@ -282,6 +282,7 @@ module.exports = function router(app) {
             try {
                 liveDataJson = JSON.parse(liveDataFile.data.toString());
             } catch (err) {
+                console.log(err);
                 return res.status(500).send({ err: "live_data_parse", msg: "The uploaded file is not valid." })
             }
         }
@@ -297,13 +298,12 @@ module.exports = function router(app) {
         }
 
         try {
-            //console.log(JSON.stringify(gameStats))
             let gameStats = await processStats(req.organizer, eventId, game, respawnStats, liveDataStats);
             let gameId = gameStats.gameId;
-            if (selectedUnclaimed !== "undefined") {
+            if (selectedUnclaimed) {
                 statsService.setLiveDataGame(selectedUnclaimed, gameId)
             }
-            else if (selectedUnclaimed === "undefined" && liveDataJson && gameId) {
+            else if (!selectedUnclaimed && liveDataJson && gameId) {
                 console.log("Writing live data", gameId, req.organizer.id);
                 await statsService.writeLiveData(gameId, liveDataJson, req.organizer.id)
             }
