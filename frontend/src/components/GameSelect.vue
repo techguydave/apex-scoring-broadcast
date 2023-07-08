@@ -25,10 +25,10 @@ export default {
 }
 </script>
 
-<style>
+<style lang="scss">
 .v-card.selected {
     border-color: #000 !important;
-    background-color: rgba(3, 193, 251, 0.5) !important;
+    background-color: $primary !important;
 }
 
 .pointer {
