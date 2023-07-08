@@ -8,8 +8,8 @@
                 Standings</router-link>
             <router-link class="subnav-link" :to="{ name: 'tournament.standings.team', params: $props }">Team
                 Standings</router-link>
-            <router-link class="subnav-link"
-                :to="{ name: 'tournament.standings.feed', params: $props }">Feed</router-link>
+            <!-- <router-link class="subnav-link"
+                :to="{ name: 'tournament.standings.feed', params: $props }">Feed</router-link> -->
         </div>
 
         <div class="leaderboard-wrap">

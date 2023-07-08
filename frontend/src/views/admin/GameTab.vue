@@ -500,7 +500,7 @@ export default {
 			await this.$apex.setPublicSettings(this.matchId, this.settings);
 		},
 		async fetchSettings() {
-			this.settings = await this.$apex.getPublicSettings(this.matchId);
+			this.settings = await this.$apex.getPublicSettings(this.matchId) || {};
 			this.placementPoints = this.settings.scoring?.placementPoints.join(", ") ?? DEFAULT_PLACEMENT; 
 			this.killPoints = this.settings.scoring?.killPoints ?? 1;
 			this.ringKillPoints = this.settings.scoring?.ringKillPoints || DEFAULT_RING_KP;
