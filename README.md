@@ -44,4 +44,4 @@ Copy the value from "key" in the response body. Store it somewhere safe.
 
 **You're ready to start contributing!**
 
-Visit http://localhost:3000 to view the site. To log in to the Tournament Manager, use the Username "admin" with the key from step 6 above.
+Visit http://localhost:8080 to view the site. To log in to the Tournament Manager, use the Username "admin" with the key from step 6 above.
