@@ -33,15 +33,13 @@ module.exports = function router(app) {
 
         let lastPoll = await redis.set(cacheKey, now, "EX", 90, "NX");
 
-        console.log("lastPoll", organizer, eventId, lastPoll);
-
         if (lastPoll === "OK") {
             const match = await matchService.getMatch(organizer.username, eventId);
             if (!match) return;
             console.log("Checking for new games on ", organizer.username, eventId, match.id)
 
             const pollingSettings = await matchService.getMatchPolling(match.id);
-            console.log(pollingSettings, now);
+            console.log(organizer.username, eventId, pollingSettings, now);
 
             if (pollingSettings?.pollStart && pollingSettings.pollStart < now && pollingSettings.pollEnd > now) {
                 let stats = await apexService.getStatsFromCode(pollingSettings.statsCodes);

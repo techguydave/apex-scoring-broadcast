@@ -131,7 +131,9 @@ import LiveDamageReportSettings from "../../components/broadcast-settings/LiveDa
 import LivePlayerInventorySettings from "../../components/broadcast-settings/LivePlayerInventorySettings.vue";
 import LiveTeamNameSettings from "../../components/broadcast-settings/LiveTeamNameSettings.vue";
 import TickerSettings from "../../components/broadcast-settings/TickerSettings.vue";
+import MapOverlaySettings from "../../components/broadcast-settings/MapOverlaySettings.vue";
 import IconBtn from "../../components/IconBtnFilled.vue";
+import { maps } from "@/utils/maps";
 
 import _ from "lodash";
 const { v4: uuid } = require('uuid');
@@ -196,6 +198,15 @@ const overlayDefaults = [
         settings: {
             styled: true,
         }
+    },
+    {
+        type: "MapOverlay",
+        name: "Map & Drop Overlay",
+        settings: {
+            showMap: true,
+            showDrops: true,
+            selectedMap: maps["worlds-edge"]
+        }
     }
 ]
 
@@ -214,6 +225,7 @@ export default {
         LivePlayerInventorySettings,
         LiveTeamNameSettings,
         TickerSettings,
+        MapOverlaySettings
     },
     props: [
         "organizer",
