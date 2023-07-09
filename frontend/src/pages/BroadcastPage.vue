@@ -2,8 +2,8 @@
     <div>
         <div class="broadcast-page">
             <component v-for="overlay in scene.overlays" :is="overlay.type" :settings="overlay.settings" :stats="stats"
-                :liveData="liveData" :key="overlay.id" :observer="observer" :observerTeam="observerTeam"
-                :observerPlayer="observerPlayer" :display="displayOptions" />
+                :liveData="liveData" :key="overlay.id" :observer="observer" :observerTeam="observerTeam" :eventId="eventId"
+                :match="match" :observerPlayer="observerPlayer" :display="displayOptions" :organizer="organizer"/>
             <div id="credit1" class="credit dark"><img width="150" src="/img/powered_by.png"></div>
             <!-- <div id="credit2" class="credit" :class="{ dark: displayOptions.dark }">Powered by overstat.gg</div> -->
         </div>
@@ -20,6 +20,7 @@ import LiveDamageReport from "../views/broadcast/LiveDamageReport.vue";
 import LivePlayerInventory from "../views/broadcast/LivePlayerInventory.vue";
 import LiveTeamName from "../views/broadcast/LiveTeamName.vue";
 import Ticker from "../views/broadcast/Ticker.vue";
+import MapOverlay from "../views/broadcast/MapOverlay.vue";
 
 import { processWsData } from "@/utils/liveData";
 export default {
@@ -32,6 +33,7 @@ export default {
         LivePlayerInventory,
         LiveTeamName,
         Ticker,
+        MapOverlay,
     },
     props: ["organizer", "display"],
     data() {
@@ -45,6 +47,7 @@ export default {
             eventId: undefined,
             apexClient: "",
             observerName: "",
+            match: {},
         }
     },
     computed: {
@@ -66,6 +69,9 @@ export default {
                 this.ws.close();
             }
         },
+        async eventId() {
+            this.match = await this.$apex.getMatch(this.organizer, this.eventId);
+        }
     },
     methods: {
         async updateScores() {

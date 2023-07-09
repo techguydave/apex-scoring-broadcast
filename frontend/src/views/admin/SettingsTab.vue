@@ -143,14 +143,7 @@ import _ from "lodash";
 import { getMapName, getMapNameShort } from "@/utils/statsUtils";
 import IconBtnFilled from "@/components/IconBtnFilled";
 import DropMap from "../../components/DropMap.vue";
-
-const maps = {
-    "worlds-edge": "mp_rr_desertlands_hu",
-    "storm-point": "mp_rr_tropic_island_mu1",
-    // "olympus": "mp_rr_olympus_mu2",
-    // "broken-moon": "mp_rr_divided_moon",
-    // "kings-canyon": "mp_rr_canyonlands_hu",
-}
+import { maps } from "@/utils/maps";
 
 export default {
     props: ["eventId", "organizer", "matchId"],

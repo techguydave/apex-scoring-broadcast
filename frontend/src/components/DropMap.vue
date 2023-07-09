@@ -24,14 +24,22 @@
             <!-- <v-btn class="ma-2">Export</v-btn> -->
         </div>
           <div class="actions text-center" v-if="mode == 'admin'">
-                <v-btn v-if="selectedTeam"  color="primary" class="ma-2" @click="resetTeam">Clear Team ({{ selectedTeam }})</v-btn>
-                <v-btn v-else :disabled="true" color="primary" class="ma-2" @click="resetTeam">Click Team Name to clear</v-btn>
-                <v-btn class="ma-2" @click="resetMap">Clear All</v-btn>
+                <template v-if="!claiming">
+                    <v-btn color="primary" @click="claimDropDiag = true">Claim</v-btn>
+                    <v-btn v-if="selectedTeam"  color="primary" class="ma-2" @click="resetTeam">Clear Team ({{ selectedTeam }})</v-btn>
+                    <v-btn v-else :disabled="true" color="primary" class="ma-2" @click="resetTeam">Click Team Name to clear</v-btn>
+                    <v-btn class="ma-2" @click="resetMap">Clear All</v-btn>
+                </template>
+                <template v-else>
+                     <v-btn v-if="claiming" color="primary" :disabled="claiming.length == 0" class="mt-2"
+                    @click="finishClaim">Done</v-btn>
+                <v-btn v-if="claiming" color="secondary" class="mt-2" @click="claiming = undefined;refreshClaims()">Cancel</v-btn>
+                </template>
             </div>
 
         <div class="map-wrap mt-4">
             <svg viewBox="0 0 2048 2048" width="100%" xmlns:xlink="http://www.w3.org/1999/xlink" ref="svg" id="svg" @click="handleClick">
-                <image width="2048" height="2048" :href="`/maps/${map}.webp`" />
+                <image v-if="!hideMap" width="2048" height="2048" :href="`/maps/${map}.webp`" />
                 <svg:style type="text/css">
                     .poi-name {
                         font-size: 30px;
@@ -51,6 +59,13 @@
                         fill: white;
                         stroke: #0009;
                         cursor: pointer;
+                    }
+                    .large-team-name {
+                        font-size: 37px;
+                        stroke: black;
+                            stroke-width: 10px;
+                            paint-order: stroke;
+                            
                     }
                     .poly {
                         stroke: #ff000bff;
@@ -81,14 +96,12 @@
                         </g>
                     </svg>
                 </template>
-                <template v-else-if="mode == 'display'">
 
-                </template>
-                <template v-else-if="mode == 'claim' || mode == 'admin'">
+                <template v-else-if="!hideDrops && (mode == 'claim' || mode == 'admin' || mode == 'display')">
                    
                     <g v-for="(points, i) in claimedPoints" :key="i">
                         <pattern :id="'stripe' + i" :width="(points?.colors?.length ?? 1) * 4" height="10" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
-                            <rect v-for="(color, i) in points?.colors" :x="i * 4" y="0" width="4" height="10" :style="`fill: ${color}77`" :key="i" />
+                            <rect v-for="(color, i) in points?.colors" :x="i * 4" y="0" width="4" height="10" :style="`fill: ${color}${hideMap ? '44': '77'}`" :key="i" />
                         </pattern>
                         <polygon :fill="'url(#stripe' + i + ')'" v-if="points?.regions[0]" :points="points?.regions[0]?.map(p => p?.join(',')).join(' ')" stroke-width="4"
                                 :stroke="points?.colors[0]"></polygon>
@@ -98,21 +111,36 @@
                         <polygon v-if="claiming && shouldShowName(l)" @click="claim(l)" 
                             :points="l.points.map(p => p.join(',')).join(' ')" stroke-width="4" class="poly dotted"
                             stroke-dasharray="4 1 2" ></polygon>
-                        <text @click="claim(l)" v-if="shouldShowName(l)" :x="l.namePos.x" :y="l.namePos.y"
-                            text-anchor="middle" class="poi-name" :class="{ 'primary-poi': l.primary, 'poi-outline': !downloading }">{{
-                                l.name }}</text>
-                        <text v-for="(t, k) in l.teams" :x="l.namePos.x" :y="l.namePos.y + (35 * (k + 1)) + 5"
-                            text-anchor="middle" class="team-name" :class="{ 'poi-outline': !downloading }" :key="t" @click="selectedTeam = t">{{ t }}</text>
+                        <template v-if="hidePoiNames">
+                            <text v-for="(t, k) in l.teams" :x="l.namePos.x" :y="l.namePos.y + (35 * k) + 5"
+                                text-anchor="middle" class="large-team-name team-name" :class="{ 'poi-outline': !downloading }" :key="t" @click="selectedTeam = t">{{ t }}</text>
+                        </template>
+                        <template v-else>
+                            <text @click="claim(l)" v-if="shouldShowName(l)" :x="l.namePos.x" :y="l.namePos.y"
+                                text-anchor="middle" class="poi-name" :class="{ 'primary-poi': l.primary, 'poi-outline': !downloading }">{{
+                                    l.name }}</text>
+                            <text v-for="(t, k) in l.teams" :x="l.namePos.x" :y="l.namePos.y + (35 * (k + 1)) + 5"
+                                text-anchor="middle" class="team-name" :class="{ 'poi-outline': !downloading }" :key="t" @click="selectedTeam = t">{{ t }}</text>
+                        </template>
                     </g>
                     
                 </template>
+                <template v-else-if="hideDrops">
+                    <g v-for="l in locations" :key="l.name">
+                        <text @click="claim(l)" v-if="shouldShowName(l)" :x="l.namePos.x" :y="l.namePos.y"
+                            text-anchor="middle" class="poi-name" :class="{ 'primary-poi': l.primary, 'poi-outline': !downloading }">{{
+                                l.name }}</text>
+                     </g>
+                </template>
             </svg>
-            <div class="export">
-                <icon-btn-filled icon="download" @click="svgImg()"></icon-btn-filled>
-            </div>
-            <div class="refresh">
-                <icon-btn-filled icon="refresh" @click="refreshClaims()"></icon-btn-filled>
-            </div>
+            <template v-if="mode != 'display'">
+                <div class="export">
+                    <icon-btn-filled icon="download" @click="svgImg()"></icon-btn-filled>
+                </div>
+                <div class="refresh">
+                    <icon-btn-filled icon="refresh" @click="refreshClaims()"></icon-btn-filled>
+                </div>
+            </template>
         </div>
         <v-dialog v-model="claimDropDiag" max-width="600px">
             <v-card>
@@ -158,7 +186,7 @@
 </template>
 
 <script>
-import maps from "@/utils/MapLocs";
+import {mapConfigs as maps} from "@/utils/maps";
 import IconBtnFilled from "@/components/IconBtnFilled";
 import PolyBool from "polybooljs";
 import _ from "lodash";
@@ -179,7 +207,7 @@ const downloadURI = (uri, name) => {
 }
 
 export default {
-    props: ["matchId", "map", "mode", "organizer", "eventId"],
+    props: ["matchId", "map", "mode", "organizer", "eventId", "hideMap", "hidePoiNames", "hideDrops"],
     data() {
         return {
             claimDropDiag: false,
